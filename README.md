@@ -1,10 +1,13 @@
-# Dime
+# BudgetThing
 
 <p align="center">
   <img src="./docs/assets/hero.png" width="451" style="max-width: 100%; height: auto;" />
 </p>
 
-Dime is a 100% free, open-source personal finance tracker built with iOS design guidelines in mind. [Download Dime on the App Store.](https://apps.apple.com/sg/app/dime-budget-expense-tracker/id1635280255)
+BudgetThing is a fork of the excellent iOS budget tracking app Dime to add a few features I think would be useful but
+that can't be merged upstream.
+
+You almost certainly want Dime
 
 ## App Preview
 
@@ -22,7 +25,7 @@ Dime is a 100% free, open-source personal finance tracker built with iOS design 
 
 ## Why You’ll Love Dime
 
-- 100% free forever, with no paywall or ads.
+- 100% free forever, with no paywall or ads. (ish)
 - Beautifully iOS-centric design, with simplicity at its core.
 - Insightful expenditure breakdowns over various time periods.
 - Create budgets based on expense categories and stick to them.

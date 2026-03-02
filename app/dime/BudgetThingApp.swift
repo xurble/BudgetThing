@@ -1,6 +1,6 @@
 //
-//  dimeApp.swift
-//  dime
+//  BudgetThingApp.swift
+//  BudgetThing
 //
 //  Created by Rafael Soh on 11/7/22.
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct dimeApp: App {
+struct BudgetThingApp: App {
     @StateObject var dataController: DataController
     @StateObject var unlockManager: UnlockManager
     @StateObject var appLockVM = AppLockViewModel()

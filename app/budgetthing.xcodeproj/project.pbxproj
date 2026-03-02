@@ -26,7 +26,7 @@
 		5321E1DF291FE2D000D5A931 /* CategoryCreationErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5321E1DB291FE02B00D5A931 /* CategoryCreationErrors.swift */; };
 		5321E1E0291FE2D000D5A931 /* CategoryCreationErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5321E1DB291FE02B00D5A931 /* CategoryCreationErrors.swift */; };
 		5324985528A64DA7007B34D1 /* RecentTransactionsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5324985428A64DA7007B34D1 /* RecentTransactionsWidget.swift */; };
-		5327D287287C697400F76ADF /* dimeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5327D286287C697400F76ADF /* dimeApp.swift */; };
+		5327D287287C697400F76ADF /* BudgetThingApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5327D286287C697400F76ADF /* BudgetThingApp.swift */; };
 		5327D28E287C697C00F76ADF /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5327D28D287C697C00F76ADF /* Preview Assets.xcassets */; };
 		5327D295287C698900F76ADF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5327D294287C698900F76ADF /* Assets.xcassets */; };
 		5327D2AD287C6AD200F76ADF /* DataController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5327D2AC287C6AD200F76ADF /* DataController.swift */; };
@@ -225,8 +225,8 @@
 		5313EC6F28ACE941000EAB0C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		5321E1DB291FE02B00D5A931 /* CategoryCreationErrors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryCreationErrors.swift; sourceTree = "<group>"; };
 		5324985428A64DA7007B34D1 /* RecentTransactionsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentTransactionsWidget.swift; sourceTree = "<group>"; };
-		5327D283287C697400F76ADF /* dime.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = dime.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		5327D286287C697400F76ADF /* dimeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = dimeApp.swift; sourceTree = "<group>"; };
+		5327D283287C697400F76ADF /* BudgetThing.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BudgetThing.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5327D286287C697400F76ADF /* BudgetThingApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetThingApp.swift; sourceTree = "<group>"; };
 		5327D28D287C697C00F76ADF /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		5327D294287C698900F76ADF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5327D2AC287C6AD200F76ADF /* DataController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataController.swift; sourceTree = "<group>"; };
@@ -430,7 +430,7 @@
 		5327D284287C697400F76ADF /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				5327D283287C697400F76ADF /* dime.app */,
+				5327D283287C697400F76ADF /* BudgetThing.app */,
 				53B1D18A288ED7E400E28062 /* ExpenditureWidgetExtension.appex */,
 				5313EC5B28ACE941000EAB0C /* BudgetIntent.appex */,
 				5313EC6628ACE941000EAB0C /* BudgetIntentUI.appex */,
@@ -446,7 +446,7 @@
 				53756F622AC3C25E0065D0C2 /* sample.csv */,
 				53A4147828B6625D008C30E7 /* AppDelegate.swift */,
 				53A4147A28B66265008C30E7 /* SceneDelegate.swift */,
-				5327D286287C697400F76ADF /* dimeApp.swift */,
+				5327D286287C697400F76ADF /* BudgetThingApp.swift */,
 				5327D2DF287C6B7C00F76ADF /* DeviceModels.json */,
 				5327D2CA287C6B4700F76ADF /* ContentView.swift */,
 				5327D294287C698900F76ADF /* Assets.xcassets */,
@@ -705,9 +705,9 @@
 			productReference = 5313EC6628ACE941000EAB0C /* BudgetIntentUI.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
-		5327D282287C697400F76ADF /* dime */ = {
+		5327D282287C697400F76ADF /* BudgetThing */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 5327D291287C697C00F76ADF /* Build configuration list for PBXNativeTarget "dime" */;
+			buildConfigurationList = 5327D291287C697C00F76ADF /* Build configuration list for PBXNativeTarget "BudgetThing" */;
 			buildPhases = (
 				5327D27F287C697400F76ADF /* Sources */,
 				5327D280287C697400F76ADF /* Frameworks */,
@@ -723,7 +723,7 @@
 				5313EC7128ACE941000EAB0C /* PBXTargetDependency */,
 				5313EC7428ACE941000EAB0C /* PBXTargetDependency */,
 			);
-			name = dime;
+			name = BudgetThing;
 			packageProductDependencies = (
 				5327D2E5287C6CC300F76ADF /* Popovers */,
 				53B1D1A7289A60D500E28062 /* CrookedText */,
@@ -734,8 +734,8 @@
 				D6A4DE1F2D61744400F7F751 /* SwiftUIIntrospect */,
 				D6A4DE232D61744400F7F751 /* SwiftUIIntrospect-Static */,
 			);
-			productName = dime;
-			productReference = 5327D283287C697400F76ADF /* dime.app */;
+			productName = BudgetThing;
+			productReference = 5327D283287C697400F76ADF /* BudgetThing.app */;
 			productType = "com.apple.product-type.application";
 		};
 		53B1D189288ED7E400E28062 /* ExpenditureWidgetExtension */ = {
@@ -779,7 +779,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 5327D27E287C697400F76ADF /* Build configuration list for PBXProject "dime" */;
+			buildConfigurationList = 5327D27E287C697400F76ADF /* Build configuration list for PBXProject "budgetthing" */;
 			compatibilityVersion = "Xcode 13.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -801,7 +801,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				5327D282287C697400F76ADF /* dime */,
+				5327D282287C697400F76ADF /* BudgetThing */,
 				53B1D189288ED7E400E28062 /* ExpenditureWidgetExtension */,
 				5313EC5A28ACE941000EAB0C /* BudgetIntent */,
 				5313EC6528ACE941000EAB0C /* BudgetIntentUI */,
@@ -973,7 +973,7 @@
 				5327D2BA287C6AFB00F76ADF /* ViewExtension.swift in Sources */,
 				5327D2DB287C6B5F00F76ADF /* LogView.swift in Sources */,
 				5362CF322A92750800244744 /* ImportDataView.swift in Sources */,
-				5327D287287C697400F76ADF /* dimeApp.swift in Sources */,
+				5327D287287C697400F76ADF /* BudgetThingApp.swift in Sources */,
 				53A4147728B3B559008C30E7 /* WelcomeSheetView.swift in Sources */,
 				53D6BDD82AF73CFC00F5728E /* SettingsEraseView.swift in Sources */,
 				53D6BDD62AF73CE400F5728E /* SettingsUpcomingView.swift in Sources */,
@@ -1099,7 +1099,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 2.1.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rafaelsoh.dime.BudgetIntent;
+				PRODUCT_BUNDLE_IDENTIFIER = farm.poplar.budgetthing.BudgetIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1131,7 +1131,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 2.1.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rafaelsoh.dime.BudgetIntent;
+				PRODUCT_BUNDLE_IDENTIFIER = farm.poplar.budgetthing.BudgetIntent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1162,7 +1162,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 2.1.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rafaelsoh.dime.BudgetIntentUI;
+				PRODUCT_BUNDLE_IDENTIFIER = farm.poplar.budgetthing.BudgetIntentUI;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1189,7 +1189,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 2.1.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rafaelsoh.dime.BudgetIntentUI;
+				PRODUCT_BUNDLE_IDENTIFIER = farm.poplar.budgetthing.BudgetIntentUI;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1330,7 +1330,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = dime/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Dime;
+				INFOPLIST_KEY_CFBundleDisplayName = BudgetThing;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "We need to unlock your data.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save an image of a transaction for sharing.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -1343,7 +1343,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 2.1.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rafaelsoh.dime;
+				PRODUCT_BUNDLE_IDENTIFIER = farm.poplar.budgetthing;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -1371,7 +1371,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = dime/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Dime;
+				INFOPLIST_KEY_CFBundleDisplayName = BudgetThing;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "We need to unlock your data.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save an image of a transaction for sharing.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -1384,7 +1384,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 2.1.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rafaelsoh.dime;
+				PRODUCT_BUNDLE_IDENTIFIER = farm.poplar.budgetthing;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -1418,7 +1418,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 2.1.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rafaelsoh.dime.ExpenditureWidget;
+				PRODUCT_BUNDLE_IDENTIFIER = farm.poplar.budgetthing.ExpenditureWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1449,7 +1449,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 2.1.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rafaelsoh.dime.ExpenditureWidget;
+				PRODUCT_BUNDLE_IDENTIFIER = farm.poplar.budgetthing.ExpenditureWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1479,7 +1479,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		5327D27E287C697400F76ADF /* Build configuration list for PBXProject "dime" */ = {
+		5327D27E287C697400F76ADF /* Build configuration list for PBXProject "budgetthing" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				5327D28F287C697C00F76ADF /* Debug */,
@@ -1488,7 +1488,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		5327D291287C697C00F76ADF /* Build configuration list for PBXNativeTarget "dime" */ = {
+		5327D291287C697C00F76ADF /* Build configuration list for PBXNativeTarget "BudgetThing" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				5327D292287C697C00F76ADF /* Debug */,
