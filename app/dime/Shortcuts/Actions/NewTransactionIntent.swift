@@ -11,9 +11,9 @@ import SwiftUI
 
 @available(iOS 16.4, *)
 struct NewTransactionIntent: AppIntent {
-    static var title: LocalizedStringResource = "New Transaction"
+    static let title: LocalizedStringResource = "New Transaction"
 
-    static var description =
+    static let description =
         IntentDescription("Log new transactions in a blink")
 
     @Parameter(title: "Type", description: "Type of the transaction", requestValueDialog: IntentDialog("Would you like to log an income or expense?"))
@@ -174,7 +174,7 @@ extension TransactionType: AppEnum {
         return TypeDisplayRepresentation(name: "Type")
     }
 
-    static var caseDisplayRepresentations: [TransactionType: DisplayRepresentation] = [
+    static let caseDisplayRepresentations: [TransactionType: DisplayRepresentation] = [
         .income: DisplayRepresentation(title: "income",
                                        image: .init(systemName: "plus.square.fill")),
         .expense: DisplayRepresentation(title: "expense",
@@ -192,7 +192,7 @@ extension RepeatType: AppEnum {
         return TypeDisplayRepresentation(name: "Frequency")
     }
 
-    static var caseDisplayRepresentations: [RepeatType: DisplayRepresentation] = [
+    static let caseDisplayRepresentations: [RepeatType: DisplayRepresentation] = [
         .daily: DisplayRepresentation(title: "Daily"),
         .weekly: DisplayRepresentation(title: "Weekly"),
         .monthly: DisplayRepresentation(title: "Monthly")

@@ -199,7 +199,7 @@ extension View {
 
 // A preference key used to store the minimum Y offset of a view
 struct RefreshOffsetKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
+    static let defaultValue: CGFloat = 0
 
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = nextValue()

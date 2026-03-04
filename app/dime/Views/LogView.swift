@@ -346,18 +346,13 @@ struct LogView: View {
     }
 }
 
-struct NumberView: AnimatableModifier {
+struct NumberView: @preconcurrency AnimatableModifier {
     var number: Double
     var dynamicTypeSize: DynamicTypeSize
     let netTotal: Bool
     let positive: Bool
-
-    @AppStorage("showCents", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var showCents: Bool = true
-
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currencyCode!
-    var currencySymbol: String {
-        return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
-    }
+    let showCents: Bool
+    let currencySymbol: String
 
     var fontSize: CGFloat {
         switch dynamicTypeSize {
@@ -533,7 +528,7 @@ struct LogInsightsView: View {
                 }
 
                 EmptyView()
-                    .modifier(NumberView(number: amount, dynamicTypeSize: _dynamicTypeSize.wrappedValue, netTotal: insightsType == 1, positive: netTotal.positive))
+                    .modifier(NumberView(number: amount, dynamicTypeSize: _dynamicTypeSize.wrappedValue, netTotal: insightsType == 1, positive: netTotal.positive, showCents: showCents, currencySymbol: currencySymbol))
             }
             .padding(7)
             .contentShape(Rectangle())

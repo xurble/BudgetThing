@@ -18,8 +18,6 @@ struct SettingsNotificationsView: View {
   @State var option = 1
   @State var customTime = Date.now
 
-  var center = UNUserNotificationCenter.current()
-
   @Namespace var animation
 
   var body: some View {
@@ -59,37 +57,40 @@ struct SettingsNotificationsView: View {
           .onTapGesture {
             if showNotifications {
               withAnimation(.easeInOut(duration: 0.2)) {
-                center.removeAllPendingNotificationRequests()
+                UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
                 showNotifications.toggle()
               }
             } else {
-              center.getNotificationSettings { settings in
+              UNUserNotificationCenter.current().getNotificationSettings { settings in
                 if settings.authorizationStatus == .notDetermined {
-                  center.requestAuthorization(options: [.alert, .badge, .sound]) { success, error in
-                    if success {
-                      withAnimation(.easeInOut(duration: 0.2)) {
-                        showNotifications.toggle()
-                        newNotification()
+                  UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { success, error in
+                    Task { @MainActor in
+                      if success {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                          showNotifications.toggle()
+                          newNotification()
+                        }
+                      } else if let error = error {
+                        print(error.localizedDescription)
+                        notificationsEnabled = false
                       }
-                    } else if let error = error {
-                      print(error.localizedDescription)
-                      notificationsEnabled = false
                     }
                   }
                 } else if settings.authorizationStatus == .denied {
-                  notificationsEnabled = false
+                  Task { @MainActor in
+                    notificationsEnabled = false
 
-                  DispatchQueue.main.async {
                     if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
                       UIApplication.shared.open(settingsURL)
                     }
                   }
-
                 } else {
-                  withAnimation(.easeInOut(duration: 0.2)) {
-                    showNotifications.toggle()
-                    if showNotifications {
-                      newNotification()
+                  Task { @MainActor in
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                      showNotifications.toggle()
+                      if showNotifications {
+                        newNotification()
+                      }
                     }
                   }
                 }

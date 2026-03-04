@@ -331,6 +331,8 @@
 		AEADEF722AE94DC3006EB614 /* ToolbarButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ToolbarButton.swift; sourceTree = "<group>"; };
 		AEADEF732AE94DC3006EB614 /* Toolbar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Toolbar.swift; sourceTree = "<group>"; };
 		AECE7F9D2AED1A6800B57267 /* SuggestedTransactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestedTransactions.swift; sourceTree = "<group>"; };
+		BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Config/Base.xcconfig; sourceTree = "<group>"; };
+		BADA55BADA55BADA55BADA56 /* Config/User.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Config/User.xcconfig; sourceTree = "<group>"; };
 		D63B20472D8728C300CAFB20 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Localizations/en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		D63B20492D8728C300CAFB20 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = en; path = Localizations/en.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -415,6 +417,7 @@
 		5327D27A287C697400F76ADF = {
 			isa = PBXGroup;
 			children = (
+				BADA55BADA55BADA55BADA57 /* Config */,
 				D63B20462D8728C300CAFB20 /* Localizable.strings */,
 				D63B20482D8728C300CAFB20 /* Localizable.stringsdict */,
 				53EB931028A65F670026BE28 /* ExpenditureWidgetExtension.entitlements */,
@@ -666,6 +669,15 @@
 				53E832E62B0B067B000CBBA0 /* TransactionCategoryPicker.swift */,
 			);
 			path = Transactions;
+			sourceTree = "<group>";
+		};
+		BADA55BADA55BADA55BADA57 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */,
+				BADA55BADA55BADA55BADA56 /* Config/User.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1082,12 +1094,12 @@
 /* Begin XCBuildConfiguration section */
 		5313EC7628ACE941000EAB0C /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = BudgetIntent/BudgetIntent.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BudgetIntent/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = BudgetIntent;
@@ -1107,19 +1119,19 @@
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
 		5313EC7728ACE941000EAB0C /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = BudgetIntent/BudgetIntent.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BudgetIntent/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = BudgetIntent;
@@ -1139,18 +1151,18 @@
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
 		5313EC7828ACE941000EAB0C /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = BudgetIntentUI/BudgetIntentUI.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BudgetIntentUI/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = BudgetIntentUI;
@@ -1166,18 +1178,18 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
 		5313EC7928ACE941000EAB0C /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = BudgetIntentUI/BudgetIntentUI.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BudgetIntentUI/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = BudgetIntentUI;
@@ -1193,13 +1205,14 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
 		5327D28F287C697C00F76ADF /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
@@ -1261,6 +1274,7 @@
 		};
 		5327D290287C697C00F76ADF /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
@@ -1316,6 +1330,7 @@
 		};
 		5327D292287C697C00F76ADF /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon4 AppIcon3 AppIcon2 AppIcon1";
@@ -1326,7 +1341,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"dime/Preview Content\"";
-				DEVELOPMENT_TEAM = 5UNNTHMF44;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = dime/Info.plist;
@@ -1350,13 +1365,14 @@
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
 		5327D293287C697C00F76ADF /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon4 AppIcon3 AppIcon2 AppIcon1";
@@ -1367,7 +1383,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"dime/Preview Content\"";
-				DEVELOPMENT_TEAM = 5UNNTHMF44;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = dime/Info.plist;
@@ -1391,13 +1407,14 @@
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
 		53B1D199288ED87000E28062 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -1406,7 +1423,6 @@
 				CODE_SIGN_ENTITLEMENTS = ExpenditureWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ExpenditureWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ExpenditureWidgetExtension;
@@ -1422,13 +1438,14 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
 		53B1D19A288ED87000E28062 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -1437,7 +1454,6 @@
 				CODE_SIGN_ENTITLEMENTS = ExpenditureWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5UNNTHMF44;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ExpenditureWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ExpenditureWidgetExtension;
@@ -1453,7 +1469,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;

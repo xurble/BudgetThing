@@ -10,7 +10,8 @@ import LocalAuthentication
 import SwiftUI
 // All App Lock related methods will be handled here
 
-class AppLockViewModel: ObservableObject {
+@MainActor
+class AppLockViewModel: ObservableObject, @unchecked Sendable {
     // Publishing the applock state from user defaults
     @Published var isAppLockEnabled: Bool = false
     // Publishing if the app is curretly unlocked or not

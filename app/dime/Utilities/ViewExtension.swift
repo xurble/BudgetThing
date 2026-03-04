@@ -37,7 +37,7 @@ extension HorizontalAlignment {
     static let moneySubtitle = HorizontalAlignment(MoneySubtitle.self)
 }
 
-extension UINavigationController: UIGestureRecognizerDelegate {
+extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
     override open func viewDidLoad() {
         super.viewDidLoad()
         interactivePopGestureRecognizer?.delegate = self
@@ -48,6 +48,7 @@ extension UINavigationController: UIGestureRecognizerDelegate {
     }
 }
 
+@MainActor
 class Utilities {
     @AppStorage("colourScheme") var selectedAppearance = 0
     var userInterfaceStyle: ColorScheme? = .dark

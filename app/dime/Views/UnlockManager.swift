@@ -8,7 +8,8 @@
 import Foundation
 import StoreKit
 
-class UnlockManager: NSObject, ObservableObject, SKPaymentTransactionObserver, SKProductsRequestDelegate {
+@MainActor
+class UnlockManager: NSObject, ObservableObject, @preconcurrency SKPaymentTransactionObserver, @preconcurrency SKProductsRequestDelegate {
     enum RequestState {
         case loading
         case loaded
@@ -32,18 +33,16 @@ class UnlockManager: NSObject, ObservableObject, SKPaymentTransactionObserver, S
 
     var loadedProducts = [SKProduct]()
 
-    func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
-        DispatchQueue.main.async { [self] in
+    nonisolated func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
+        Task { @MainActor in
             for transaction in transactions {
                 switch transaction.transactionState {
                 case .purchased, .restored:
-
-                    self.purchaseCount += 1
-                    self.dataController.tipCounter = purchaseCount
+                    purchaseCount += 1
+                    dataController.tipCounter = purchaseCount
                     queue.finishTransaction(transaction)
-
                 case .failed:
-                    self.failedTransaction = true
+                    failedTransaction = true
                     queue.finishTransaction(transaction)
                     revertBool()
                 default:
@@ -53,23 +52,23 @@ class UnlockManager: NSObject, ObservableObject, SKPaymentTransactionObserver, S
         }
     }
 
-    func productsRequest(_: SKProductsRequest, didReceive response: SKProductsResponse) {
-        DispatchQueue.main.async {
+    nonisolated func productsRequest(_: SKProductsRequest, didReceive response: SKProductsResponse) {
+        Task { @MainActor in
             // Store the returned products for later, if we need them.
-            self.loadedProducts = response.products
+            loadedProducts = response.products
 
-            guard !self.loadedProducts.isEmpty else {
-                self.requestState = .failed
+            guard !loadedProducts.isEmpty else {
+                requestState = .failed
                 return
             }
 
             if response.invalidProductIdentifiers.isEmpty == false {
                 print("ALERT: Received invalid product identifiers: \(response.invalidProductIdentifiers)")
-                self.requestState = .failed
+                requestState = .failed
                 return
             }
 
-            self.requestState = .loaded
+            requestState = .loaded
         }
     }
 
@@ -79,8 +78,9 @@ class UnlockManager: NSObject, ObservableObject, SKPaymentTransactionObserver, S
     }
 
     func revertBool() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
-            self.failedTransaction = false
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 4_000_000_000)
+            failedTransaction = false
         }
     }
 

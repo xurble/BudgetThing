@@ -29,8 +29,6 @@ struct ContentView: View {
     @State var showIntro: Bool = false
     @State var showUpdate: Bool = false
 
-    var center = UNUserNotificationCenter.current()
-
     @AppStorage("topEdge", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var savedTopEdge: Double = 30
     @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var savedBottomEdge: Double = 15
 
@@ -142,20 +140,10 @@ struct ContentView: View {
                 showUpdateSheet = false
             }
 
-            center.getNotificationSettings { settings in
-                if settings.authorizationStatus == .authorized {
-                    if !showNotifications && notificationsEnabled == false {
-                        showNotifications = true
-                        notificationsEnabled = true
-                        newNotification()
-                    }
-                } else if settings.authorizationStatus == .denied {
-                    notificationsEnabled = false
-
-                    if showNotifications {
-                        showNotifications = false
-                        center.removeAllPendingNotificationRequests()
-                    }
+            UNUserNotificationCenter.current().getNotificationSettings { settings in
+                let authorizationStatus = settings.authorizationStatus
+                Task { @MainActor in
+                    handleNotificationSettings(authorizationStatus)
                 }
             }
         }
@@ -165,22 +153,32 @@ struct ContentView: View {
                     appLockVM.isAppUnLocked = false
                 }
             } else if newPhase == .active {
-                center.getNotificationSettings { settings in
-                    if settings.authorizationStatus == .authorized {
-                        if !showNotifications && notificationsEnabled == false {
-                            showNotifications = true
-                            notificationsEnabled = true
-                            newNotification()
-                        }
-                    } else if settings.authorizationStatus == .denied {
-                        notificationsEnabled = false
-
-                        if showNotifications {
-                            showNotifications = false
-                            center.removeAllPendingNotificationRequests()
-                        }
+                UNUserNotificationCenter.current().getNotificationSettings { settings in
+                    let authorizationStatus = settings.authorizationStatus
+                    Task { @MainActor in
+                        handleNotificationSettings(authorizationStatus)
                     }
                 }
+            }
+        }
+    }
+
+    @MainActor
+    private func handleNotificationSettings(_ authorizationStatus: UNAuthorizationStatus) {
+        let center = UNUserNotificationCenter.current()
+
+        if authorizationStatus == .authorized {
+            if !showNotifications && notificationsEnabled == false {
+                showNotifications = true
+                notificationsEnabled = true
+                newNotification()
+            }
+        } else if authorizationStatus == .denied {
+            notificationsEnabled = false
+
+            if showNotifications {
+                showNotifications = false
+                center.removeAllPendingNotificationRequests()
             }
         }
     }

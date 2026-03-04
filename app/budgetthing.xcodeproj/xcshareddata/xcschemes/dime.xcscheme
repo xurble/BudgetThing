@@ -49,9 +49,18 @@
             BlueprintIdentifier = "5327D282287C697400F76ADF"
             BuildableName = "BudgetThing.app"
             BlueprintName = "BudgetThing"
-            ReferencedContainer = "container:dime.xcodeproj">
+            ReferencedContainer = "container:budgetthing.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "5327D282287C697400F76ADF"
+            BuildableName = "BudgetThing.app"
+            BlueprintName = "BudgetThing"
+            ReferencedContainer = "container:dime.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "TZ"
@@ -81,6 +90,15 @@
             ReferencedContainer = "container:dime.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "5327D282287C697400F76ADF"
+            BuildableName = "BudgetThing.app"
+            BlueprintName = "BudgetThing"
+            ReferencedContainer = "container:dime.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

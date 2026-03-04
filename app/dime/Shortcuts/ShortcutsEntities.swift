@@ -12,7 +12,7 @@ import Foundation
 // @available(iOS 16, *)
 // struct IncomeCategoryEntity: AppEntity, Identifiable {
 //    static var typeDisplayRepresentation: TypeDisplayRepresentation = TypeDisplayRepresentation(name: "Income Category")
-//    static var defaultQuery: IncomeCategoryQuery = IncomeCategoryQuery()
+//    static let defaultQuery: IncomeCategoryQuery = IncomeCategoryQuery()
 //
 //
 //    var id: UUID
@@ -68,7 +68,7 @@ import Foundation
 // @available(iOS 16, *)
 // struct ExpenseCategoryEntity: AppEntity, Identifiable {
 //    static var typeDisplayRepresentation: TypeDisplayRepresentation = TypeDisplayRepresentation(name: "Expense Category")
-//    static var defaultQuery: ExpenseCategoryQuery = ExpenseCategoryQuery()
+//    static let defaultQuery: ExpenseCategoryQuery = ExpenseCategoryQuery()
 //
 //
 //    var id: UUID
@@ -123,9 +123,9 @@ import Foundation
 
 @available(iOS 16, *)
 struct IncomeCategoryEntity: AppEntity, Identifiable {
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = .init(name: "Category")
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = .init(name: "Category")
     typealias DefaultQueryType = IncomeCategoryQuery
-    static var defaultQuery: IncomeCategoryQuery = .init()
+    static let defaultQuery: IncomeCategoryQuery = .init()
 
     var id: UUID
 
@@ -153,45 +153,42 @@ struct IncomeCategoryEntity: AppEntity, Identifiable {
 @available(iOS 16, *)
 struct IncomeCategoryQuery: EntityStringQuery {
     func entities(matching query: String) async throws -> [IncomeCategoryEntity] {
-        let dataController = DataController.shared
-
-        let categories = dataController.getAllCategories(income: true).filter {
-            $0.wrappedName.localizedCaseInsensitiveContains(query) || $0.wrappedEmoji.localizedCaseInsensitiveContains(query)
-        }
-
-        return categories.compactMap { category in
-            if let id = category.id {
-                return IncomeCategoryEntity(id: id, name: category.wrappedName, emoji: category.wrappedEmoji, income: category.income)
-            } else {
-                return nil
+        return await MainActor.run {
+            DataController.shared.getAllCategories(income: true).filter {
+                $0.wrappedName.localizedCaseInsensitiveContains(query) || $0.wrappedEmoji.localizedCaseInsensitiveContains(query)
+            }.compactMap { category in
+                if let id = category.id {
+                    return IncomeCategoryEntity(id: id, name: category.wrappedName, emoji: category.wrappedEmoji, income: category.income)
+                } else {
+                    return nil
+                }
             }
         }
     }
 
     func entities(for identifiers: [IncomeCategoryEntity.ID]) async throws -> [IncomeCategoryEntity] {
-        return identifiers.compactMap { identifier in
-            let dataController = DataController.shared
+        return await MainActor.run {
+            var results: [IncomeCategoryEntity] = []
 
-            if let match = try? dataController.findCategory(withId: identifier) {
-                if let id = match.id {
-                    return IncomeCategoryEntity(id: id, name: match.wrappedName, emoji: match.wrappedEmoji, income: match.income)
-                } else {
-                    return nil
+            for identifier in identifiers {
+                if let match = try? DataController.shared.findCategory(withId: identifier),
+                   let id = match.id {
+                    results.append(IncomeCategoryEntity(id: id, name: match.wrappedName, emoji: match.wrappedEmoji, income: match.income))
                 }
-            } else {
-                return nil
             }
+
+            return results
         }
     }
 
     func suggestedEntities() async throws -> [IncomeCategoryEntity] {
-        let dataController = DataController.shared
-
-        return dataController.getAllCategories(income: true).compactMap { category in
-            if let id = category.id {
-                return IncomeCategoryEntity(id: id, name: category.wrappedName, emoji: category.wrappedEmoji, income: category.income)
-            } else {
-                return nil
+        return await MainActor.run {
+            DataController.shared.getAllCategories(income: true).compactMap { category in
+                if let id = category.id {
+                    return IncomeCategoryEntity(id: id, name: category.wrappedName, emoji: category.wrappedEmoji, income: category.income)
+                } else {
+                    return nil
+                }
             }
         }
     }
@@ -199,9 +196,9 @@ struct IncomeCategoryQuery: EntityStringQuery {
 
 @available(iOS 16, *)
 struct ExpenseCategoryEntity: AppEntity, Identifiable {
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = .init(name: "Category")
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = .init(name: "Category")
     typealias DefaultQueryType = ExpenseCategoryQuery
-    static var defaultQuery: ExpenseCategoryQuery = .init()
+    static let defaultQuery: ExpenseCategoryQuery = .init()
 
     var id: UUID
 
@@ -229,44 +226,42 @@ struct ExpenseCategoryEntity: AppEntity, Identifiable {
 @available(iOS 16, *)
 struct ExpenseCategoryQuery: EntityStringQuery {
     func entities(matching query: String) async throws -> [ExpenseCategoryEntity] {
-        let dataController = DataController.shared
-
-        let categories = dataController.getAllCategories(income: false).filter {
-            $0.wrappedName.localizedCaseInsensitiveContains(query) || $0.wrappedEmoji.localizedCaseInsensitiveContains(query)
-        }
-
-        return categories.compactMap { category in
-            if let id = category.id {
-                return ExpenseCategoryEntity(id: id, name: category.wrappedName, emoji: category.wrappedEmoji, income: category.income)
-            } else {
-                return nil
+        return await MainActor.run {
+            DataController.shared.getAllCategories(income: false).filter {
+                $0.wrappedName.localizedCaseInsensitiveContains(query) || $0.wrappedEmoji.localizedCaseInsensitiveContains(query)
+            }.compactMap { category in
+                if let id = category.id {
+                    return ExpenseCategoryEntity(id: id, name: category.wrappedName, emoji: category.wrappedEmoji, income: category.income)
+                } else {
+                    return nil
+                }
             }
         }
     }
 
     func entities(for identifiers: [ExpenseCategoryEntity.ID]) async throws -> [ExpenseCategoryEntity] {
-        return identifiers.compactMap { identifier in
-            let dataController = DataController.shared
-            if let match = try? dataController.findCategory(withId: identifier) {
-                if let id = match.id {
-                    return ExpenseCategoryEntity(id: id, name: match.wrappedName, emoji: match.wrappedEmoji, income: match.income)
-                } else {
-                    return nil
+        return await MainActor.run {
+            var results: [ExpenseCategoryEntity] = []
+
+            for identifier in identifiers {
+                if let match = try? DataController.shared.findCategory(withId: identifier),
+                   let id = match.id {
+                    results.append(ExpenseCategoryEntity(id: id, name: match.wrappedName, emoji: match.wrappedEmoji, income: match.income))
                 }
-            } else {
-                return nil
             }
+
+            return results
         }
     }
 
     func suggestedEntities() async throws -> [ExpenseCategoryEntity] {
-        let dataController = DataController.shared
-
-        return dataController.getAllCategories(income: false).compactMap { category in
-            if let id = category.id {
-                return ExpenseCategoryEntity(id: id, name: category.wrappedName, emoji: category.wrappedEmoji, income: category.income)
-            } else {
-                return nil
+        return await MainActor.run {
+            DataController.shared.getAllCategories(income: false).compactMap { category in
+                if let id = category.id {
+                    return ExpenseCategoryEntity(id: id, name: category.wrappedName, emoji: category.wrappedEmoji, income: category.income)
+                } else {
+                    return nil
+                }
             }
         }
     }
@@ -274,9 +269,9 @@ struct ExpenseCategoryQuery: EntityStringQuery {
 
 @available(iOS 16, *)
 struct BudgetEntity: AppEntity, Identifiable {
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = .init(name: "Budget")
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = .init(name: "Budget")
     typealias DefaultQueryType = BudgetQuery
-    static var defaultQuery: BudgetQuery = .init()
+    static let defaultQuery: BudgetQuery = .init()
 
     var id: UUID
 
@@ -300,45 +295,42 @@ struct BudgetEntity: AppEntity, Identifiable {
 @available(iOS 16, *)
 struct BudgetQuery: EntityStringQuery {
     func entities(matching query: String) async throws -> [BudgetEntity] {
-        let dataController = DataController.shared
-
-        let budgets = dataController.getAllBudgets().filter {
-            $0.wrappedName.localizedCaseInsensitiveContains(query) || $0.wrappedEmoji.localizedCaseInsensitiveContains(query)
-        }
-
-        return budgets.compactMap { budget in
-            if let id = budget.id {
-                return BudgetEntity(id: id, name: budget.wrappedName, emoji: budget.wrappedEmoji)
-            } else {
-                return nil
+        return await MainActor.run {
+            DataController.shared.getAllBudgets().filter {
+                $0.wrappedName.localizedCaseInsensitiveContains(query) || $0.wrappedEmoji.localizedCaseInsensitiveContains(query)
+            }.compactMap { budget in
+                if let id = budget.id {
+                    return BudgetEntity(id: id, name: budget.wrappedName, emoji: budget.wrappedEmoji)
+                } else {
+                    return nil
+                }
             }
         }
     }
 
     func entities(for identifiers: [BudgetEntity.ID]) async throws -> [BudgetEntity] {
-        return identifiers.compactMap { identifier in
-            let dataController = DataController.shared
+        return await MainActor.run {
+            var results: [BudgetEntity] = []
 
-            if let match = try? dataController.findBudget(withId: identifier) {
-                if let id = match.id {
-                    return BudgetEntity(id: id, name: match.wrappedName, emoji: match.wrappedEmoji)
-                } else {
-                    return nil
+            for identifier in identifiers {
+                if let match = try? DataController.shared.findBudget(withId: identifier),
+                   let id = match.id {
+                    results.append(BudgetEntity(id: id, name: match.wrappedName, emoji: match.wrappedEmoji))
                 }
-            } else {
-                return nil
             }
+
+            return results
         }
     }
 
     func suggestedEntities() async throws -> [BudgetEntity] {
-        let dataController = DataController.shared
-
-        return dataController.getAllBudgets().compactMap { budget in
-            if let id = budget.id {
-                return BudgetEntity(id: id, name: budget.wrappedName, emoji: budget.wrappedEmoji)
-            } else {
-                return nil
+        return await MainActor.run {
+            DataController.shared.getAllBudgets().compactMap { budget in
+                if let id = budget.id {
+                    return BudgetEntity(id: id, name: budget.wrappedName, emoji: budget.wrappedEmoji)
+                } else {
+                    return nil
+                }
             }
         }
     }
@@ -348,7 +340,7 @@ struct BudgetQuery: EntityStringQuery {
 // struct CategoryEntity: AppEntity, Identifiable, Hashable, Equatable {
 //    static var typeDisplayRepresentation: TypeDisplayRepresentation = TypeDisplayRepresentation(name: "Category")
 //    typealias DefaultQueryType = CategoryQuery
-//    static var defaultQuery: CategoryQuery = CategoryQuery()
+//    static let defaultQuery: CategoryQuery = CategoryQuery()
 //
 //    var id: UUID
 //

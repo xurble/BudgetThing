@@ -7,11 +7,10 @@
 
 import Intents
 
-class IntentHandler: INExtension, BudgetWidgetConfigurationIntentHandling {
-//    let dataController = DataController()
-    let dataController = DataController.shared
-
+class IntentHandler: INExtension, @preconcurrency BudgetWidgetConfigurationIntentHandling {
+    @MainActor
     func provideBudgetOptionsCollection(for _: BudgetWidgetConfigurationIntent, with completion: @escaping (INObjectCollection<WidgetBudget>?, Error?) -> Void) {
+        let dataController = DataController.shared
         let budgetFetchRequest = dataController.fetchRequestForBudgets()
 
         let budgets = dataController.results(for: budgetFetchRequest).map {

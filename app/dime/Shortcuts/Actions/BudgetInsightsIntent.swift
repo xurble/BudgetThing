@@ -11,9 +11,9 @@ import SwiftUI
 
 @available(iOS 16.4, *)
 struct BudgetIntent: AppIntent {
-    static var title: LocalizedStringResource = "Get Budget Insights"
+    static let title: LocalizedStringResource = "Get Budget Insights"
 
-    static var description =
+    static let description =
         IntentDescription("Extract leftover amount for a particular budget")
 
     @Parameter(title: "Budget Type", requestValueDialog: IntentDialog("What budget type would you like to extract insights from?"))
@@ -82,7 +82,7 @@ extension ShortcutsBudgetsType: AppEnum {
         return TypeDisplayRepresentation(name: "Budget Type")
     }
 
-    static var caseDisplayRepresentations: [ShortcutsBudgetsType: DisplayRepresentation] = [
+    static let caseDisplayRepresentations: [ShortcutsBudgetsType: DisplayRepresentation] = [
         .overall: DisplayRepresentation(title: "overall budget"),
         .category: DisplayRepresentation(title: "categorical budget")
     ]

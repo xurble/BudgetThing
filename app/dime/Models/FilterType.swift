@@ -17,7 +17,7 @@ enum FilterType: String, CaseIterable {
     case recurring
     case upcoming
 
-    static var imageDictionary: [FilterType: String] = [
+    static let imageDictionary: [FilterType: String] = [
         .all: "square.text.square.fill",
         .type: "centsign.circle.fill",
         .day: "d.square.fill",

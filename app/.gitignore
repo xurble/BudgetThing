@@ -1,0 +1,5 @@
+
+# Local Xcode settings
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+Config/Config/User.xcconfig

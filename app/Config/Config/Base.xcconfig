@@ -1,0 +1,5 @@
+// Shared build settings.
+// Add local, untracked overrides in Config/User.xcconfig.
+#include? "User.xcconfig"
+
+SWIFT_VERSION = 6.0

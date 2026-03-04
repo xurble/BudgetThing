@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 import UIKit
 
+@MainActor
 struct SupportEmail {
     let toAddress: String
     let subject: String

@@ -11,9 +11,9 @@ import SwiftUI
 
 @available(iOS 16.4, *)
 struct GetInsightsIntent: AppIntent {
-    static var title: LocalizedStringResource = "Get Insights"
+    static let title: LocalizedStringResource = "Get Insights"
 
-    static var description =
+    static let description =
         IntentDescription("Extracts your total expenditure or income for a particular time period")
 
     @Parameter(title: "Type", description: "Type of Data", requestValueDialog: IntentDialog("Which of the following would you like to extract?"))
@@ -108,7 +108,7 @@ extension ShortcutsInsightsTimeFrame: AppEnum {
         return TypeDisplayRepresentation(name: "Time Frame")
     }
 
-    static var caseDisplayRepresentations: [ShortcutsInsightsTimeFrame: DisplayRepresentation] = [
+    static let caseDisplayRepresentations: [ShortcutsInsightsTimeFrame: DisplayRepresentation] = [
         .day: DisplayRepresentation(title: "today"),
         .week: DisplayRepresentation(title: "this week"),
         .month: DisplayRepresentation(title: "this month"),
@@ -127,7 +127,7 @@ extension ShortcutsInsightsType: AppEnum {
         return TypeDisplayRepresentation(name: "Insights Type")
     }
 
-    static var caseDisplayRepresentations: [ShortcutsInsightsType: DisplayRepresentation] = [
+    static let caseDisplayRepresentations: [ShortcutsInsightsType: DisplayRepresentation] = [
         .net: DisplayRepresentation(title: "net total"),
         .income: DisplayRepresentation(title: "total income"),
         .spent: DisplayRepresentation(title: "total expenditure")
