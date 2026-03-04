@@ -439,7 +439,7 @@ struct TemplateTransactionView: View {
             }
             .padding(17)
             .frame(width: proxy.size.width, height: proxy.size.height)
-            .background(Color.PrimaryBackground)
+            .liquidGlassBackground()
             .onTapGesture {
                 self.hideKeyboard()
             }
@@ -534,7 +534,7 @@ struct TemplateTransactionView: View {
         .animation(.easeOut(duration: 0.2), value: showToast)
         .ignoresSafeArea(.keyboard, edges: .all)
         .frame(maxHeight: .infinity)
-        .background(Color.PrimaryBackground)
+        .liquidGlassBackground()
         .edgesIgnoringSafeArea(.all)
         .onChange(of: showToast) { newValue in
             if newValue {
@@ -931,7 +931,7 @@ struct SettingsQuickAddWidgetView: View {
         .navigationBarHidden(true)
         .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(Color.PrimaryBackground)
+        .liquidGlassBackground()
     }
 }
 

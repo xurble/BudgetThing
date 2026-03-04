@@ -58,7 +58,7 @@ struct InsightsView: View {
             .frame(height: 250, alignment: .top)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .ignoresSafeArea(.all)
-            .background(Color.PrimaryBackground)
+            .liquidGlassBackground()
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 
         } else {
@@ -113,7 +113,7 @@ struct InsightsView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.PrimaryBackground)
+            .liquidGlassBackground()
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             .onReceive(self.didSave) { _ in
                 self.refreshID = UUID()

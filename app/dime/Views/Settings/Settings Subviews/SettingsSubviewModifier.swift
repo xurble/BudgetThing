@@ -16,7 +16,7 @@ struct SettingsSubviewModifier: ViewModifier {
             .navigationBarHidden(true)
             .padding(20)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .background(Color.PrimaryBackground)
+            .liquidGlassBackground()
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 }

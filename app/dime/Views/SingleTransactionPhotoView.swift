@@ -56,7 +56,7 @@ struct SingleDayPhotoView: View {
 //            .shadow(color: .dropLight, radius: 45, x: -40, y: -40)
         }
         .padding(60)
-        .background(Color.PrimaryBackground)
+        .liquidGlassBackground()
         .frame(width: 1100, alignment: .top)
     }
 }

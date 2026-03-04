@@ -39,7 +39,7 @@ struct BudgetView: View {
             .frame(height: 250, alignment: .top)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .ignoresSafeArea(.all)
-            .background(Color.PrimaryBackground)
+            .liquidGlassBackground()
 
         } else {
             ActualBudgetView()
@@ -219,7 +219,7 @@ struct ActualBudgetView: View {
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             .navigationBarTitle("")
             .navigationBarHidden(true)
-            .background(Color.PrimaryBackground)
+            .liquidGlassBackground()
             .sheet(item: $toEdit, onDismiss: {
                 toEdit = nil
             }) { budget in
@@ -1286,7 +1286,7 @@ struct DetailedBudgetView: View {
         .navigationBarBackButtonHidden(true)
         .navigationBarTitle("")
         .navigationBarHidden(true)
-        .background(Color.PrimaryBackground)
+        .liquidGlassBackground()
         .sheet(item: $toEdit, onDismiss: {
             toEdit = nil
         }) { budget in
@@ -1354,7 +1354,7 @@ struct DetailedMainBudgetView: View {
         .navigationBarBackButtonHidden(true)
         .navigationBarTitle("")
         .navigationBarHidden(true)
-        .background(Color.PrimaryBackground)
+        .liquidGlassBackground()
         .fullScreenCover(item: $toEdit, onDismiss: {
             toEdit = nil
         }) { budget in

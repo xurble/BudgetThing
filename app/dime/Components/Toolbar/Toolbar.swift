@@ -18,5 +18,8 @@ struct Toolbar<Content>: View where Content: View {
                 rightButton()
             }
         }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .glassRoundedRect(cornerRadius: 18, tint: Color.SecondaryBackground.opacity(0.35))
     }
 }

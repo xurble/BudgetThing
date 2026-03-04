@@ -230,7 +230,7 @@ struct SettingsView: View {
                 
             }
             .padding(10)
-            .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
+            .glassRoundedRect(cornerRadius: 16, tint: Color.SecondaryBackground.opacity(0.35))
           }
           .padding(.horizontal, 20)
           .padding(.bottom, 25)
@@ -484,7 +484,7 @@ struct SettingsView: View {
       }
       .navigationBarTitle("")
       .navigationBarHidden(true)
-      .background(Color.PrimaryBackground)
+      .liquidGlassBackground()
       .fullScreenCover(isPresented: $showTipJarMenu) {
         TipJarAlert()
       }
@@ -534,6 +534,9 @@ struct SettingsView: View {
         }
       }
     }
+    .padding(.horizontal, 10)
+    .padding(.vertical, 8)
+    .glassRoundedRect(cornerRadius: 16, tint: Color.SecondaryBackground.opacity(0.35))
     .frame(maxWidth: .infinity)
   }
 
@@ -845,45 +848,47 @@ struct SettingsRowView: View {
   @Environment(\.dynamicTypeSize) var dynamicTypeSize
 
   var body: some View {
-    HStack(spacing: 12) {
-      Image(systemName: systemImage)
-        .font(.system(.body, design: .rounded))
-
-        //                .font(.system(size: 17))
-        //                .padding(5)
-        .foregroundColor(.white)
-        .frame(
-          width: dynamicTypeSize > .xLarge ? 40 : 30, height: dynamicTypeSize > .xLarge ? 40 : 30,
-          alignment: .center
-        )
-        .background(Color("\(colour)"), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-
-      Text(LocalizedStringKey(title))
-        .font(.system(.body, design: .rounded).weight(.medium))
-
-        //                .font(.system(size: 17, weight: .medium, design: .rounded))
-        .lineLimit(1)
-        .foregroundColor(Color.PrimaryText)
-
-      Spacer()
-
-      if optionalText != nil {
-        Text(optionalText!)
+    GlassCard(cornerRadius: 18, tint: Color.SecondaryBackground.opacity(0.35)) {
+      HStack(spacing: 12) {
+        Image(systemName: systemImage)
           .font(.system(.body, design: .rounded))
 
-          //                    .font(.system(size: 17, weight: .regular, design: .rounded))
-          .foregroundColor(.DarkIcon.opacity(0.6))
-          .layoutPriority(1)
-          .padding(.trailing, -8)
-      }
+          //                .font(.system(size: 17))
+          //                .padding(5)
+          .foregroundColor(.white)
+          .frame(
+            width: dynamicTypeSize > .xLarge ? 40 : 30, height: dynamicTypeSize > .xLarge ? 40 : 30,
+            alignment: .center
+          )
+          .background(Color("\(colour)"), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
 
-      Image(systemName: "chevron.forward")
-        .font(.system(.subheadline, design: .rounded))
-        //                .font(.system(size: 15))
-        .foregroundColor(.DarkIcon.opacity(0.6))
+        Text(LocalizedStringKey(title))
+          .font(.system(.body, design: .rounded).weight(.medium))
+
+          //                .font(.system(size: 17, weight: .medium, design: .rounded))
+          .lineLimit(1)
+          .foregroundColor(Color.PrimaryText)
+
+        Spacer()
+
+        if optionalText != nil {
+          Text(optionalText!)
+            .font(.system(.body, design: .rounded))
+
+            //                    .font(.system(size: 17, weight: .regular, design: .rounded))
+            .foregroundColor(.DarkIcon.opacity(0.6))
+            .layoutPriority(1)
+            .padding(.trailing, -8)
+        }
+
+        Image(systemName: "chevron.forward")
+          .font(.system(.subheadline, design: .rounded))
+          //                .font(.system(size: 15))
+          .foregroundColor(.DarkIcon.opacity(0.6))
+      }
+      .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
     .frame(maxWidth: .infinity)
-    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
   }
 }
 
@@ -895,6 +900,6 @@ struct SettingsCategoryView: View {
       .navigationBarBackButtonHidden(true)
       .navigationBarTitle("")
       .navigationBarHidden(true)
-      .background(Color.PrimaryBackground)
+      .liquidGlassBackground()
   }
 }

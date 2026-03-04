@@ -91,7 +91,7 @@ struct LogView: View {
             .padding(.horizontal, 30)
             .frame(height: 250, alignment: .top)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.PrimaryBackground)
+            .liquidGlassBackground()
 
         } else {
             VStack(spacing: 0) {
@@ -262,7 +262,7 @@ struct LogView: View {
             }
 //            .onAppear(perform: scrollDelegate.addGesture)
 //            .onDisappear(perform: scrollDelegate.removeGesture)
-            .background(Color.PrimaryBackground)
+            .liquidGlassBackground()
             .fullScreenCover(isPresented: $searchMode) {
                 SearchView()
             }
@@ -689,7 +689,7 @@ struct SearchView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .padding(15)
-        .background(Color.PrimaryBackground)
+        .liquidGlassBackground()
     }
 }
 

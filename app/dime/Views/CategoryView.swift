@@ -129,7 +129,7 @@ struct CategoryView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .ignoresSafeArea(.keyboard, edges: .all)
-        .background(Color.PrimaryBackground)
+        .liquidGlassBackground()
     }
 }
 
@@ -488,7 +488,7 @@ struct CategoryListView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(Color.PrimaryBackground)
+        .liquidGlassBackground()
         .animation(.easeOut(duration: 0.2), value: showToast)
         .onChange(of: toDelete) { _ in
             if toDelete != nil {
@@ -922,7 +922,7 @@ struct NewCategoryAlert: View {
             .frame(maxHeight: bottomSpacers ? 350 : .infinity)
         }
         .frame(maxHeight: .infinity, alignment: .top)
-        .background(Color.PrimaryBackground)
+        .liquidGlassBackground()
         .animation(.easeOut(duration: 0.2), value: showToast)
         .onChange(of: expenseCategories.count) { _ in
             if expenseCategories.count == 24 {
@@ -1322,7 +1322,7 @@ struct EditCategoryAlert: View {
             .frame(maxHeight: bottomSpacers ? 350 : .infinity)
         }
         .frame(maxHeight: .infinity, alignment: .top)
-        .background(Color.PrimaryBackground)
+        .liquidGlassBackground()
         .animation(.easeOut(duration: 0.2), value: showToast)
         .onChange(of: showToast) { newValue in
             if newValue {

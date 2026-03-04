@@ -62,6 +62,7 @@ struct HomeView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
+            LiquidGlassBackground()
             TabView(selection: $currentTab) {
                 LogView(topEdge: topEdge, bottomEdge: bottomEdge, launchSearch: launchSearch)
                     .ignoresSafeArea(.all)
@@ -208,10 +209,7 @@ struct AppLockView: View {
                 .foregroundColor(Color.PrimaryText)
                 .padding(.horizontal, 40)
                 .padding(.vertical, 15)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 13)
-                        .stroke(Color.Outline)
-                }
+                .glassRoundedRect(cornerRadius: 14, tint: Color.SecondaryBackground.opacity(0.4))
             }
 
             if appLockVM.enrollmentError {
@@ -223,6 +221,6 @@ struct AppLockView: View {
         }
         .padding(.horizontal, 30)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.PrimaryBackground)
+        .liquidGlassBackground()
     }
 }
