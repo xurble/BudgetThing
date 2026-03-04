@@ -183,7 +183,6 @@ extension Color {
 }
 
 public extension View {
-    @available(iOS 14.0, *)
     func colorPickerSheet(isPresented: Binding<Bool>, selection: Binding<Color>, supportsAlpha: Bool = true, title: String? = nil) -> some View {
         background(ColorPickerSheet(isPresented: isPresented, selection: selection, supportsAlpha: supportsAlpha, title: title))
     }
@@ -214,7 +213,6 @@ func blend(over color: Color, withAlpha alpha: CGFloat) -> Color {
     return Color(UIColor(red: red, green: green, blue: blue, alpha: 1))
 }
 
-@available(iOS 14.0, *)
 private struct ColorPickerSheet: UIViewRepresentable {
     @Binding var isPresented: Bool
     @Binding var selection: Color

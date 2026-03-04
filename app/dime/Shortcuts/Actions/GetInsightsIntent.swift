@@ -9,7 +9,6 @@ import AppIntents
 import Foundation
 import SwiftUI
 
-@available(iOS 16.4, *)
 struct GetInsightsIntent: AppIntent {
     static let title: LocalizedStringResource = "Get Insights"
 
@@ -102,7 +101,6 @@ enum ShortcutsInsightsTimeFrame: Int {
     case all = 5
 }
 
-@available(iOS 16, *)
 extension ShortcutsInsightsTimeFrame: AppEnum {
     static var typeDisplayRepresentation: TypeDisplayRepresentation {
         return TypeDisplayRepresentation(name: "Time Frame")
@@ -121,7 +119,6 @@ enum ShortcutsInsightsType: String {
     case net, income, spent
 }
 
-@available(iOS 16, *)
 extension ShortcutsInsightsType: AppEnum {
     static var typeDisplayRepresentation: TypeDisplayRepresentation {
         return TypeDisplayRepresentation(name: "Insights Type")

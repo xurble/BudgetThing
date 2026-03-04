@@ -497,15 +497,10 @@ struct TransactionView: View {
                                 if date < Date.now {
                                     Image(systemName: "calendar")
                                 } else {
-                                    if #available(iOS 17.0, *) {
-                                        Image(systemName: "rays")
-                                            .symbolEffect(
-                                                .variableColor.iterative.dimInactiveLayers.nonReversing,
-                                                options: .repeating, value: animateIcon)
-                                    } else {
-                                        Image(systemName: "slowmo")
-                                            .foregroundColor(Color.SubtitleText)
-                                    }
+                                    Image(systemName: "rays")
+                                        .symbolEffect(
+                                            .variableColor.iterative.dimInactiveLayers.nonReversing,
+                                            options: .repeating, value: animateIcon)
                                 }
                             }
                             .foregroundColor(Color.SubtitleText)
@@ -631,16 +626,11 @@ struct TransactionView: View {
     //                                    }
                                     } else {
                                         HStack(spacing: 5.5) {
-                                            if #available(iOS 17.0, *) {
-                                                Image(systemName: "circle.grid.2x2")
-                                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                                                    .symbolEffect(
-                                                        .bounce.up.byLayer, options: .repeating.speed(0.5),
-                                                        value: showCategoryPicker)
-                                            } else {
-                                                Image(systemName: "circle.grid.2x2")
-                                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                                            }
+                                            Image(systemName: "circle.grid.2x2")
+                                                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                                                .symbolEffect(
+                                                    .bounce.up.byLayer, options: .repeating.speed(0.5),
+                                                    value: showCategoryPicker)
 
                                             Text("Category")
                                                 .font(.system(.body, design: .rounded).weight(.semibold))
@@ -910,15 +900,10 @@ struct TransactionView: View {
             CategoryView(mode: .transaction, income: income)
         }
         .sheet(isPresented: $showPicker) {
-            if #available(iOS 16.0, *) {
-                CustomRecurringView(
-                    repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showPicker: $showPicker
-                )
-                .presentationDetents([.height(230)])
-            } else {
-                CustomRecurringView(
-                    repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showPicker: $showPicker)
-            }
+            CustomRecurringView(
+                repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showPicker: $showPicker
+            )
+            .presentationDetents([.height(230)])
         }
         .onChange(of: dynamicTypeSize) { _ in
             if income {

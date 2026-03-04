@@ -10,7 +10,6 @@ import Foundation
 import SwiftUI
 import WidgetKit
 
-@available(iOS 16, *)
 enum CustomError: Swift.Error, CustomLocalizedStringResourceConvertible {
     case notFound,
          coreDataSave,
@@ -472,7 +471,6 @@ class DataController: ObservableObject, @unchecked Sendable {
 //        return Array(Set(notes))
     }
 
-    @available(iOS 16, *)
     func findCategory(withId id: UUID) throws -> Category {
         let request: NSFetchRequest<Category> = Category.fetchRequest()
         request.fetchLimit = 1
@@ -494,7 +492,6 @@ class DataController: ObservableObject, @unchecked Sendable {
         return results(for: request)
     }
 
-    @available(iOS 16, *)
     func findBudget(withId id: UUID) throws -> Budget {
         let request: NSFetchRequest<Budget> = Budget.fetchRequest()
         request.fetchLimit = 1

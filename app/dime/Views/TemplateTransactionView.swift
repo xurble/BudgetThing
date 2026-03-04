@@ -422,17 +422,9 @@ struct TemplateTransactionView: View {
                             Button {
                                 submit()
                             } label: {
-                                Group {
-                                    if #available(iOS 17.0, *) {
-                                        Image(systemName: "checkmark.square.fill")
-                                            .font(.system(size: 30, weight: .medium, design: .rounded))
-                                            .symbolEffect(.bounce.up.byLayer, value: transactionValue != 0 && category != nil)
-//                                            .symbolEffectsRemoved()
-                                    } else {
-                                        Image(systemName: "checkmark.square.fill")
-                                            .font(.system(size: 30, weight: .medium, design: .rounded))
-                                    }
-                                }
+                                Image(systemName: "checkmark.square.fill")
+                                    .font(.system(size: 30, weight: .medium, design: .rounded))
+                                    .symbolEffect(.bounce.up.byLayer, value: transactionValue != 0 && category != nil)
                                 .frame(width: proxy.size.width * 0.3, height: proxy.size.height * 0.22)
                                 .foregroundColor(Color.LightIcon)
                                 .background(Color.DarkBackground, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -575,12 +567,8 @@ struct TemplateTransactionView: View {
             CategoryView(mode: .transaction, income: income)
         }
         .sheet(isPresented: $showPicker) {
-            if #available(iOS 16.0, *) {
-                CustomRecurringView(repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showPicker: $showPicker)
-                    .presentationDetents([.height(230)])
-            } else {
-                CustomRecurringView(repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showPicker: $showPicker)
-            }
+            CustomRecurringView(repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showPicker: $showPicker)
+                .presentationDetents([.height(230)])
         }
     }
 

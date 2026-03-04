@@ -12,13 +12,9 @@ struct NewExpenseWidget: Widget {
     let kind: String = "AddExpense"
 
     private var supportedFamilies: [WidgetFamily] {
-        if #available(iOSApplicationExtension 16, *) {
-            return [
-                .accessoryCircular
-            ]
-        } else {
-            return [WidgetFamily]()
-        }
+        [
+            .accessoryCircular
+        ]
     }
 
     var body: some WidgetConfiguration {
@@ -66,37 +62,20 @@ struct NewExpenseWidgetEntryView: View {
     }
 
     var body: some View {
-        if #available(iOS 17.0, *) {
-            ZStack {
-                AccessoryWidgetBackground()
+        ZStack {
+            AccessoryWidgetBackground()
 
-                Text("\(currencySymbol.count < 3 ? "+" : "")\(currencySymbol)")
-                    .font(.system(size: currencySymbol.count < 3 ? 13 : 11, weight: .bold, design: .rounded))
-                    .foregroundColor(Color.SecondaryBackground)
-                    .padding(.vertical, 2)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.white, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
-                    .padding(.horizontal, 9)
-            }
-            .widgetURL(URL(string: "budgetthing://newExpense"))
-            .containerBackground(for: .widget) {
-                AccessoryWidgetBackground()
-            }
-        } else {
-            ZStack {
-                Circle()
-                    .fill(Color.SecondaryBackground.opacity(0.5))
-
-                Text("\(currencySymbol.count < 3 ? "+" : "")\(currencySymbol)")
-                    .font(.system(size: currencySymbol.count < 3 ? 13 : 11, weight: .bold, design: .rounded))
-                    .foregroundColor(Color.SecondaryBackground)
-                    .padding(.vertical, 2)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.white, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
-                    .padding(.horizontal, 9)
-            }
-            .padding(0.5)
-            .widgetURL(URL(string: "budgetthing://newExpense"))
+            Text("\(currencySymbol.count < 3 ? "+" : "")\(currencySymbol)")
+                .font(.system(size: currencySymbol.count < 3 ? 13 : 11, weight: .bold, design: .rounded))
+                .foregroundColor(Color.SecondaryBackground)
+                .padding(.vertical, 2)
+                .frame(maxWidth: .infinity)
+                .background(Color.white, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+                .padding(.horizontal, 9)
+        }
+        .widgetURL(URL(string: "budgetthing://newExpense"))
+        .containerBackground(for: .widget) {
+            AccessoryWidgetBackground()
         }
     }
 }

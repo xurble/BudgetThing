@@ -9,7 +9,6 @@ import AppIntents
 import Foundation
 import SwiftUI
 
-@available(iOS 16.4, *)
 struct NewTransactionIntent: AppIntent {
     static let title: LocalizedStringResource = "New Transaction"
 
@@ -168,7 +167,6 @@ enum TransactionType: String {
     case income, expense
 }
 
-@available(iOS 16, *)
 extension TransactionType: AppEnum {
     static var typeDisplayRepresentation: TypeDisplayRepresentation {
         return TypeDisplayRepresentation(name: "Type")
@@ -186,7 +184,6 @@ enum RepeatType: String {
     case daily, weekly, monthly
 }
 
-@available(iOS 16, *)
 extension RepeatType: AppEnum {
     static var typeDisplayRepresentation: TypeDisplayRepresentation {
         return TypeDisplayRepresentation(name: "Frequency")

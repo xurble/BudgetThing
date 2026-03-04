@@ -22,16 +22,14 @@ struct TestView: View {
     @State var strength: Float = 2.0
 
     var body: some View {
-        if #available(iOS 17.0, *) {
-            TimelineView(.animation) { _ in
-                ShaderPlaygroundShowcase()
-                    .layerEffect(ShaderLibrary.chromatic_abberation_time(
-                        .float(self.time.timeIntervalSinceNow),
-                        .float(self.strength)
-                    ), maxSampleOffset: .zero)
-                    .animation(.linear(duration: 1), value: self.time)
-                    .animation(.linear(duration: 1), value: self.strength)
-            }
+        TimelineView(.animation) { _ in
+            ShaderPlaygroundShowcase()
+                .layerEffect(ShaderLibrary.chromatic_abberation_time(
+                    .float(self.time.timeIntervalSinceNow),
+                    .float(self.strength)
+                ), maxSampleOffset: .zero)
+                .animation(.linear(duration: 1), value: self.time)
+                .animation(.linear(duration: 1), value: self.strength)
         }
     }
 }

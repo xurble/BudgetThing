@@ -71,19 +71,12 @@ struct NumberPad: View {
                     Button {
                         submit()
                     } label: {
-                        Group {
-                            if #available(iOS 17.0, *) {
-                                Image(systemName: "checkmark.square.fill")
-                                    .font(.system(size: 30, weight: .medium, design: .rounded))
-                                    .symbolEffect(.bounce.up.byLayer, value: price != 0 && category != nil)
-                            } else {
-                                Image(systemName: "checkmark.square.fill")
-                                    .font(.system(size: 30, weight: .medium, design: .rounded))
-                            }
-                        }
-                        .frame(width: proxy.size.width * 0.3, height: proxy.size.height * 0.22)
-                        .foregroundColor(Color.LightIcon)
-                        .background(Color.DarkBackground, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        Image(systemName: "checkmark.square.fill")
+                            .font(.system(size: 30, weight: .medium, design: .rounded))
+                            .symbolEffect(.bounce.up.byLayer, value: price != 0 && category != nil)
+                            .frame(width: proxy.size.width * 0.3, height: proxy.size.height * 0.22)
+                            .foregroundColor(Color.LightIcon)
+                            .background(Color.DarkBackground, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                     }
                     .buttonStyle(NumPadButton())
                 }

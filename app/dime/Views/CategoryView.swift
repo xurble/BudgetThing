@@ -124,12 +124,8 @@ struct CategoryView: View {
             .padding(25)
         }
         .sheet(isPresented: $newCategory) {
-            if #available(iOS 16.0, *) {
-                NewCategoryAlert(income: $income, bottomSpacers: false)
-                    .presentationDetents([.height(270)])
-            } else {
-                NewCategoryAlert(income: $income, bottomSpacers: true)
-            }
+            NewCategoryAlert(income: $income, bottomSpacers: false)
+                .presentationDetents([.height(270)])
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .ignoresSafeArea(.keyboard, edges: .all)
@@ -403,8 +399,7 @@ struct CategoryListView: View {
             }
 
             VStack {
-                if #available(iOS 16.0, *) {
-                    List {
+                List {
                         Section(header: Text(sectionHeader).foregroundColor(Color.SubtitleText)) {
                             if categories.isEmpty {
                                 VStack(spacing: 10) {
@@ -490,86 +485,6 @@ struct CategoryListView: View {
                     .scrollContentBackground(.hidden)
                     .scrollIndicators(.hidden)
                     .environment(\.editMode, .constant(self.isEditing ? EditMode.active : EditMode.inactive))
-                } else {
-                    List {
-                        Section(header: Text("\(income ? "INCOME" : "EXPENSE") CATEGORIES").foregroundColor(Color.SubtitleText)) {
-                            if categories.isEmpty {
-                                VStack(spacing: 10) {
-                                    Image(systemName: "tray")
-                                        .font(.system(.largeTitle, design: .rounded).weight(.light))
-                                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                                        .font(.system(size: 37, weight: .light))
-                                        .foregroundColor(Color.SubtitleText)
-
-                                    Text("No \(income ? "income" : "expense") categories found,\nclick the 'New' button to add some.")
-                                        .font(.system(.body, design: .rounded).weight(.medium))
-                                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                                        .font(.system(size: 17, weight: .medium, design: .rounded))
-//                                        .italic()
-                                        .multilineTextAlignment(.center)
-                                        .foregroundColor(Color.SubtitleText)
-                                }
-                                .frame(maxWidth: .infinity, alignment: .center)
-                                .padding(.vertical, 37)
-                                .listRowBackground(Color.SettingsBackground)
-                            } else {
-                                ForEach(categories) { category in
-                                    HStack(spacing: 10) {
-                                        Text(category.wrappedEmoji)
-                                            .font(.system(.subheadline, design: .rounded))
-                                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                                            .font(.system(size: 15))
-                                        Text(category.wrappedName)
-                                            .font(.system(.body, design: .rounded))
-                                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                                            .font(.system(size: 18.5, weight: .regular, design: .rounded))
-                                            .lineLimit(1)
-                                            .foregroundColor(toDelete == category ? Color.AlertRed : Color.PrimaryText)
-
-                                        Spacer()
-
-                                        if !income {
-                                            RoundedRectangle(cornerRadius: 5, style: .continuous)
-                                                .fill(Color(hex: category.wrappedColour))
-                                                .frame(width: 20, height: 20)
-                                        }
-                                    }
-                                    .padding(.vertical, 5)
-                                    .listRowBackground(Color.SettingsBackground)
-                                    .listRowSeparatorTint(Color.Outline)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        toEdit = category
-                                    }
-                                    .swipeActions(edge: .trailing) {
-                                        Button {
-                                            toDelete = category
-                                        } label: {
-                                            Image(systemName: "trash.fill")
-                                        }
-                                        .tint(Color.AlertRed)
-                                    }
-                                    .swipeActions(edge: .leading) {
-                                        Button {
-                                            toEdit = category
-                                        } label: {
-                                            Image(systemName: "pencil")
-                                        }
-                                        .tint(Color("Yellow"))
-                                    }
-                                }
-                                .onMove(perform: moveItem)
-                            }
-
-//                                .onDelete(perform: deleteItem)
-                        }
-
-                        if showSuggestions {
-                            SuggestedCategoriesView(income: income)
-                        }
-                    }
-                    .environment(\.editMode, .constant(self.isEditing ? EditMode.active : EditMode.inactive))
-                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -672,12 +587,8 @@ struct CategoryListView: View {
         .sheet(item: $toEdit, onDismiss: {
             toEdit = nil
         }) { category in
-            if #available(iOS 16.0, *) {
-                EditCategoryAlert(toEdit: category, showRootToast: $showToast, rootToastTitle: $toastTitle, rootToastImage: $toastImage, positive: $positive, bottomSpacers: false)
-                    .presentationDetents([.height(270)])
-            } else {
-                EditCategoryAlert(toEdit: category, showRootToast: $showToast, rootToastTitle: $toastTitle, rootToastImage: $toastImage, positive: $positive, bottomSpacers: true)
-            }
+            EditCategoryAlert(toEdit: category, showRootToast: $showToast, rootToastTitle: $toastTitle, rootToastImage: $toastImage, positive: $positive, bottomSpacers: false)
+                .presentationDetents([.height(270)])
         }
         .onChange(of: showToast) { newValue in
             if newValue {

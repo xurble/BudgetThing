@@ -8,7 +8,6 @@
 import AppIntents
 import Foundation
 
-@available(iOS 16.4, *)
 struct DimeShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
