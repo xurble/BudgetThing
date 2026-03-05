@@ -182,7 +182,12 @@ struct LineGraph: View {
                 let translation = value.location.x
 
                 // Getting index...
-                let index = max(min(Int((translation / width).rounded() + 1), data.count - 1), 0)
+                guard width > 0, !data.isEmpty, !points.isEmpty else {
+                    return
+                }
+
+                let maxIndex = min(data.count, points.count) - 1
+                let index = max(min(Int((translation / width).rounded() + 1), maxIndex), 0)
 
                 currentPlot = data[index]
                 self.translation = translation
@@ -199,7 +204,7 @@ struct LineGraph: View {
             }))
         }
         .padding(.horizontal, 10)
-        .onChange(of: isDrag) { _ in
+        .onChange(of: isDrag) { 
             if !isDrag {
                 showPlot = false
             }
@@ -211,7 +216,7 @@ struct LineGraph: View {
                 }
             }
         }
-        .onChange(of: data) { _ in
+        .onChange(of: data) { 
 
             // MARK: ReAnimating When ever Plot Data Updates
 

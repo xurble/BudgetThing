@@ -234,7 +234,7 @@ struct NumberPadTextView: View {
     @Binding var isEditingDecimal: Bool
     @Binding var decimalValuesAssigned: AssignedDecimal
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currency?.identifier ?? "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }

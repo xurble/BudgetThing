@@ -203,7 +203,7 @@ struct CategoryListView: View {
 //                        .font(.system(size: 16, weight: .semibold, design: .rounded))
                         .foregroundColor(toastColor)
                 }
-                .padding(8)
+                .padding(10)
                 .background(toastColor.opacity(0.23), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
                 .transition(AnyTransition.opacity.combined(with: .move(edge: .top)))
                 .frame(maxWidth: 250)
@@ -490,7 +490,7 @@ struct CategoryListView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .liquidGlassBackground()
         .animation(.easeOut(duration: 0.2), value: showToast)
-        .onChange(of: toDelete) { _ in
+        .onChange(of: toDelete) { 
             if toDelete != nil {
                 deleteMode = true
             }
@@ -590,14 +590,14 @@ struct CategoryListView: View {
             EditCategoryAlert(toEdit: category, showRootToast: $showToast, rootToastTitle: $toastTitle, rootToastImage: $toastImage, positive: $positive, bottomSpacers: false)
                 .presentationDetents([.height(270)])
         }
-        .onChange(of: showToast) { newValue in
+        .onChange(of: showToast) { _, newValue in
             if newValue {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     showToast = false
                 }
             }
         }
-        .onChange(of: showSuggestions) { newValue in
+        .onChange(of: showSuggestions) { _, newValue in
             if !newValue {
                 toastTitle = "Suggestions Hidden"
                 toastImage = "eye.slash"
@@ -844,7 +844,7 @@ struct NewCategoryAlert: View {
                         Button {
                             showingColourPicker = true
                         } label: {
-                            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                            RoundedRectangle(cornerRadius: 11, style: .continuous)
                                 .fill(Color(hex: selectedColour))
                                 .padding(8)
                                 .background(Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
@@ -924,19 +924,19 @@ struct NewCategoryAlert: View {
         .frame(maxHeight: .infinity, alignment: .top)
         .liquidGlassBackground()
         .animation(.easeOut(duration: 0.2), value: showToast)
-        .onChange(of: expenseCategories.count) { _ in
+        .onChange(of: expenseCategories.count) { 
             if expenseCategories.count == 24 {
                 dismiss()
             }
         }
-        .onChange(of: showToast) { newValue in
+        .onChange(of: showToast) { _, newValue in
             if newValue {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     showToast = false
                 }
             }
         }
-        .onChange(of: customSelectedColor) { _ in
+        .onChange(of: customSelectedColor) { 
             selectedColour = customSelectedColor.toHex() ?? "#FFFFFF"
         }
         .colorPickerSheet(isPresented: $showNativePicker, selection: $customSelectedColor, supportsAlpha: false, title: "")
@@ -1263,7 +1263,7 @@ struct EditCategoryAlert: View {
                         Button {
                             showingColourPicker = true
                         } label: {
-                            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                            RoundedRectangle(cornerRadius: 11, style: .continuous)
                                 .fill(Color(hex: selectedColour))
                                 .padding(8)
                                 .background(Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
@@ -1324,7 +1324,7 @@ struct EditCategoryAlert: View {
         .frame(maxHeight: .infinity, alignment: .top)
         .liquidGlassBackground()
         .animation(.easeOut(duration: 0.2), value: showToast)
-        .onChange(of: showToast) { newValue in
+        .onChange(of: showToast) { _, newValue in
             if newValue {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     showToast = false
@@ -1336,17 +1336,17 @@ struct EditCategoryAlert: View {
         }) { category in
             DeleteCategoryAlert(toDelete: category, deleted: $deleteMode)
         }
-        .onChange(of: expenseCategories.count) { _ in
+        .onChange(of: expenseCategories.count) { 
             if expenseCategories.count == 24 {
                 dismiss()
             }
         }
-        .onChange(of: customSelectedColor) { _ in
+        .onChange(of: customSelectedColor) { 
             print("changed")
             selectedColour = customSelectedColor.toHex() ?? "#FFFFFF"
         }
         .colorPickerSheet(isPresented: $showNativePicker, selection: $customSelectedColor, supportsAlpha: false, title: "")
-        .onChange(of: deleteMode) { _ in
+        .onChange(of: deleteMode) { 
             dismiss()
         }
         .onAppear {
@@ -1610,7 +1610,7 @@ struct SuggestedCategoriesView: View {
                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 //                            .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(Color.SubtitleText)
-                            .padding(4)
+                            .padding(5)
                             .background(Color.SecondaryBackground, in: Circle())
                             .contentShape(Circle())
                     }
@@ -1806,12 +1806,12 @@ struct ColourPickerView: View {
 
     @State var testing = false
     let columns = [
-        GridItem(.fixed(40), spacing: 6),
-        GridItem(.fixed(40), spacing: 6),
-        GridItem(.fixed(40), spacing: 6),
-        GridItem(.fixed(40), spacing: 6),
-        GridItem(.fixed(40), spacing: 6),
-        GridItem(.fixed(40))
+        GridItem(.fixed(50), spacing: 8),
+        GridItem(.fixed(50), spacing: 8),
+        GridItem(.fixed(50), spacing: 8),
+        GridItem(.fixed(50), spacing: 8),
+        GridItem(.fixed(50), spacing: 8),
+        GridItem(.fixed(50))
     ]
 
     @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var colourScheme: Int = 0
@@ -1823,32 +1823,32 @@ struct ColourPickerView: View {
     }
 
     var body: some View {
-        LazyVGrid(columns: columns, spacing: 6) {
+        LazyVGrid(columns: columns, spacing: 8) {
             ForEach(Color.colorArray, id: \.self) { suggestedColor in
                 if suggestedColor == "#" {
                     ZStack {
-                        RoundedRectangle(cornerRadius: 9)
+                        RoundedRectangle(cornerRadius: 11)
                             .fill(AngularGradient(gradient: Gradient(colors: [.red, .yellow, .green, .blue, .purple, .pink]), center: .center))
 
-                        RoundedRectangle(cornerRadius: 6)
+                        RoundedRectangle(cornerRadius: 8)
                             .fill(darkMode ? Color("AlwaysDarkBackground") : Color("AlwaysLightBackground"))
-                            .padding(4)
+                            .padding(5)
 
-                        RoundedRectangle(cornerRadius: 3)
+                        RoundedRectangle(cornerRadius: 4)
                             .fill(customSelectedColor)
-                            .padding(8)
+                            .padding(10)
 
                         if customMode {
                             Image(systemName: "checkmark")
-                                .font(.system(size: 15, weight: .bold))
+                                .font(.system(size: 19, weight: .bold))
                                 .foregroundColor(customSelectedColor.luminance() > 0.5 ? Color.black : Color.white)
                         } else {
                             Image(systemName: "plus")
-                                .font(.system(size: 13, weight: .bold))
+                                .font(.system(size: 16, weight: .bold))
                                 .foregroundColor(Color.black)
                         }
                     }
-                    .frame(width: 40, height: 40, alignment: .center)
+                    .frame(width: 50, height: 50, alignment: .center)
                     .onTapGesture {
                         showMenu = false
                         showNativePicker = true
@@ -1856,7 +1856,7 @@ struct ColourPickerView: View {
                 } else {
                     RoundedRectangle(cornerRadius: 9, style: .continuous)
                         .fill(Color(hex: suggestedColor))
-                        .frame(height: 40)
+                        .frame(height: 50)
                         .opacity(selectedColours.contains(suggestedColor) ? 0.2 : 1)
                         .onTapGesture {
                             if !selectedColours.contains(suggestedColor) {
@@ -1870,17 +1870,17 @@ struct ColourPickerView: View {
                         .overlay {
                             if selectedColour == suggestedColor && !customMode {
                                 Image(systemName: "checkmark")
-                                    .font(.system(size: 15, weight: .bold))
+                                    .font(.system(size: 19, weight: .bold))
                                     .foregroundColor(Color.black)
                             }
                         }
                 }
             }
         }
-        .padding(6)
-        .frame(width: 282)
-        .background(RoundedRectangle(cornerRadius: 9).fill(darkMode ? Color("AlwaysDarkBackground") : Color("AlwaysLightBackground")).shadow(color: darkMode ? Color.clear : Color.gray.opacity(0.25), radius: 6))
-        .overlay(RoundedRectangle(cornerRadius: 9).stroke(darkMode ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3))
+        .padding(8)
+        .frame(width: 352)
+        .background(RoundedRectangle(cornerRadius: 11).fill(darkMode ? Color("AlwaysDarkBackground") : Color("AlwaysLightBackground")).shadow(color: darkMode ? Color.clear : Color.gray.opacity(0.25), radius: 6))
+        .overlay(RoundedRectangle(cornerRadius: 11).stroke(darkMode ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3))
     }
 
     init(selectedColor: Binding<String>, showMenu: Binding<Bool>, showNativePicker: Binding<Bool>, toEdit: Category? = nil) {

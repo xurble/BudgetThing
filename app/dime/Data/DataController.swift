@@ -128,18 +128,30 @@ class DataController: ObservableObject, @unchecked Sendable {
     }
 
     func save() {
-        if container.viewContext.hasChanges {
-            try? container.viewContext.save()
-            WidgetCenter.shared.reloadAllTimelines()
+        save(context: container.viewContext)
+    }
+
+    private func save(context: NSManagedObjectContext) {
+        if context.hasChanges {
+            try? context.save()
+            DispatchQueue.main.async {
+                WidgetCenter.shared.reloadAllTimelines()
+            }
         }
     }
 
-    func updateRecurringTransaction(transaction: Transaction) {
+    func updateRecurringTransaction(
+        transaction: Transaction,
+        context: NSManagedObjectContext? = nil,
+        shouldSave: Bool = true
+    ) {
+        let context = context ?? container.viewContext
+
         if transaction.nextTransactionDate < Calendar.current.startOfDay(for: Date.now) {
             var holdingDate = transaction.nextTransactionDate
 
             while holdingDate <= Calendar.current.startOfDay(for: Date.now) {
-                let newTransaction = Transaction(context: container.viewContext)
+                let newTransaction = Transaction(context: context)
                 newTransaction.note = transaction.wrappedNote
                 newTransaction.category = transaction.category
                 newTransaction.amount = transaction.wrappedAmount
@@ -178,10 +190,12 @@ class DataController: ObservableObject, @unchecked Sendable {
 
             transaction.recurringType = 0
 
-            save()
+            if shouldSave {
+                save(context: context)
+            }
 
         } else if Calendar.current.isDateInToday(transaction.nextTransactionDate) {
-            let newTransaction = Transaction(context: container.viewContext)
+            let newTransaction = Transaction(context: context)
             newTransaction.note = transaction.wrappedNote
             newTransaction.category = transaction.category
             newTransaction.amount = transaction.wrappedAmount
@@ -202,7 +216,9 @@ class DataController: ObservableObject, @unchecked Sendable {
 
             transaction.recurringType = 0
 
-            save()
+            if shouldSave {
+                save(context: context)
+            }
         }
     }
 
@@ -211,6 +227,27 @@ class DataController: ObservableObject, @unchecked Sendable {
 
         recurringTransactions.forEach { transaction in
             updateRecurringTransaction(transaction: transaction)
+        }
+    }
+
+    func updateRecurringTransactionsInBackground() {
+        container.performBackgroundTask { context in
+            let request = self.fetchRequestForRecurringTransactions()
+
+            do {
+                let recurringTransactions = try context.fetch(request)
+                recurringTransactions.forEach { transaction in
+                    self.updateRecurringTransaction(
+                        transaction: transaction,
+                        context: context,
+                        shouldSave: false
+                    )
+                }
+
+                self.save(context: context)
+            } catch {
+                print("Failed to update recurring transactions: \(error)")
+            }
         }
     }
 

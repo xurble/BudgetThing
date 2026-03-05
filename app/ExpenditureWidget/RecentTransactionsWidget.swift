@@ -127,7 +127,7 @@ struct ExpenditureWidgetEntryView: View {
     @Environment(\.widgetFamily) var widgetFamily
     let entry: Provider.Entry
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currency?.identifier ?? "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -458,7 +458,7 @@ struct RecentTransactionsDollarView: View {
     var net: Bool
     var bigger: Bool = false
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currency?.identifier ?? "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -473,10 +473,10 @@ struct RecentTransactionsDollarView: View {
 
     var body: some View {
         HStack(alignment: .lastTextBaseline, spacing: 1.3) {
-            Group {
+            HStack(alignment: .lastTextBaseline, spacing: 0) {
                 Text(net ? "\(amount < 0 ? "-" : (amount == 0 ? "" : "+"))\(currencySymbol)" : currencySymbol)
                     .font(.system(bigger ? .title3 : .subheadline, design: .rounded).weight(.medium))
-                    .foregroundColor(Color.SubtitleText) +
+                    .foregroundColor(Color.SubtitleText)
 
                 Text("\(actualAmount, specifier: showCents && actualAmount < 100  ? "%.2f" : "%.0f")")
                     .font(.system(bigger ? .title : .title3, design: .rounded).weight(.medium))

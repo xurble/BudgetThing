@@ -274,17 +274,17 @@ struct WidgetBudgetDollarView: View {
     var amount: Double
     var red: Bool
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currency?.identifier ?? "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
 
     var body: some View {
         HStack(alignment: .lastTextBaseline, spacing: 1.3) {
-            Group {
+            HStack(alignment: .lastTextBaseline, spacing: 0) {
                 Text(currencySymbol)
                     .font(.system(.subheadline, design: .rounded).weight(.medium))
-                    .foregroundColor(red ? Color("BudgetRed") : Color.SubtitleText) +
+                    .foregroundColor(red ? Color("BudgetRed") : Color.SubtitleText)
 
                 Text("\(amount, specifier: showCents && amount < 100  ? "%.2f" : "%.0f")")
                     .font(.system(.title3, design: .rounded).weight(.medium))

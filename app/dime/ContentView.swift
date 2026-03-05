@@ -24,7 +24,7 @@ struct ContentView: View {
     // converts category colors to hex codes
     @AppStorage("dataMigration2", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var dataMigration2: Bool = true
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currency?.identifier ?? "USD"
 
     @State var showIntro: Bool = false
     @State var showUpdate: Bool = false
@@ -88,7 +88,7 @@ struct ContentView: View {
                 defaults.set(true, forKey: "animated")
 
                 if NSUbiquitousKeyValueStore.default.string(forKey: "currency") == nil {
-                    NSUbiquitousKeyValueStore.default.set(Locale.current.currencyCode!, forKey: "currency")
+                    NSUbiquitousKeyValueStore.default.set(Locale.current.currency?.identifier ?? "USD", forKey: "currency")
                 } else {
                     currency = NSUbiquitousKeyValueStore.default.string(forKey: "currency")!
                 }
@@ -98,8 +98,8 @@ struct ContentView: View {
                 if let holdingCurrency = NSUbiquitousKeyValueStore.default.string(forKey: "currency") {
                     currency = holdingCurrency
                 } else {
-                    currency = Locale.current.currencyCode!
-                    NSUbiquitousKeyValueStore.default.set(Locale.current.currencyCode!, forKey: "currency")
+                    currency = Locale.current.currency?.identifier ?? "USD"
+                    NSUbiquitousKeyValueStore.default.set(Locale.current.currency?.identifier ?? "USD", forKey: "currency")
                 }
             }
 
@@ -147,7 +147,7 @@ struct ContentView: View {
                 }
             }
         }
-        .onChange(of: scenePhase) { newPhase in
+        .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .background || newPhase == .inactive {
                 if appLockVM.isAppLockEnabled {
                     appLockVM.isAppUnLocked = false

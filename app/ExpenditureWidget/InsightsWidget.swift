@@ -301,7 +301,7 @@ struct InsightsWidgetEntryView: View {
     let monthNames: [Int: String] = [1: "Jan", 4: "Apr", 7: "Jul", 10: "Oct"]
 
     @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var firstDayOfMonth: Int = 1
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currency?.identifier ?? "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -621,10 +621,10 @@ struct InsightsWidgetDollarView: View {
 
     var body: some View {
         HStack(alignment: .lastTextBaseline, spacing: 1.3) {
-            Group {
+            HStack(alignment: .lastTextBaseline, spacing: 0) {
                 Text(currencySymbol)
                     .font(.system(.subheadline, design: .rounded).weight(.medium))
-                    .foregroundColor(Color.SubtitleText) +
+                    .foregroundColor(Color.SubtitleText)
 
                 Text(dollarText)
                     .font(.system(.title3, design: .rounded).weight(.medium))

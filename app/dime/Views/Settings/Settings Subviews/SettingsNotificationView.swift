@@ -190,7 +190,7 @@ struct SettingsNotificationsView: View {
         }
         .padding(.horizontal, 15)
         .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
-        .onChange(of: option) { newValue in
+        .onChange(of: option) { _, newValue in
           UserDefaults(suiteName: "group.farm.poplar.budgetthing")!.set(
             option, forKey: "notificationOption")
 
@@ -205,7 +205,7 @@ struct SettingsNotificationsView: View {
 
           newNotification()
         }
-        .onChange(of: customTime) { _ in
+        .onChange(of: customTime) { 
           let components = Calendar.current.dateComponents([.hour, .minute], from: customTime)
 
           UserDefaults(suiteName: "group.farm.poplar.budgetthing")!.set(

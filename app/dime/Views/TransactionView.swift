@@ -47,7 +47,7 @@ struct TransactionView: View {
     @State var showCategoryPicker = false
     @State var showCategorySheet = false
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currency?.identifier ?? "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -828,7 +828,7 @@ struct TransactionView: View {
                         .padding(.vertical, 8)
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 13))
                         .padding(17)
-                        .onChange(of: dateString) { _ in
+                        .onChange(of: dateString) { 
 
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                                 showingDatePicker = false
@@ -854,18 +854,18 @@ struct TransactionView: View {
         .frame(maxHeight: .infinity)
         .liquidGlassBackground()
         .edgesIgnoringSafeArea(.all)
-        .onChange(of: showToast) { newValue in
+        .onChange(of: showToast) { _, newValue in
             if newValue {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     showToast = false
                 }
             }
         }
-        .onChange(of: income) { _ in
+        .onChange(of: income) { 
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             category = nil
         }
-        .onChange(of: isDragging) { _ in
+        .onChange(of: isDragging) { 
             if !isDragging {
                 if income {
                     withAnimation(.easeInOut(duration: 0.3)) {
@@ -905,7 +905,7 @@ struct TransactionView: View {
             )
             .presentationDetents([.height(230)])
         }
-        .onChange(of: dynamicTypeSize) { _ in
+        .onChange(of: dynamicTypeSize) { 
             if income {
                 swipingOffset = capsuleWidth
             }
@@ -1432,7 +1432,7 @@ struct NoteView: View {
             RoundedRectangle(cornerRadius: 11.5, style: .continuous)
                 .stroke(Color.Outline, lineWidth: 1.5)
         )
-        .onChange(of: textFocused) { newValue in
+        .onChange(of: textFocused) { _, newValue in
             focused = newValue
         }
     }
@@ -1477,21 +1477,21 @@ struct RecurringPickerView: View {
             ForEach(stringArray, id: \.self) { string in
                 HStack {
                     Text(LocalizedStringKey(string))
-                        .font(.system(.body, design: .rounded).weight(.medium))
+                        .font(.system(.title3, design: .rounded).weight(.medium))
                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         .lineLimit(1)
                     Spacer()
 
                     if repeatType == (stringArray.firstIndex(of: string) ?? 0) && repeatCoefficient == 1 {
                         Image(systemName: "checkmark")
-                            .font(.system(.footnote, design: .rounded).weight(.medium))
+                            .font(.system(.body, design: .rounded).weight(.medium))
                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         //                            .font(.system(size: 14, weight: .medium))
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 //                .font(.system(size: 18, weight: .medium, design: .rounded))
-                .padding(5)
+                .padding(6)
                 .background {
                     if repeatType == (stringArray.firstIndex(of: string) ?? 0) && repeatCoefficient == 1 {
                         RoundedRectangle(cornerRadius: 6)
@@ -1536,17 +1536,17 @@ struct RecurringPickerView: View {
 
                 if repeatCoefficient > 1 {
                     Image(systemName: "checkmark")
-                        .font(.system(.footnote, design: .rounded).weight(.medium))
+                        .font(.system(.body, design: .rounded).weight(.medium))
                         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     //                        .font(.system(size: 14, weight: .medium))
                 }
             }
             .lineLimit(1)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .font(.system(.body, design: .rounded).weight(.medium))
+            .font(.system(.title3, design: .rounded).weight(.medium))
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             //            .font(.system(size: 18, weight: .medium, design: .rounded))
-            .padding(5)
+            .padding(6)
             .background {
                 if repeatCoefficient > 1 {
                     RoundedRectangle(cornerRadius: 6)
@@ -1571,7 +1571,7 @@ struct RecurringPickerView: View {
                     showPicker = true
                 }
             }
-            .onChange(of: showPicker) { newValue in
+            .onChange(of: showPicker) { _, newValue in
                 // holdingType != repeatType || holdingCoefficient != repeatCoefficient
                 if !newValue {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
@@ -1581,15 +1581,15 @@ struct RecurringPickerView: View {
             }
         }
         .foregroundColor(darkMode ? Color("AlwaysLightBackground") : Color("AlwaysDarkBackground"))
-        .padding(4)
-        .frame(width: 150)
+        .padding(5)
+        .frame(width: 188)
         .background(
-            RoundedRectangle(cornerRadius: 9).fill(
+            RoundedRectangle(cornerRadius: 11).fill(
                 darkMode ? Color("AlwaysDarkBackground") : Color("AlwaysLightBackground")
             ).shadow(color: darkMode ? Color.clear : Color.gray.opacity(0.25), radius: 6)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 9).stroke(
+            RoundedRectangle(cornerRadius: 11).stroke(
                 darkMode ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3))
     }
 }

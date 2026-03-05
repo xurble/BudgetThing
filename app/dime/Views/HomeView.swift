@@ -97,14 +97,16 @@ struct HomeView: View {
         ZStack(alignment: .bottom) {
             LiquidGlassBackground()
             TabView(selection: $currentTab) {
-                LogView(topEdge: topEdge, bottomEdge: bottomEdge, launchSearch: launchSearch)
-                    .fabBarSafeAreaPadding()
-                    .toolbarVisibility(tabBarVisibility, for: .tabBar)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .tag(AppTab.log)
-                    .tabItem {
-                        Label("Log", image: "Log")
-                    }
+                NavigationStack {
+                    LogView(topEdge: topEdge, bottomEdge: bottomEdge, launchSearch: launchSearch)
+                }
+                .fabBarSafeAreaPadding()
+                .toolbarVisibility(tabBarVisibility, for: .tabBar)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .tag(AppTab.log)
+                .tabItem {
+                    Label("Log", image: "Log")
+                }
 
                 InsightsView()
                     .fabBarSafeAreaPadding()
@@ -188,7 +190,7 @@ struct HomeView: View {
             dataController.save()
             transactionManager.toDelete = nil
         })
-        .onChange(of: transactionManager.showPopup) { newValue in
+        .onChange(of: transactionManager.showPopup) { _, newValue in
             withAnimation {
                 showPopup = newValue
             }
@@ -237,7 +239,7 @@ struct HomeView: View {
                 currentTab = .budget
             }
         }
-        .onChange(of: launchAdd) { _ in
+        .onChange(of: launchAdd) { 
             presentAddTransaction()
         }
         .onOpenURL { url in

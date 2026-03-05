@@ -26,7 +26,7 @@ struct LogView: View {
 
     var topEdge: CGFloat
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currency?.identifier ?? "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -45,6 +45,7 @@ struct LogView: View {
     // show filter menu
     @State var showFilter = false
     @State var filter = FilterType.all
+    @State private var showInsights = false
 
     // filters
     @State var categoryFilter: Category?
@@ -64,8 +65,6 @@ struct LogView: View {
 
 //    @State var pullStatus: PullToReach = .none
 //    @State var released: PullToReach = .none
-
-    @State var progress = 0.0
 
     var body: some View {
         if transactions.isEmpty {
@@ -95,123 +94,75 @@ struct LogView: View {
 
         } else {
             VStack(spacing: 0) {
-                VStack(spacing: 18) {
-                    HStack {
-                        Button {
-                            searchMode = true
-                        } label: {
-                            Image(systemName: "magnifyingglass")
-//                                .font(.system(size: 23, weight: .regular))
-                                .font(.system(.title2, design: .rounded).weight(.regular))
-                                .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                                .foregroundColor(Color.DarkIcon)
-                                .padding(5)
-                                .contentShape(Rectangle())
-                                .background {
-                                    RoundedRectangle(cornerRadius: 7)
-                                        .fill(Color.SecondaryBackground)
-                                        .scaleEffect(progress == 1 ? 1.5 : 1.0)
-                                        .opacity(progress)
-                                }
-                        }
-                        .accessibilityLabel("Search")
-
-                        Spacer()
-
-                        switch filter {
-                        case .all:
+                if filter != .all {
+                    VStack(spacing: 18) {
+                        HStack {
+                            Spacer()
+                            switch filter {
+                            case .all:
 //                            Text(navBarText)
 //                            .font(.system(size: 16, weight: .semibold, design: .rounded))
 //                            .opacity(0)
+                                EmptyView()
+                            case .category:
+                                filterTagView(text: "filter-tag-category")
+                            case .day:
+                                filterTagView(text: "filter-tag-day")
+                            case .week:
+                                filterTagView(text: "filter-tag-week")
+                            case .month:
+                                filterTagView(text: "filter-tag-month")
+                            case .recurring:
+                                filterTagView(text: "filter-tag-recurring")
+                            case .type:
+                                filterTagView(text: "filter-tag-type")
+                            case .upcoming:
+                                filterTagView(text: "filter-tag-upcoming")
+                            }
+
+                            Spacer()
+                        }
+
+                        switch filter {
+                        case .all:
                             EmptyView()
                         case .category:
-                            filterTagView(text: "filter-tag-category")
+                            CategoryStepperView(categoryFilter: $categoryFilter)
                         case .day:
-                            filterTagView(text: "filter-tag-day")
+                            DateStepperView(date: $dateFilter)
                         case .week:
-                            filterTagView(text: "filter-tag-week")
+                            WeekStepperView(showingDate: $weekFilter)
                         case .month:
-                            filterTagView(text: "filter-tag-month")
+                            MonthStepperView(showingDate: $monthFilter)
                         case .recurring:
-                            filterTagView(text: "filter-tag-recurring")
+                            EmptyView()
                         case .type:
-                            filterTagView(text: "filter-tag-type")
+                            IncomeFilterToggleView(income: $income)
                         case .upcoming:
-                            filterTagView(text: "filter-tag-upcoming")
-                        }
-
-                        Spacer()
-
-                        Button {
-                            showFilter = true
-                        } label: {
-                            Image(systemName: filter == .all ? "triangle" : "triangle.tophalf.filled")
-                                .font(.system(.title2, design: .rounded).weight(.regular))
-                                .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                                .foregroundColor(Color.DarkIcon)
-                                .rotationEffect(Angle(degrees: 180))
-                                .padding(5)
-                                .contentShape(Rectangle())
-                                .background {
-                                    if showFilter {
-                                        RoundedRectangle(cornerRadius: 7)
-                                            .fill(Color.SecondaryBackground)
-                                    }
-//                                    if pullStatus == .filter || showFilter {
-//                                        RoundedRectangle(cornerRadius: 7)
-//                                            .fill(Color.SecondaryBackground)
-//                                            .scaleEffect(released == .filter ? 1.2 : 1.0)
-//                                            .opacity(released  == .filter ? 0.5 : 1.0)
-//                                    }
-                                }
-                        }
-                        .accessibilityLabel("Filter")
-                        .popover(present: $showFilter, attributes: {
-                            $0.position = .absolute(
-                                originAnchor: .bottomRight,
-                                popoverAnchor: .topRight
-                            )
-                            $0.rubberBandingMode = .none
-                            $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
-                            $0.presentation.animation = .easeInOut(duration: 0.2)
-                            $0.dismissal.animation = .easeInOut(duration: 0.3)
-                        }) {
-                            FilterPickerView(filterType: $filter, showMenu: $showFilter)
+                            EmptyView()
                         }
                     }
-
-                    switch filter {
-                    case .all:
-                        EmptyView()
-                    case .category:
-                        CategoryStepperView(categoryFilter: $categoryFilter)
-                    case .day:
-                        DateStepperView(date: $dateFilter)
-                    case .week:
-                        WeekStepperView(showingDate: $weekFilter)
-                    case .month:
-                        MonthStepperView(showingDate: $monthFilter)
-                    case .recurring:
-                        EmptyView()
-                    case .type:
-                        IncomeFilterToggleView(income: $income)
-                    case .upcoming:
-                        EmptyView()
-                    }
+                    .padding(.horizontal, 25)
                 }
-                .padding(.horizontal, 25)
-                .frame(height: (filter == .all || filter == .recurring || filter == .upcoming) ? 50 : 110, alignment: .top)
-                .padding(.top, topEdge + 10)
 
                 ScrollView(showsIndicators: false) {
-                    if filter == .all {
-                        LogInsightsView(navBarText: $navBarText, showCents: showCents, currencySymbol: currencySymbol)
-                    }
+                    VStack(spacing: 0) {
+                        Color.clear
+                            .frame(height: 110)
 
-                    TransactionsList(filter: filter, category: categoryFilter, date: dateFilter, week: weekFilter, month: monthFilter, income: income)
-                        .zIndex(0)
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, bottomEdge)
+                        if filter == .all {
+                            if showInsights {
+                                LogInsightsView(navBarText: $navBarText, showCents: showCents, currencySymbol: currencySymbol)
+                            } else {
+                                Color.clear.frame(height: 170)
+                            }
+                        }
+
+                        TransactionsList(filter: filter, category: categoryFilter, date: dateFilter, week: weekFilter, month: monthFilter, income: income)
+                            .zIndex(0)
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, bottomEdge)
+                    }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -263,12 +214,59 @@ struct LogView: View {
 //            .onAppear(perform: scrollDelegate.addGesture)
 //            .onDisappear(perform: scrollDelegate.removeGesture)
             .liquidGlassBackground()
+            .toolbarBackground(.clear, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    HStack(spacing: 12) {
+                        Button {
+                            searchMode = true
+                        } label: {
+                            Image(systemName: "magnifyingglass")
+                                .symbolRenderingMode(.hierarchical)
+                                .foregroundStyle(Color.PrimaryText)
+                                .scaleEffect(1.3)
+                        }
+                        .accessibilityLabel("Search")
+                        .padding(6)
+                        .contentShape(Rectangle())
+
+                        Button {
+                            showFilter = true
+                        } label: {
+                            Image(systemName: "line.3.horizontal.decrease.circle")
+                                .symbolRenderingMode(.hierarchical)
+                                .foregroundStyle(Color.PrimaryText)
+                                .scaleEffect(1.3)
+                        }
+                        .padding(6)
+                        .contentShape(Rectangle())
+                        .accessibilityLabel("Filter")
+                        .popover(present: $showFilter, attributes: {
+                            $0.position = .absolute(
+                                originAnchor: .bottomRight,
+                                popoverAnchor: .topRight
+                            )
+                            $0.rubberBandingMode = .none
+                            $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
+                            $0.presentation.animation = .easeInOut(duration: 0.2)
+                            $0.dismissal.animation = .easeInOut(duration: 0.3)
+                        }) {
+                            FilterPickerView(filterType: $filter, showMenu: $showFilter)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.vertical, 6)
+                    .padding(.horizontal, 10)
+                    .glassCapsule()
+                }
+                .sharedBackgroundVisibility(.hidden)
+            }
             .fullScreenCover(isPresented: $searchMode) {
                 SearchView()
             }
-            .onChange(of: syncMonitor.syncStateSummary) { newState in
+            .onChange(of: syncMonitor.syncStateSummary) { _, newState in
                 if newState == .succeeded && !updatedRecurring {
-                    dataController.updateRecurringTransactions()
+                    dataController.updateRecurringTransactionsInBackground()
                     updatedRecurring = true
 
                     DispatchQueue.main.asyncAfter(deadline: .now() + 60) {
@@ -278,32 +276,36 @@ struct LogView: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
                 if syncMonitor.syncStateSummary == .succeeded && !updatedRecurring {
-                    dataController.updateRecurringTransactions()
+                    dataController.updateRecurringTransactionsInBackground()
                     updatedRecurring = true
 
                     DispatchQueue.main.asyncAfter(deadline: .now() + 60) {
                         updatedRecurring = false
                     }
                 } else if !NSUbiquitousKeyValueStore.default.bool(forKey: "icloud_sync") {
-                    dataController.updateRecurringTransactions()
+                    dataController.updateRecurringTransactionsInBackground()
                 }
             }
-            .onChange(of: launchSearch) { _ in
+            .onChange(of: launchSearch) { 
                 searchMode = true
             }
             .onAppear {
                 if !NSUbiquitousKeyValueStore.default.bool(forKey: "icloud_sync") {
-                    dataController.updateRecurringTransactions()
+                    dataController.updateRecurringTransactionsInBackground()
                 }
+            }
+            .task {
+                await Task.yield()
+                showInsights = true
             }
 //            .animation(.spring(duration: 0.5), value: released)
 //            .animation(.spring(response: 0.4, dampingFraction: 0.6), value: pullStatus)
-//            .onChange(of: pullStatus) { newValue in
+//            .onChange(of: pullStatus) { _, newValue in
 //                if newValue != .none && released == .none {
 //                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
 //                }
 //            }
-//            .onChange(of: released) { _ in
+//            .onChange(of: released) { 
 //                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
 //                    released = .none
 //                }
@@ -381,10 +383,10 @@ struct NumberView: @preconcurrency AnimatableModifier {
 
     func body(content _: Content) -> some View {
         HStack(alignment: .lastTextBaseline, spacing: 2) {
-            Group {
+            HStack(alignment: .lastTextBaseline, spacing: 0) {
                 Text(netTotal ? (positive ? "+\(currencySymbol)" : "-\(currencySymbol)") : currencySymbol)
                     .font(.system(.largeTitle, design: .rounded))
-                    .foregroundColor(Color.SubtitleText) +
+                    .foregroundColor(Color.SubtitleText)
 
                 Text("\(number, specifier: showCents  ? "%.2f" : "%.0f")")
                     .font(.system(size: fontSize, weight: .regular, design: .rounded))
@@ -774,21 +776,21 @@ struct TimePickerView: View {
             ForEach(timeframes.indices, id: \.self) { index in
                 HStack {
                     Text(LocalizedStringKey(timeframes[index]))
-                        .font(.system(.body, design: .rounded).weight(.medium))
+                        .font(.system(.title3, design: .rounded).weight(.medium))
                         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
 
                     Spacer()
 
                     if holdingTimeframe == index + 1 {
                         Image(systemName: "checkmark")
-                            .font(.system(.footnote, design: .rounded).weight(.medium))
+                            .font(.system(.body, design: .rounded).weight(.medium))
                             .dynamicTypeSize(...DynamicTypeSize.xxLarge)
 //                            .font(.system(size: 14, weight: .medium))
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 //                .font(.system(size: 18, weight: .medium, design: .rounded))
-                .padding(5)
+                .padding(6)
                 .background {
                     if holdingTimeframe == index + 1 {
                         RoundedRectangle(cornerRadius: 6)
@@ -816,10 +818,10 @@ struct TimePickerView: View {
             }
         }
         .foregroundColor(darkMode ? Color("AlwaysLightBackground") : Color("AlwaysDarkBackground"))
-        .padding(4)
-        .frame(width: dynamicTypeSize > .xxLarge ? 185 : 160)
-        .background(RoundedRectangle(cornerRadius: 9).fill(darkMode ? Color("AlwaysDarkBackground") : Color("AlwaysLightBackground")).shadow(color: darkMode ? Color.clear : Color.gray.opacity(0.25), radius: 6))
-        .overlay(RoundedRectangle(cornerRadius: 9).stroke(darkMode ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3))
+        .padding(5)
+        .frame(width: dynamicTypeSize > .xxLarge ? 231 : 200)
+        .background(RoundedRectangle(cornerRadius: 11).fill(darkMode ? Color("AlwaysDarkBackground") : Color("AlwaysLightBackground")).shadow(color: darkMode ? Color.clear : Color.gray.opacity(0.25), radius: 6))
+        .overlay(RoundedRectangle(cornerRadius: 11).stroke(darkMode ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3))
         .onAppear {
             holdingTimeframe = timeframe
         }
@@ -847,25 +849,25 @@ struct FilterPickerView: View {
                 HStack {
                     Image(systemName: FilterType.imageDictionary[filter] ?? "")
 //                        .font(.system(size: 16))
-                        .font(.system(.callout, design: .rounded).weight(.regular))
+                        .font(.system(.title3, design: .rounded).weight(.regular))
                         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                        .frame(width: 20)
+                        .frame(width: 25)
                     Text(LocalizedStringKey(filter.rawValue))
 //                        .font(.system(size: 18, weight: .medium, design: .rounded))
-                        .font(.system(.body, design: .rounded).weight(.medium))
+                        .font(.system(.title3, design: .rounded).weight(.medium))
                         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
                         .lineLimit(1)
                     Spacer()
 
                     if filterType == filter {
                         Image(systemName: "checkmark")
-                            .font(.system(.footnote, design: .rounded).weight(.medium))
+                            .font(.system(.body, design: .rounded).weight(.medium))
                             .dynamicTypeSize(...DynamicTypeSize.xxLarge)
 //                            .font(.system(size: 14, weight: .medium))
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(5)
+                .padding(6)
                 .background {
                     if filterType == filter {
                         RoundedRectangle(cornerRadius: 6)
@@ -891,9 +893,9 @@ struct FilterPickerView: View {
             }
         }
         .foregroundColor(darkMode ? Color("AlwaysLightBackground") : Color("AlwaysDarkBackground"))
-        .padding(4)
-        .frame(width: dynamicTypeSize > .xLarge ? 220 : 190)
-        .background(RoundedRectangle(cornerRadius: 9).fill(darkMode ? Color("AlwaysDarkBackground") : Color("AlwaysLightBackground")).shadow(color: darkMode ? Color.clear : Color.gray.opacity(0.25), radius: 6))
+        .padding(5)
+        .frame(width: dynamicTypeSize > .xLarge ? 275 : 238)
+        .glassRoundedRect(cornerRadius: 11)
         .overlay(RoundedRectangle(cornerRadius: 9).stroke(darkMode ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3))
     }
 }
@@ -951,7 +953,7 @@ struct ListView: View {
 
     @AppStorage("showCents", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var showCents: Bool = true
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currency?.identifier ?? "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -983,7 +985,7 @@ struct ListView: View {
 //                        .font(.system(size: 14, weight: .semibold, design: .rounded))
                         .foregroundColor(Color.SubtitleText)
                         .accessibilityElement(children: .ignore)
-                        .accessibilityLabel("\(currencySymbol)\(String(format: "%.2f", filtered.string)) was spent \(dateConverterAccessibilityLabel(date: day.id ?? Date.now))")
+                        .accessibilityLabel("\(currencySymbol)\(filtered.string) was spent \(dateConverterAccessibilityLabel(date: day.id ?? Date.now))")
 
                         Line()
                             .stroke(Color.Outline, style: StrokeStyle(lineWidth: 1.3, lineCap: .round))
@@ -1088,7 +1090,7 @@ struct FutureListView: View {
 
     @AppStorage("showCents", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var showCents: Bool = true
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currency?.identifier ?? "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -1196,6 +1198,7 @@ struct SingleTransactionView: View {
 
     @State private var offset: CGFloat = 0
     @State private var deleted: Bool = false
+    @State private var isHorizontalSwipe = false
     var deletePopup: Bool {
         return abs(offset) > UIScreen.main.bounds.width * 0.2
     }
@@ -1335,30 +1338,36 @@ struct SingleTransactionView: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("\(transaction.wrappedNote), \(currencySymbol)\(String(format: "%.2f", transaction.wrappedAmount)), Transaction Category: \(transaction.category?.wrappedName ?? "Unknown"), Transaction made at \(timeConverterAccessibilityLabel(date: transaction.wrappedDate))")
         }
-        .onChange(of: deletePopup) { _ in
+        .onChange(of: deletePopup) { 
             if deletePopup {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
             }
         }
-        .onChange(of: deleteConfirm) { _ in
+        .onChange(of: deleteConfirm) { 
             if deleteConfirm {
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             }
         }
         .animation(.easeInOut, value: deletePopup)
         .simultaneousGesture(
-            DragGesture()
-                .updating($isDragging, body: { _, state, _ in
-                    state = true
+            DragGesture(minimumDistance: 10)
+                .updating($isDragging, body: { value, state, _ in
+                    if abs(value.translation.width) > abs(value.translation.height) {
+                        state = true
+                    }
                 })
                 .onChanged { value in
+                    guard abs(value.translation.width) > abs(value.translation.height) else { return }
+
                     if value.translation.width < 0 {
                         withAnimation {
                             offset = value.translation.width
                         }
                     }
                 }
-                .onEnded { _ in
+                .onEnded { value in
+                    guard abs(value.translation.width) > abs(value.translation.height) else { return }
+
                     if deleteConfirm {
                         deleted = true
                         withAnimation(.easeInOut(duration: 0.3)) {
@@ -1403,14 +1412,14 @@ struct SingleTransactionView: View {
                     }
                 }
         )
-        .onChange(of: isDragging) { _ in
+        .onChange(of: isDragging) { 
             if !isDragging && !deleted {
                 withAnimation(.easeInOut(duration: 0.3)) {
                     offset = 0
                 }
             }
         }
-        .onChange(of: transactionManager.toDelete) { newValue in
+        .onChange(of: transactionManager.toDelete) { _, newValue in
             if newValue == nil {
                 deleted = false
                 offset = 0
@@ -1697,7 +1706,7 @@ struct FilteredDateView: View {
 
     var date: Date
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currency?.identifier ?? "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -1898,7 +1907,7 @@ struct CategoryStepperView: View {
                 categoryFilter = categories[0]
             }
         }
-        .onChange(of: income) { _ in
+        .onChange(of: income) { 
             if categories.isEmpty {
                 categoryFilter = nil
             } else {

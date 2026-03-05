@@ -126,7 +126,7 @@ struct HorizontalPieChartView: View {
     @FetchRequest private var allCategories: FetchedResults<Category>
     @FetchRequest private var transactions: FetchedResults<Transaction>
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currency?.identifier ?? "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -453,7 +453,7 @@ struct FilteredCategoryInsightsView: View {
 struct FilteredDateInsightsView: View {
     @FetchRequest private var transactions: FetchedResults<Transaction>
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currency?.identifier ?? "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -599,7 +599,7 @@ struct SingleGraphView: View {
     @State var selectedDateAmount: Double = 0
 
     var currencySymbol: String
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currency?.identifier ?? "USD"
     var showCents: Bool
 
     @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var firstDayOfMonth: Int = 1
@@ -922,7 +922,7 @@ struct WeekGraphView: View {
         SortDescriptor(\.day)
     ]) private var transactions: FetchedResults<Transaction>
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currency?.identifier ?? "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -1097,12 +1097,12 @@ struct WeekGraphView: View {
                             }
                         }
                 )
-                .onChange(of: changeTime) { _ in
+                .onChange(of: changeTime) { 
                     if changeTime {
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     }
                 }
-                .onChange(of: isDragging) { _ in
+                .onChange(of: isDragging) { 
                     if !isDragging && !changeDate {
                         withAnimation(.easeInOut(duration: 0.3)) {
                             offset = 0
@@ -1110,16 +1110,16 @@ struct WeekGraphView: View {
                     }
                 }
                 .animation(.easeInOut, value: changeTime)
-                .onChange(of: showingWeek) { _ in
+                .onChange(of: showingWeek) { 
                     selectedDate = nil
                     categoryFilterMode = false
                     refreshID1 = UUID()
                 }
-                .onChange(of: income) { _ in
+                .onChange(of: income) { 
                     selectedDate = nil
                     categoryFilterMode = false
                 }
-                .onChange(of: incomeFiltering) { _ in
+                .onChange(of: incomeFiltering) { 
                     selectedDate = nil
                     categoryFilterMode = false
                 }
@@ -1194,7 +1194,7 @@ struct AverageLineView: View {
 //                }
 //            }
 //        }
-//        .onChange(of: showLine) { newValue in
+//        .onChange(of: showLine) { _, newValue in
 //            if newValue {
 //                DispatchQueue.main.asyncAfter(deadline: .now()) {
 //                    if !animated {
@@ -1205,7 +1205,7 @@ struct AverageLineView: View {
 //                }
 //            }
 //        }
-//        .onChange(of: calculatedOffset) { newValue in
+//        .onChange(of: calculatedOffset) { _, newValue in
 //            print(calculatedOffset)
 //            if newValue != 0 {
 //                if showLine {
@@ -1307,7 +1307,7 @@ struct SingleWeekBarGraphView: View {
                 .id(refreshID)
 
         }
-        .onChange(of: selectedDate) { _ in
+        .onChange(of: selectedDate) { 
             selectedDateAmount = dayDictionary[selectedDate ?? Date.now] ?? 0.0
             refreshID = UUID()
         }
@@ -1348,7 +1348,7 @@ struct MonthGraphView: View {
 
     @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var firstDayOfMonth: Int = 1
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currency?.identifier ?? "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -1518,12 +1518,12 @@ struct MonthGraphView: View {
                             }
                         }
                 )
-                .onChange(of: changeTime) { _ in
+                .onChange(of: changeTime) { 
                     if changeTime {
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     }
                 }
-                .onChange(of: isDragging) { _ in
+                .onChange(of: isDragging) { 
                     if !isDragging && !changeDate {
                         withAnimation(.easeInOut(duration: 0.3)) {
                             offset = 0
@@ -1531,16 +1531,16 @@ struct MonthGraphView: View {
                     }
                 }
                 .animation(.easeInOut, value: changeTime)
-                .onChange(of: showingMonth) { _ in
+                .onChange(of: showingMonth) { 
                     selectedDate = nil
                     categoryFilterMode = false
                     refreshID1 = UUID()
                 }
-                .onChange(of: income) { _ in
+                .onChange(of: income) { 
                     selectedDate = nil
                     categoryFilterMode = false
                 }
-                .onChange(of: incomeFiltering) { _ in
+                .onChange(of: incomeFiltering) { 
                     selectedDate = nil
                     categoryFilterMode = false
                 }
@@ -1699,7 +1699,7 @@ struct SingleMonthBarGraphView: View {
                 .opacity(actualDays <= 1 ? 0 : 1)
 
         }
-        .onChange(of: selectedDate) { _ in
+        .onChange(of: selectedDate) { 
             selectedDateAmount = dayDictionary[selectedDate ?? Date.now] ?? 0.0
         }
     }
@@ -1729,7 +1729,7 @@ struct YearGraphView: View {
         SortDescriptor(\.day)
     ]) private var transactions: FetchedResults<Transaction>
 
-    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currencyCode!
+    @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currency?.identifier ?? "USD"
     var currencySymbol: String {
         return Locale.current.localizedCurrencySymbol(forCurrencyCode: currency)!
     }
@@ -1897,12 +1897,12 @@ struct YearGraphView: View {
                             }
                         }
                 )
-                .onChange(of: changeTime) { _ in
+                .onChange(of: changeTime) { 
                     if changeTime {
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     }
                 }
-                .onChange(of: isDragging) { _ in
+                .onChange(of: isDragging) { 
                     if !isDragging && !changeDate {
                         withAnimation(.easeInOut(duration: 0.3)) {
                             offset = 0
@@ -1910,16 +1910,16 @@ struct YearGraphView: View {
                     }
                 }
                 .animation(.easeInOut, value: changeTime)
-                .onChange(of: showingYear) { _ in
+                .onChange(of: showingYear) { 
                     selectedDate = nil
                     categoryFilterMode = false
                     refreshID1 = UUID()
                 }
-                .onChange(of: income) { _ in
+                .onChange(of: income) { 
                     selectedDate = nil
                     categoryFilterMode = false
                 }
-                .onChange(of: incomeFiltering) { _ in
+                .onChange(of: incomeFiltering) { 
                     selectedDate = nil
                     categoryFilterMode = false
                 }
@@ -2053,7 +2053,7 @@ struct SingleYearBarGraphView: View {
                 .opacity(actualMonths <= 1 ? 0 : 1)
 
         }
-        .onChange(of: selectedDate) { _ in
+        .onChange(of: selectedDate) { 
             selectedDateAmount = monthDictionary[selectedDate ?? Date.now] ?? 0.0
         }
     }
@@ -2132,12 +2132,12 @@ struct ChartTimePickerView: View {
 
                     if time == timeframe {
                         Image(systemName: "checkmark")
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.system(size: 18, weight: .medium))
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .font(.system(size: 18, weight: .medium, design: .rounded))
-                .padding(5)
+                .font(.system(size: 22, weight: .medium, design: .rounded))
+                .padding(6)
                 .background {
                     if time == timeframe {
                         RoundedRectangle(cornerRadius: 6)
@@ -2162,11 +2162,11 @@ struct ChartTimePickerView: View {
             }
         }
         .foregroundColor(darkMode ? Color("AlwaysLightBackground") : Color("AlwaysDarkBackground"))
-        .padding(4)
-        .frame(width: 120)
-        .background(RoundedRectangle(cornerRadius: 9).fill(darkMode ? Color("AlwaysDarkBackground") : Color("AlwaysLightBackground")).shadow(color: darkMode ? Color.clear : Color.gray.opacity(0.25), radius: 6))
-        .overlay(RoundedRectangle(cornerRadius: 9).stroke(darkMode ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3))
-        .onChange(of: timeframe) { _ in
+        .padding(5)
+        .frame(width: 150)
+        .background(RoundedRectangle(cornerRadius: 11).fill(darkMode ? Color("AlwaysDarkBackground") : Color("AlwaysLightBackground")).shadow(color: darkMode ? Color.clear : Color.gray.opacity(0.25), radius: 6))
+        .overlay(RoundedRectangle(cornerRadius: 11).stroke(darkMode ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3))
+        .onChange(of: timeframe) { 
             if timeframe == .week {
                 chartType = 1
             } else if timeframe == .month {
@@ -2264,10 +2264,10 @@ struct InsightsDollarView: View {
 
     var body: some View {
         HStack(alignment: .lastTextBaseline, spacing: 1.3) {
-            Group {
+            HStack(alignment: .lastTextBaseline, spacing: 0) {
                 Text(symbol)
                     .font(.system(.title3, design: .rounded).weight(.medium))
-                    .foregroundColor(Color.SubtitleText) +
+                    .foregroundColor(Color.SubtitleText)
 
                 Text("\(amount, specifier: showCents && amount < 100 ? "%.2f" : "%.0f")")
                     .font(.system(.title, design: .rounded).weight(.medium))
