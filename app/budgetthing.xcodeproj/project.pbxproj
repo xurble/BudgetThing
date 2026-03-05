@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		0623606D2F585A83003A8E0D /* LiquidGlass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0623606C2F585A83003A8E0D /* LiquidGlass.swift */; };
+		066D0B722F59863300F3A3DE /* FabBar in Frameworks */ = {isa = PBXBuildFile; productRef = 066D0B712F59863300F3A3DE /* FabBar */; };
+		066D0B762F5987EA00F3A3DE /* Buttons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 066D0B752F5987EA00F3A3DE /* Buttons.swift */; };
 		530C89D62A793B6C00B5028D /* ShortcutsEntities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530C89D52A793B6C00B5028D /* ShortcutsEntities.swift */; };
 		530C9DFD28ACE14A0038535F /* BudgetWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530C9DFC28ACE14A0038535F /* BudgetWidget.swift */; };
 		530C9DFE28ACE14A0038535F /* BudgetWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530C9DFC28ACE14A0038535F /* BudgetWidget.swift */; };
@@ -52,7 +54,6 @@
 		5327D2DB287C6B5F00F76ADF /* LogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5327D2D2287C6B5E00F76ADF /* LogView.swift */; };
 		5327D2DC287C6B5F00F76ADF /* BudgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5327D2D3287C6B5E00F76ADF /* BudgetView.swift */; };
 		5327D2DD287C6B5F00F76ADF /* InsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5327D2D4287C6B5E00F76ADF /* InsightsView.swift */; };
-		5327D2DE287C6B5F00F76ADF /* CustomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5327D2D5287C6B5E00F76ADF /* CustomTabBar.swift */; };
 		5327D2E0287C6B7D00F76ADF /* DeviceModels.json in Resources */ = {isa = PBXBuildFile; fileRef = 5327D2DF287C6B7C00F76ADF /* DeviceModels.json */; };
 		5327D2E6287C6CC300F76ADF /* Popovers in Frameworks */ = {isa = PBXBuildFile; productRef = 5327D2E5287C6CC300F76ADF /* Popovers */; };
 		532C58BC2A629C3900DA2C81 /* NewBudgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532C58BB2A629C3900DA2C81 /* NewBudgetView.swift */; };
@@ -213,6 +214,7 @@
 
 /* Begin PBXFileReference section */
 		0623606C2F585A83003A8E0D /* LiquidGlass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidGlass.swift; sourceTree = "<group>"; };
+		066D0B752F5987EA00F3A3DE /* Buttons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Buttons.swift; sourceTree = "<group>"; };
 		530C89D52A793B6C00B5028D /* ShortcutsEntities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsEntities.swift; sourceTree = "<group>"; };
 		530C9DFC28ACE14A0038535F /* BudgetWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetWidget.swift; sourceTree = "<group>"; };
 		5311A22E29F04EF300A5BE20 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.intentdefinition; name = Base; path = Base.lproj/WidgetConfiguration.intentdefinition; sourceTree = "<group>"; };
@@ -253,7 +255,6 @@
 		5327D2D2287C6B5E00F76ADF /* LogView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogView.swift; sourceTree = "<group>"; };
 		5327D2D3287C6B5E00F76ADF /* BudgetView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BudgetView.swift; sourceTree = "<group>"; };
 		5327D2D4287C6B5E00F76ADF /* InsightsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InsightsView.swift; sourceTree = "<group>"; wrapsLines = 0; };
-		5327D2D5287C6B5E00F76ADF /* CustomTabBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CustomTabBar.swift; sourceTree = "<group>"; };
 		5327D2DF287C6B7C00F76ADF /* DeviceModels.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = DeviceModels.json; sourceTree = "<group>"; };
 		5327D2E7287C6DC200F76ADF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		5327D2E8287C6DF700F76ADF /* dime.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = dime.entitlements; sourceTree = "<group>"; };
@@ -361,6 +362,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D6A4DE242D61744400F7F751 /* SwiftUIIntrospect-Static in Frameworks */,
+				066D0B722F59863300F3A3DE /* FabBar in Frameworks */,
 				D6A4DE202D61744400F7F751 /* SwiftUIIntrospect in Frameworks */,
 				53A4148028B7DA4C008C30E7 /* ConfettiSwiftUI in Frameworks */,
 				5383D85E287D9A0100D1B9BA /* CloudKit.framework in Frameworks */,
@@ -528,8 +530,8 @@
 				5327D2D4287C6B5E00F76ADF /* InsightsView.swift */,
 				5327D2D3287C6B5E00F76ADF /* BudgetView.swift */,
 				532C58BB2A629C3900DA2C81 /* NewBudgetView.swift */,
-				5327D2D5287C6B5E00F76ADF /* CustomTabBar.swift */,
 				5358E9162AC86DA1003E8CA9 /* SingleTransactionPhotoView.swift */,
+				066D0B752F5987EA00F3A3DE /* Buttons.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -748,6 +750,7 @@
 				533A38F32AA49E5900F66957 /* Alamofire */,
 				D6A4DE1F2D61744400F7F751 /* SwiftUIIntrospect */,
 				D6A4DE232D61744400F7F751 /* SwiftUIIntrospect-Static */,
+				066D0B712F59863300F3A3DE /* FabBar */,
 			);
 			productName = BudgetThing;
 			productReference = 5327D283287C697400F76ADF /* BudgetThing.app */;
@@ -811,6 +814,7 @@
 				538D10732A5AB7E7008F1AFB /* XCRemoteSwiftPackageReference "IsScrolling" */,
 				533A38F22AA49E0100F66957 /* XCRemoteSwiftPackageReference "Alamofire" */,
 				D6A4DE1E2D61744400F7F751 /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */,
+				066D0B702F59863300F3A3DE /* XCRemoteSwiftPackageReference "FabBar" */,
 			);
 			productRefGroup = 5327D284287C697400F76ADF /* Products */;
 			projectDirPath = "";
@@ -963,7 +967,6 @@
 				53E832E52B0A2CAF000CBBA0 /* InsightsSummaryBlock.swift in Sources */,
 				5327D2C9287C6B2500F76ADF /* SupportEmail.swift in Sources */,
 				5327D2DC287C6B5F00F76ADF /* BudgetView.swift in Sources */,
-				5327D2DE287C6B5F00F76ADF /* CustomTabBar.swift in Sources */,
 				5327D2D7287C6B5F00F76ADF /* TransactionView.swift in Sources */,
 				53D6BDDA2AF73DE900F5728E /* SettingsCloudView.swift in Sources */,
 				53D250702AA6331600016013 /* TemplateTransactionView.swift in Sources */,
@@ -983,6 +986,7 @@
 				AEADEF6F2AE94DA3006EB614 /* Toast.swift in Sources */,
 				53A32B3828AB6C6400628905 /* Line.swift in Sources */,
 				5327D2C7287C6B2500F76ADF /* FilterType.swift in Sources */,
+				066D0B762F5987EA00F3A3DE /* Buttons.swift in Sources */,
 				5321E1DC291FE02C00D5A931 /* CategoryCreationErrors.swift in Sources */,
 				53D40B652AB1B2DB001D3866 /* UpdateSheet.swift in Sources */,
 				5327D2BA287C6AFB00F76ADF /* ViewExtension.swift in Sources */,
@@ -1529,6 +1533,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		066D0B702F59863300F3A3DE /* XCRemoteSwiftPackageReference "FabBar" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ryanashcraft/FabBar.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.0;
+			};
+		};
 		5327D2E4287C6CC300F76ADF /* XCRemoteSwiftPackageReference "Popovers" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/aheze/Popovers";
@@ -1588,6 +1600,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		066D0B712F59863300F3A3DE /* FabBar */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 066D0B702F59863300F3A3DE /* XCRemoteSwiftPackageReference "FabBar" */;
+			productName = FabBar;
+		};
 		5327D2E5287C6CC300F76ADF /* Popovers */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5327D2E4287C6CC300F76ADF /* XCRemoteSwiftPackageReference "Popovers" */;

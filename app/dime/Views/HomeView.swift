@@ -6,8 +6,10 @@
 //
 
 import ConfettiSwiftUI
+import FabBar
 import Foundation
 import SwiftUI
+import UIKit
 
 class OverallToastPresenter: ObservableObject {
     @Published var showToast: Bool = false
@@ -16,6 +18,13 @@ class OverallToastPresenter: ObservableObject {
 enum DeletionType {
     case instant
     case prompt
+}
+
+enum AppTab: Hashable {
+    case log
+    case insights
+    case budget
+    case settings
 }
 
 class OverallTransactionManager: ObservableObject {
@@ -34,7 +43,9 @@ struct HomeView: View {
     @Environment(\.managedObjectContext) var moc
     @EnvironmentObject var dataController: DataController
 
-    @State var currentTab = "Log"
+    @State private var currentTab: AppTab = .log
+    @State private var addTransaction = false
+    @State private var transactionCount = 0
 
     var topEdge: CGFloat
     var bottomEdge: CGFloat
@@ -50,14 +61,36 @@ struct HomeView: View {
     @State var counter = 0
 
     @EnvironmentObject var tabBarManager: TabBarManager
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @State var showPopup = false
+    @FetchRequest(sortDescriptors: []) private var transactions: FetchedResults<Transaction>
 
-    // Hiding Native TabBar...
+    @AppStorage("confetti", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var confetti: Bool = false
+    @AppStorage("firstTransactionViewLaunch", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var firstLaunch: Bool = true
+
     init(topEdge: CGFloat, bottomEdge: CGFloat) {
-        UITabBar.appearance().isHidden = true
         self.topEdge = topEdge
         self.bottomEdge = bottomEdge
+    }
+
+    private var tabBarVisibility: Visibility {
+        horizontalSizeClass == .compact || tabBarManager.hideTab ? .hidden : .visible
+    }
+
+    private var fabBarTabs: [FabBarTab<AppTab>] {
+        [
+            FabBarTab(value: .log, title: "Log", image: "Log", imageBundle: .main),
+            FabBarTab(value: .insights, title: "Insights", image: "Insights", imageBundle: .main),
+            FabBarTab(value: .budget, title: "Budget", image: "Budget", imageBundle: .main),
+            FabBarTab(value: .settings, title: "Settings", image: "Settings", imageBundle: .main)
+        ]
+    }
+
+    private var fabBarAction: FabBarAction {
+        FabBarAction(systemImage: "plus", accessibilityLabel: "Add Transaction") {
+            presentAddTransaction()
+        }
     }
 
     var body: some View {
@@ -65,28 +98,50 @@ struct HomeView: View {
             LiquidGlassBackground()
             TabView(selection: $currentTab) {
                 LogView(topEdge: topEdge, bottomEdge: bottomEdge, launchSearch: launchSearch)
-                    .ignoresSafeArea(.all)
+                    .fabBarSafeAreaPadding()
+                    .toolbarVisibility(tabBarVisibility, for: .tabBar)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .tag("Log")
+                    .tag(AppTab.log)
+                    .tabItem {
+                        Label("Log", image: "Log")
+                    }
 
                 InsightsView()
+                    .fabBarSafeAreaPadding()
+                    .toolbarVisibility(tabBarVisibility, for: .tabBar)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .tag("Insights")
+                    .tag(AppTab.insights)
+                    .tabItem {
+                        Label("Insights", image: "Insights")
+                    }
 
                 BudgetView()
+                    .fabBarSafeAreaPadding()
+                    .toolbarVisibility(tabBarVisibility, for: .tabBar)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .tag("Budget")
+                    .tag(AppTab.budget)
+                    .tabItem {
+                        Label("Budget", image: "Budget")
+                    }
 
                 SettingsView()
+                    .fabBarSafeAreaPadding()
+                    .toolbarVisibility(tabBarVisibility, for: .tabBar)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .tag("Settings")
+                    .tag(AppTab.settings)
+                    .tabItem {
+                        Label("Settings", image: "Settings")
+                    }
             }
+            .fabBar(
+                selection: $currentTab,
+                tabs: fabBarTabs,
+                action: fabBarAction,
+                isVisible: !tabBarManager.hideTab
+            )
             .allowsHitTesting(showPopup ? false : true)
             .environmentObject(toastPresenter)
             .environmentObject(transactionManager)
-
-            CustomTabBar(currentTab: $currentTab, topEdge: topEdge, bottomEdge: bottomEdge, counter: $counter, launchAdd: launchAdd)
-                .offset(y: tabBarManager.hideTab ? (70 + bottomEdge) : 0)
 
             if showPopup {
                 Rectangle()
@@ -143,6 +198,17 @@ struct HomeView: View {
         }) { transaction in
             TransactionView(toEdit: transaction)
         }
+        .fullScreenCover(isPresented: $addTransaction, onDismiss: {
+            if confetti, transactionCount != transactions.count {
+                counter += 1
+            }
+
+            if firstLaunch {
+                firstLaunch = false
+            }
+        }) {
+            TransactionView(toEdit: nil)
+        }
         .confettiCannon(counter: $counter, num: 50, openingAngle: Angle(degrees: 0), closingAngle: Angle(degrees: 360), radius: 200)
         .onAppear {
             if appLockVM.isAppLockEnabled && fromURL1 {
@@ -154,7 +220,7 @@ struct HomeView: View {
             }
 
             if appLockVM.isAppLockEnabled && fromURL2 {
-                currentTab = "Log"
+                currentTab = .log
 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     launchSearch.toggle()
@@ -164,22 +230,34 @@ struct HomeView: View {
             }
 
             if appLockVM.isAppLockEnabled && fromURL3 {
-                currentTab = "Insights"
+                currentTab = .insights
             }
 
             if appLockVM.isAppLockEnabled && fromURL4 {
-                currentTab = "Budget"
+                currentTab = .budget
             }
+        }
+        .onChange(of: launchAdd) { _ in
+            presentAddTransaction()
         }
         .onOpenURL { url in
-            if url.host == "search" {
-                currentTab = "Log"
+            if url.host == "newExpense" {
+                presentAddTransaction()
+            } else if url.host == "search" {
+                currentTab = .log
             } else if url.host == "insights" {
-                currentTab = "Insights"
+                currentTab = .insights
             } else if url.host == "budget" {
-                currentTab = "Budget"
+                currentTab = .budget
             }
         }
+    }
+
+    private func presentAddTransaction() {
+        let impactMed = UIImpactFeedbackGenerator(style: .light)
+        impactMed.impactOccurred()
+        transactionCount = transactions.count
+        addTransaction = true
     }
 }
 

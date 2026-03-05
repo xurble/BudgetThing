@@ -211,7 +211,7 @@ struct LogView: View {
                     TransactionsList(filter: filter, category: categoryFilter, date: dateFilter, week: weekFilter, month: monthFilter, income: income)
                         .zIndex(0)
                         .padding(.horizontal, 20)
-                        .padding(.bottom, 70 + bottomEdge)
+                        .padding(.bottom, bottomEdge)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -236,7 +236,7 @@ struct LogView: View {
 //                    TransactionsList(filter: filter, category: categoryFilter, date: dateFilter, week: weekFilter, month: monthFilter, income: income)
 //                        .zIndex(0)
 //                        .padding(.horizontal, 20)
-//                        .padding(.bottom, 70 + bottomEdge)
+//                        .padding(.bottom, bottomEdge)
                 ////                        .offsetExtractor(coordinateSpace: "Scroll") { rect in
                 ////                            DispatchQueue.main.async {
                 ////                                print(rect.minY)
