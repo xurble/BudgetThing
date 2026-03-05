@@ -333,8 +333,8 @@
 		AEADEF722AE94DC3006EB614 /* ToolbarButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ToolbarButton.swift; sourceTree = "<group>"; };
 		AEADEF732AE94DC3006EB614 /* Toolbar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Toolbar.swift; sourceTree = "<group>"; };
 		AECE7F9D2AED1A6800B57267 /* SuggestedTransactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestedTransactions.swift; sourceTree = "<group>"; };
-		BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Config/Base.xcconfig; sourceTree = "<group>"; };
-		BADA55BADA55BADA55BADA56 /* Config/User.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Config/User.xcconfig; sourceTree = "<group>"; };
+		BADA55BADA55BADA55BADA55 /* Base.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
+		BADA55BADA55BADA55BADA56 /* User.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = User.xcconfig; sourceTree = "<group>"; };
 		D63B20472D8728C300CAFB20 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Localizations/en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		D63B20492D8728C300CAFB20 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = en; path = Localizations/en.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -677,8 +677,8 @@
 		BADA55BADA55BADA55BADA57 /* Config */ = {
 			isa = PBXGroup;
 			children = (
-				BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */,
-				BADA55BADA55BADA55BADA56 /* Config/User.xcconfig */,
+				BADA55BADA55BADA55BADA55 /* Base.xcconfig */,
+				BADA55BADA55BADA55BADA56 /* User.xcconfig */,
 			);
 			path = Config;
 			sourceTree = "<group>";
@@ -1098,7 +1098,7 @@
 /* Begin XCBuildConfiguration section */
 		5313EC7628ACE941000EAB0C /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */;
+			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Base.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = BudgetIntent/BudgetIntent.entitlements;
@@ -1130,7 +1130,7 @@
 		};
 		5313EC7728ACE941000EAB0C /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */;
+			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Base.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = BudgetIntent/BudgetIntent.entitlements;
@@ -1162,7 +1162,7 @@
 		};
 		5313EC7828ACE941000EAB0C /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */;
+			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Base.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = BudgetIntentUI/BudgetIntentUI.entitlements;
 				CODE_SIGN_STYLE = Automatic;
@@ -1189,7 +1189,7 @@
 		};
 		5313EC7928ACE941000EAB0C /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */;
+			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Base.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = BudgetIntentUI/BudgetIntentUI.entitlements;
 				CODE_SIGN_STYLE = Automatic;
@@ -1216,7 +1216,7 @@
 		};
 		5327D28F287C697C00F76ADF /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */;
+			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Base.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
@@ -1278,7 +1278,7 @@
 		};
 		5327D290287C697C00F76ADF /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */;
+			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Base.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
@@ -1334,7 +1334,7 @@
 		};
 		5327D292287C697C00F76ADF /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */;
+			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Base.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon4 AppIcon3 AppIcon2 AppIcon1";
@@ -1345,7 +1345,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"dime/Preview Content\"";
-				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = dime/Info.plist;
@@ -1377,7 +1376,7 @@
 		};
 		5327D293287C697C00F76ADF /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */;
+			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Base.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon4 AppIcon3 AppIcon2 AppIcon1";
@@ -1388,7 +1387,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"dime/Preview Content\"";
-				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = dime/Info.plist;
@@ -1420,7 +1418,7 @@
 		};
 		53B1D199288ED87000E28062 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */;
+			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Base.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -1451,7 +1449,7 @@
 		};
 		53B1D19A288ED87000E28062 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Config/Base.xcconfig */;
+			baseConfigurationReference = BADA55BADA55BADA55BADA55 /* Base.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;

@@ -28,20 +28,31 @@ struct CustomTabBar: View {
     @AppStorage("firstTransactionViewLaunch", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var firstLaunch: Bool = true
 
     @State var animate = false
+    @Namespace private var glassNamespace
 
     var body: some View {
         GlassEffectContainer(spacing: 16) {
-            HStack(spacing: 4) {
-                TabButton(image: "Log", currentTab: $currentTab)
+            HStack(spacing: 10) {
+                HStack(spacing: 4) {
+                    TabButton(image: "Log", currentTab: $currentTab, glassNamespace: glassNamespace)
 
-                TabButton(image: "Insights", currentTab: $currentTab)
+                    TabButton(image: "Insights", currentTab: $currentTab, glassNamespace: glassNamespace)
+
+                    TabButton(image: "Budget", currentTab: $currentTab, glassNamespace: glassNamespace)
+
+                    TabButton(image: "Settings", currentTab: $currentTab, glassNamespace: glassNamespace)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity)
+                .glassRoundedRect(cornerRadius: 26, tint: Color.SecondaryBackground.opacity(0.35))
 
                 ZStack {
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    Circle()
                         .fill(Color.SecondaryBackground.opacity(0.3))
-                        .frame(width: 86, height: 56)
+                        .frame(width: 54, height: 54)
                         .opacity(self.animate ? 0 : 1)
-                        .scaleEffect(self.animate ? 1 : 0.5)
+                        .scaleEffect(self.animate ? 1 : 0.6)
 
                     Button {
                         let impactMed = UIImpactFeedbackGenerator(style: .light)
@@ -50,10 +61,10 @@ struct CustomTabBar: View {
                         addTransaction = true
                     } label: {
                         Image(systemName: "plus")
-                            .font(.system(size: 18, weight: .semibold))
+                            .font(.system(size: 20, weight: .semibold))
                             .foregroundColor(Color.PrimaryText)
-                            .frame(width: 58, height: 40)
-                            .glassRoundedRect(cornerRadius: 16, tint: Color.SecondaryBackground.opacity(0.45))
+                            .frame(width: 46, height: 46)
+                            .glassEffect(.regular.tint(Color.SecondaryBackground.opacity(0.45)).interactive(), in: Circle())
                     }
                     .buttonStyle(.plain)
                 }
@@ -65,15 +76,7 @@ struct CustomTabBar: View {
                     }
                 }
                 .accessibilityLabel("Add New Transaction")
-
-                TabButton(image: "Budget", currentTab: $currentTab)
-
-                TabButton(image: "Settings", currentTab: $currentTab)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .frame(maxWidth: .infinity)
-            .glassRoundedRect(cornerRadius: 26, tint: Color.SecondaryBackground.opacity(0.35))
         }
         .padding(.horizontal, 12)
         .padding(.bottom, max(8, bottomEdge - 8))
@@ -144,20 +147,35 @@ struct BouncyButton: ButtonStyle {
 struct TabButton: View {
     var image: String
     @Binding var currentTab: String
+    var glassNamespace: Namespace.ID
 
     var body: some View {
         Button {
-            DispatchQueue.main.async {
+            withAnimation(.easeInOut(duration: 0.35)) {
                 currentTab = image
             }
         } label: {
-            Image(image)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(maxWidth: 28, maxHeight: 28)
-                .animation(.easeInOut(duration: 0.3), value: currentTab)
-                .frame(maxWidth: .infinity)
-                .foregroundColor(currentTab == image ? Color.DarkIcon : Color.GreyIcon)
+            ZStack {
+                if currentTab == image {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Color.clear)
+                        .frame(height: 36)
+                        .glassEffect(
+                            .regular.tint(Color.SecondaryBackground.opacity(0.5)).interactive(),
+                            in: .rect(cornerRadius: 14)
+                        )
+                        .glassEffectID("tab-selection", in: glassNamespace)
+                        .glassEffectTransition(.matchedGeometry)
+                }
+
+                Image(image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: 28, maxHeight: 28)
+                    .animation(.easeInOut(duration: 0.3), value: currentTab)
+                    .frame(maxWidth: .infinity)
+                    .foregroundColor(currentTab == image ? Color.DarkIcon : Color.GreyIcon)
+            }
         }
         .buttonStyle(BouncyButton(duration: 0.3, scale: 0.6))
         .accessibilityLabel("\(image) tab")
