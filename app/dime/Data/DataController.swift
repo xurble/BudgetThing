@@ -48,10 +48,17 @@ class DataController: ObservableObject, @unchecked Sendable {
 //        if !keyValueStore.bool(forKey: "icloud_sync") {
 //            description.cloudKitContainerOptions = nil
 //        } else {
-//            description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.farm.poplar.budgetthing")
+//            description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.farm.poplar.BudgetThingData")
 //        }
 
-        description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.farm.poplar.budgetthing")
+        // Set to true to disable CloudKit when you get "Invalid bundle ID for container"
+        // (fix the container ↔ bundle ID in Apple Developer portal, then set back to false).
+        let cloudKitDisabled = false
+        if cloudKitDisabled {
+            description.cloudKitContainerOptions = nil
+        } else {
+            description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.farm.poplar.BudgetThingData")
+        }
 
         let groupID = "group.farm.poplar.budgetthing"
 
@@ -69,20 +76,15 @@ class DataController: ObservableObject, @unchecked Sendable {
 
             self.container.viewContext.automaticallyMergesChangesFromParent = true
         }
-
-//        #if DEBUG
-//            do {
-//                // Use the container to initialize the development schema.
-//                try container.initializeCloudKitSchema(options: [])
-//            } catch {
-//                // Handle any errors.
-//            }
-//        #endif
-////        do {
-////            try container.initializeCloudKitSchema()
-////        } catch {
-////            print(error)
-////        }
+/*
+        #if DEBUG
+                do {
+                try container.initializeCloudKitSchema(options: [])
+            } catch {
+                print(error)
+            }
+        #endif
+*/
     }
 
     // internal variables

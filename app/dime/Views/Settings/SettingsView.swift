@@ -708,7 +708,7 @@ struct TipJarAlert: View {
 
             ProductView(
               products: unlockManager.loadedProducts.sorted {
-                $0.price.doubleValue < $1.price.doubleValue
+                $0.price < $1.price
               }
             )
             .padding(.bottom, 20)
@@ -776,20 +776,20 @@ struct TipJarAlert: View {
 
 struct ProductView: View {
   @EnvironmentObject var unlockManager: UnlockManager
-  let products: [SKProduct]
+  let products: [Product]
 
   var body: some View {
     VStack {
-      ForEach(products, id: \.self) { product in
+      ForEach(products, id: \.id) { product in
         HStack {
-          Text(getText(product.productIdentifier))
+          Text(getText(product.id))
 
           Spacer()
 
           Button {
             unlock(product)
           } label: {
-            Text(product.localizedPrice)
+            Text(product.displayPrice)
               .monospacedDigit()
               .padding(6)
               .background(
@@ -805,7 +805,7 @@ struct ProductView: View {
     //        .font(.system(size: 18, weight: .semibold, design: .rounded))
   }
 
-  func unlock(_ product: SKProduct) {
+  func unlock(_ product: Product) {
     unlockManager.buy(product: product)
   }
 

@@ -9,72 +9,74 @@ import Foundation
 import StoreKit
 
 @MainActor
-class UnlockManager: NSObject, ObservableObject, @preconcurrency SKPaymentTransactionObserver, @preconcurrency SKProductsRequestDelegate {
+final class UnlockManager: ObservableObject {
+    typealias StoreTransaction = StoreKit.Transaction
+    typealias StoreVerificationResult = StoreKit.VerificationResult<StoreTransaction>
+
     enum RequestState {
         case loading
         case loaded
         case failed
     }
 
-    var canMakePayments: Bool {
-        SKPaymentQueue.canMakePayments()
-    }
-
-    private enum StoreError: Error {
-        case invalidIdentifiers, missingProduct
-    }
-
     @Published var requestState = RequestState.loading
     @Published var purchaseCount: Int
     @Published var failedTransaction = false
+    @Published var loadedProducts: [Product] = []
 
     private let dataController: DataController
-    private let request: SKProductsRequest
+    private let productIDs = [
+        "farm.poplar.budgetthing.smalltip",
+        "farm.poplar.budgetthing.mediumtip",
+        "farm.poplar.budgetthing.largetip"
+    ]
+    private var updatesTask: Task<Void, Never>?
+    private var unfinishedTask: Task<Void, Never>?
+    private var productTask: Task<Void, Never>?
+    private var processedTransactionIDs = Set<StoreTransaction.ID>()
 
-    var loadedProducts = [SKProduct]()
+    var canMakePayments: Bool {
+        AppStore.canMakePayments
+    }
 
-    nonisolated func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
-        Task { @MainActor in
-            for transaction in transactions {
-                switch transaction.transactionState {
-                case .purchased, .restored:
-                    purchaseCount += 1
-                    dataController.tipCounter = purchaseCount
-                    queue.finishTransaction(transaction)
-                case .failed:
-                    failedTransaction = true
-                    queue.finishTransaction(transaction)
-                    revertBool()
-                default:
-                    break
-                }
-            }
+    init(dataController: DataController) {
+        self.dataController = dataController
+        purchaseCount = dataController.tipCounter
+
+        productTask = Task { [weak self] in
+            await self?.loadProducts()
+        }
+
+        unfinishedTask = Task { [weak self] in
+            await self?.observeUnfinishedTransactions()
+        }
+
+        updatesTask = Task { [weak self] in
+            await self?.observeTransactionUpdates()
         }
     }
 
-    nonisolated func productsRequest(_: SKProductsRequest, didReceive response: SKProductsResponse) {
-        Task { @MainActor in
-            // Store the returned products for later, if we need them.
-            loadedProducts = response.products
+    deinit {
+        updatesTask?.cancel()
+        unfinishedTask?.cancel()
+        productTask?.cancel()
+    }
 
-            guard !loadedProducts.isEmpty else {
-                requestState = .failed
-                return
-            }
-
-            if response.invalidProductIdentifiers.isEmpty == false {
-                print("ALERT: Received invalid product identifiers: \(response.invalidProductIdentifiers)")
-                requestState = .failed
-                return
-            }
-
-            requestState = .loaded
+    func buy(product: Product) {
+        Task { [weak self] in
+            await self?.purchase(product)
         }
     }
 
-    func buy(product: SKProduct) {
-        let payment = SKPayment(product: product)
-        SKPaymentQueue.default().add(payment)
+    func restore() {
+        Task { [weak self] in
+            do {
+                try await AppStore.sync()
+            } catch {
+                self?.failedTransaction = true
+                self?.revertBool()
+            }
+        }
     }
 
     func revertBool() {
@@ -84,34 +86,68 @@ class UnlockManager: NSObject, ObservableObject, @preconcurrency SKPaymentTransa
         }
     }
 
-    func restore() {
-        SKPaymentQueue.default().restoreCompletedTransactions()
+    private func loadProducts() async {
+        requestState = .loading
+        do {
+            let products = try await Product.products(for: productIDs)
+            guard !products.isEmpty else {
+                requestState = .failed
+                return
+            }
+
+            loadedProducts = products
+            requestState = .loaded
+        } catch {
+            requestState = .failed
+        }
     }
 
-    init(dataController: DataController) {
-        // Store the data controller we were sent.
-        self.dataController = dataController
-
-        // Prepare to look for our unlock product.
-        let productIDs = Set(["farm.poplar.budgetthing.smalltip", "farm.poplar.budgetthing.mediumtip", "farm.poplar.budgetthing.largetip"])
-        request = SKProductsRequest(productIdentifiers: productIDs)
-
-        // This is required because we inherit from NSObject.
-        purchaseCount = dataController.tipCounter
-
-        super.init()
-
-        // Start watching the payment queue.
-        SKPaymentQueue.default().add(self)
-
-        // Set ourselves up to be notified when the product request completes.
-        request.delegate = self
-
-        // Start the request
-        request.start()
+    private func purchase(_ product: Product) async {
+        do {
+            let result = try await product.purchase()
+            switch result {
+            case .success(let verificationResult):
+                await handle(verificationResult)
+            case .userCancelled:
+                break
+            case .pending:
+                break
+            @unknown default:
+                break
+            }
+        } catch {
+            failedTransaction = true
+            revertBool()
+        }
     }
 
-    deinit {
-        SKPaymentQueue.default().remove(self)
+    private func observeTransactionUpdates() async {
+        for await verificationResult in StoreTransaction.updates {
+            await handle(verificationResult)
+        }
+    }
+
+    private func observeUnfinishedTransactions() async {
+        for await verificationResult in StoreTransaction.unfinished {
+            await handle(verificationResult)
+        }
+    }
+
+    private func handle(_ verificationResult: StoreVerificationResult) async {
+        guard case .verified(let transaction) = verificationResult else {
+            return
+        }
+
+        if !processedTransactionIDs.insert(transaction.id).inserted {
+            await transaction.finish()
+            return
+        }
+
+        if productIDs.contains(transaction.productID) {
+            purchaseCount += 1
+            dataController.tipCounter = purchaseCount
+        }
+
+        await transaction.finish()
     }
 }
