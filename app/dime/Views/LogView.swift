@@ -1350,7 +1350,7 @@ struct SingleTransactionView: View {
         }
         .animation(.easeInOut, value: deletePopup)
         .simultaneousGesture(
-            DragGesture(minimumDistance: 10)
+            DragGesture(minimumDistance: 20)
                 .updating($isDragging, body: { value, state, _ in
                     if abs(value.translation.width) > abs(value.translation.height) {
                         state = true

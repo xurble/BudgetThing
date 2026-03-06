@@ -175,7 +175,7 @@ struct LineGraph: View {
                 alignment: .bottomLeading
             )
             .contentShape(Rectangle())
-            .gesture(DragGesture().onChanged { value in
+            .simultaneousGesture(DragGesture().onChanged { value in
 
                 withAnimation { showPlot = true }
 
