@@ -63,6 +63,10 @@ extension View {
         background(LiquidGlassBackground())
     }
 
+    func liquidGlassBackground(opacity: Double) -> some View {
+        background(LiquidGlassBackground().opacity(opacity))
+    }
+
     func glassCapsule(tint: Color? = nil) -> some View {
         glassEffect(glassStyle(for: tint), in: .capsule)
     }

@@ -248,52 +248,16 @@ struct TransactionView: View {
                         .transition(AnyTransition.opacity.combined(with: .move(edge: .top)))
                         .frame(maxWidth: dynamicTypeSize > .xLarge ? 250 : 200)
                     } else {
-                        ZStack(alignment: .leading) {
-                            Capsule()
-                                .fill(Color.SecondaryBackground)
-                                .frame(width: capsuleWidth)
-                                .offset(x: swipingOffset)
-
-                            HStack(spacing: 0) {
-                                Text("Expense")
-                                    .font(.system(.body, design: .rounded).weight(.semibold))
-
-                                    .lineLimit(1)
-                                    .foregroundColor(income == false ? Color.PrimaryText : Color.SubtitleText)
-                                    .padding(6)
-                                    .frame(width: capsuleWidth)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        DispatchQueue.main.async {
-                                            withAnimation(.easeIn(duration: 0.15)) {
-                                                income = false
-                                                swipingOffset = 0
-                                            }
-                                        }
-                                    }
-
-                                Text("transaction-view-income-picker")
-                                    .font(.system(.body, design: .rounded).weight(.semibold))
-
-                                    .lineLimit(1)
-                                //                                    .font(.system(size: 18, weight: .semibold, design: .rounded))
-                                    .foregroundColor(income == true ? Color.PrimaryText : Color.SubtitleText)
-                                    .padding(6)
-                                    .frame(width: capsuleWidth)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        DispatchQueue.main.async {
-                                            withAnimation(.easeIn(duration: 0.15)) {
-                                                income = true
-                                                swipingOffset = capsuleWidth
-                                            }
-                                        }
-                                    }
-                            }
+                        Picker("", selection: $income) {
+                            Text("Expense")
+                                .tag(false)
+                            Text("transaction-view-income-picker")
+                                .tag(true)
                         }
-                        .padding(3)
-                        .fixedSize(horizontal: true, vertical: true)
-                        .overlay(Capsule().stroke(Color.Outline.opacity(0.4), lineWidth: 1.3))
+                        .pickerStyle(.segmented)
+                        .font(.system(.body, design: .rounded).weight(.semibold))
+                        .frame(width: capsuleWidth * 2)
+                        .labelsHidden()
                     }
                 }
                 //                .frame(height: 50, alignment: .top)
@@ -389,8 +353,10 @@ struct TransactionView: View {
 
                 ZStack {
                     // swipe to change between income and expense
-                    Color.PrimaryBackground
+                    Rectangle()
+                        .fill(Color.clear)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .contentShape(Rectangle())
                         .simultaneousGesture(
                             DragGesture()
                                 .updating(
@@ -711,7 +677,7 @@ struct TransactionView: View {
             }
             .padding(17)
             .frame(width: proxy.size.width, height: proxy.size.height)
-            .liquidGlassBackground()
+            .liquidGlassBackground(opacity: 1)
             .onTapGesture {
                 self.hideKeyboard()
             }
@@ -852,7 +818,7 @@ struct TransactionView: View {
         .animation(.easeOut(duration: 0.2), value: showToast)
         .ignoresSafeArea(.keyboard, edges: .all)
         .frame(maxHeight: .infinity)
-        .liquidGlassBackground()
+        .liquidGlassBackground(opacity: 0.95)
         .edgesIgnoringSafeArea(.all)
         .onChange(of: showToast) { _, newValue in
             if newValue {
