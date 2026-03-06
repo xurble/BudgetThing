@@ -19,6 +19,7 @@ struct InsightsWidget: Widget {
         .configurationDisplayName("Insights")
         .description("Analyse your expenditure breakdowns over various time periods.")
         .supportedFamilies([.systemMedium])
+        .containerBackgroundRemovable(true)
     }
 }
 
@@ -495,7 +496,7 @@ struct InsightsWidgetEntryView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .widgetURL(URL(string: "budgetthing://insights"))
             .containerBackground(for: .widget) {
-                Color.PrimaryBackground
+                Color.clear
             }
     }
 

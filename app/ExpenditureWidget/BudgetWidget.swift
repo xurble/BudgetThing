@@ -18,6 +18,7 @@ struct BudgetWidget: Widget {
         .configurationDisplayName("Budget")
         .description("Monitor how you are sticking to your budgets.")
         .supportedFamilies([.systemSmall])
+        .containerBackgroundRemovable(true)
     }
 }
 
@@ -158,7 +159,7 @@ struct BudgetWidgetEntryView: View {
                 .padding(15)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .containerBackground(for: .widget) {
-                    Color.PrimaryBackground
+                    Color.clear
                 }
 
         } else if entry.budget.emoji == "failed" {
@@ -169,7 +170,7 @@ struct BudgetWidgetEntryView: View {
                 .padding(15)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .containerBackground(for: .widget) {
-                    Color.PrimaryBackground
+                    Color.clear
                 }
 
         } else {
@@ -261,7 +262,7 @@ struct BudgetWidgetEntryView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .containerBackground(for: .widget) {
-                    Color.PrimaryBackground
+                    Color.clear
                 }
                 .widgetURL(URL(string: "budgetthing://budget?budget=\(entry.budget.name)"))
         }

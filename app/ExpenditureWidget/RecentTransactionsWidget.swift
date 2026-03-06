@@ -27,6 +27,7 @@ struct RecentExpenditureWidget: Widget {
         .configurationDisplayName("Recent Transactions")
         .description("View your latest expenses.")
         .supportedFamilies(supportedFamilies)
+        .containerBackgroundRemovable(true)
     }
 }
 
@@ -312,7 +313,7 @@ struct ExpenditureWidgetEntryView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .containerBackground(for: .widget) {
-                Color.PrimaryBackground
+                Color.clear
             }
             .widgetURL(entry.transactions.count < 2 ? URL(string: "budgetthing://newExpense") : nil)
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)

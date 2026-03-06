@@ -26,6 +26,7 @@ struct LockBudgetWidget: Widget {
         .configurationDisplayName("Budget")
         .description("Monitor how you are sticking to your budgets.")
         .supportedFamilies(supportedFamilies)
+        .containerBackgroundRemovable(true)
     }
 }
 
@@ -176,14 +177,14 @@ struct LockBudgetWidgetEntryView: View {
         case .accessoryCircular:
             if entry.configuration.budget == nil {
                 ZStack {
-                    AccessoryWidgetBackground()
+                    Color.clear
 
                     Text("SELECT BUDGET")
                         .font(.system(size: 8, weight: .semibold, design: .rounded))
                         .frame(maxWidth: .infinity)
                         .multilineTextAlignment(.center)
                 }
-                .containerBackground(for: .widget) { AccessoryWidgetBackground() }
+                .containerBackground(for: .widget) { Color.clear }
             } else {
                 Gauge(value: percent < 1 ? percent : 1) {
                     Text(entry.budget.emoji)

@@ -26,6 +26,7 @@ struct MainBudgetWidget: Widget {
         .supportedFamilies(supportedFamilies)
         .configurationDisplayName("Overall Budget")
         .description("Monitor how you are sticking to your overall budgets.")
+        .containerBackgroundRemovable(true)
     }
 }
 
@@ -163,7 +164,7 @@ struct MainBudgetWidgetEntryView: View {
         case .accessoryCircular:
             if !entry.found {
                 ZStack {
-                    AccessoryWidgetBackground()
+                    Color.clear
 
                     VStack {
                         Text("ADD\nBUDGET")
@@ -172,7 +173,7 @@ struct MainBudgetWidgetEntryView: View {
                             .multilineTextAlignment(.center)
                     }
                 }
-                .containerBackground(for: .widget) { AccessoryWidgetBackground() }
+                .containerBackground(for: .widget) { Color.clear }
             } else {
                 Gauge(value: percent < 1 ? percent : 1) {
                     Image(systemName: "dollarsign.circle.fill")
@@ -234,7 +235,7 @@ struct MainBudgetWidgetEntryView: View {
                         .foregroundColor(Color.SubtitleText)
                         .padding(15)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .containerBackground(for: .widget) { Color.PrimaryBackground }
+                        .containerBackground(for: .widget) { Color.clear }
                 } else {
                     VStack(spacing: 12) {
                         HStack(alignment: .top) {
@@ -319,7 +320,7 @@ struct MainBudgetWidgetEntryView: View {
                         .frame(maxHeight: .infinity, alignment: .bottom)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .containerBackground(for: .widget) { Color.PrimaryBackground }
+                    .containerBackground(for: .widget) { Color.clear }
                 }
 
         default:

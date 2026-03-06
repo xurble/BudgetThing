@@ -25,6 +25,7 @@ struct NewExpenseWidget: Widget {
         .configurationDisplayName("New Expense")
         .description("A convenient button to log new purchases.")
         .supportedFamilies(supportedFamilies)
+        .containerBackgroundRemovable(true)
     }
 }
 
@@ -63,7 +64,7 @@ struct NewExpenseWidgetEntryView: View {
 
     var body: some View {
         ZStack {
-            AccessoryWidgetBackground()
+            Color.clear
 
             Text("\(currencySymbol.count < 3 ? "+" : "")\(currencySymbol)")
                 .font(.system(size: currencySymbol.count < 3 ? 13 : 11, weight: .bold, design: .rounded))
@@ -75,7 +76,7 @@ struct NewExpenseWidgetEntryView: View {
         }
         .widgetURL(URL(string: "budgetthing://newExpense"))
         .containerBackground(for: .widget) {
-            AccessoryWidgetBackground()
+            Color.clear
         }
     }
 }
