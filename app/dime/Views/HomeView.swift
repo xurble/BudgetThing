@@ -248,6 +248,8 @@ struct HomeView: View {
         }
         .confettiCannon(counter: $counter, num: 50, openingAngle: Angle(degrees: 0), closingAngle: Angle(degrees: 360), radius: 200)
         .onAppear {
+            transactionCount = transactions.count
+
             if appLockVM.isAppLockEnabled && fromURL1 {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     launchAdd.toggle()
@@ -293,7 +295,6 @@ struct HomeView: View {
     private func presentAddTransaction() {
         let impactMed = UIImpactFeedbackGenerator(style: .light)
         impactMed.impactOccurred()
-        transactionCount = transactions.count
         addTransaction = true
     }
 }

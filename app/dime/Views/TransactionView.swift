@@ -168,7 +168,12 @@ struct TransactionView: View {
     var showRecommendations: Bool = false
 
     var suggestedTransactions: [Transaction] {
-        return dataController.getSuggestedNotes(searchQuery: note, category: category, income: income)
+        let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard showRecommendations, textFieldFocused, !trimmedNote.isEmpty else {
+            return []
+        }
+
+        return dataController.getSuggestedNotes(searchQuery: trimmedNote, category: category, income: income)
     }
 
     var showingNotePicker: Bool {

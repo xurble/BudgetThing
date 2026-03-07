@@ -471,11 +471,16 @@ class DataController: ObservableObject, @unchecked Sendable {
     }
 
     func getSuggestedNotes(searchQuery: String, category: Category?, income: Bool) -> [Transaction] {
+        let trimmedQuery = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedQuery.isEmpty else {
+            return []
+        }
+
         let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
         itemRequest.sortDescriptors = [NSSortDescriptor(keyPath: \Transaction.date, ascending: false)]
 
-        let beginPredicate = NSPredicate(format: "%K BEGINSWITH[cd] %@", #keyPath(Transaction.note), searchQuery)
-        let containPredicate = NSPredicate(format: "%K CONTAINS[cd] %@", #keyPath(Transaction.note), searchQuery)
+        let beginPredicate = NSPredicate(format: "%K BEGINSWITH[cd] %@", #keyPath(Transaction.note), trimmedQuery)
+        let containPredicate = NSPredicate(format: "%K CONTAINS[cd] %@", #keyPath(Transaction.note), trimmedQuery)
         let compound = NSCompoundPredicate(orPredicateWithSubpredicates: [beginPredicate, containPredicate])
 
         let incomePredicate = NSPredicate(format: "income = %d", income)
