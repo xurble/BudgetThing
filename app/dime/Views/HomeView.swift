@@ -24,7 +24,7 @@ enum AppTab: Hashable {
     case log
     case insights
     case budget
-    case settings
+    case bank
 }
 
 class OverallTransactionManager: ObservableObject {
@@ -82,7 +82,7 @@ struct HomeView: View {
             FabBarTab(value: .log, title: "Log", image: "Log", imageBundle: .main),
             FabBarTab(value: .insights, title: "Insights", image: "Insights", imageBundle: .main),
             FabBarTab(value: .budget, title: "Budget", image: "Budget", imageBundle: .main),
-            FabBarTab(value: .settings, title: "Settings", image: "Settings", imageBundle: .main)
+            FabBarTab(value: .bank, title: "Bank", image: "Bank", imageBundle: .main)
         ]
     }
 
@@ -150,13 +150,13 @@ struct HomeView: View {
                         Label("Budget", image: "Budget")
                     }
 
-                SettingsView()
+                BankView()
                     .fabBarSafeAreaPadding()
                     .toolbarVisibility(tabBarVisibility, for: .tabBar)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .tag(AppTab.settings)
+                    .tag(AppTab.bank)
                     .tabItem {
-                        Label("Settings", image: "Settings")
+                        Label("Bank", image: "Bank")
                     }
             }
             .fabBar(

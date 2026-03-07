@@ -10,6 +10,7 @@
 		0623606D2F585A83003A8E0D /* LiquidGlass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0623606C2F585A83003A8E0D /* LiquidGlass.swift */; };
 		066D0B722F59863300F3A3DE /* FabBar in Frameworks */ = {isa = PBXBuildFile; productRef = 066D0B712F59863300F3A3DE /* FabBar */; };
 		066D0B762F5987EA00F3A3DE /* Buttons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 066D0B752F5987EA00F3A3DE /* Buttons.swift */; };
+		06A2954B2F5CA6EC00CEDD79 /* BankView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06A2954A2F5CA6EB00CEDD79 /* BankView.swift */; };
 		530C89D62A793B6C00B5028D /* ShortcutsEntities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530C89D52A793B6C00B5028D /* ShortcutsEntities.swift */; };
 		530C9DFD28ACE14A0038535F /* BudgetWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530C9DFC28ACE14A0038535F /* BudgetWidget.swift */; };
 		530C9DFE28ACE14A0038535F /* BudgetWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530C9DFC28ACE14A0038535F /* BudgetWidget.swift */; };
@@ -214,6 +215,7 @@
 /* Begin PBXFileReference section */
 		0623606C2F585A83003A8E0D /* LiquidGlass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidGlass.swift; sourceTree = "<group>"; };
 		066D0B752F5987EA00F3A3DE /* Buttons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Buttons.swift; sourceTree = "<group>"; };
+		06A2954A2F5CA6EB00CEDD79 /* BankView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BankView.swift; sourceTree = "<group>"; };
 		530C89D52A793B6C00B5028D /* ShortcutsEntities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsEntities.swift; sourceTree = "<group>"; };
 		530C9DFC28ACE14A0038535F /* BudgetWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetWidget.swift; sourceTree = "<group>"; };
 		5311A22E29F04EF300A5BE20 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.intentdefinition; name = Base; path = Base.lproj/WidgetConfiguration.intentdefinition; sourceTree = "<group>"; };
@@ -529,6 +531,7 @@
 				532C58BB2A629C3900DA2C81 /* NewBudgetView.swift */,
 				5358E9162AC86DA1003E8CA9 /* SingleTransactionPhotoView.swift */,
 				066D0B752F5987EA00F3A3DE /* Buttons.swift */,
+				06A2954A2F5CA6EB00CEDD79 /* BankView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -968,6 +971,7 @@
 				53D6BDDA2AF73DE900F5728E /* SettingsCloudView.swift in Sources */,
 				53D250702AA6331600016013 /* TemplateTransactionView.swift in Sources */,
 				5327D2AD287C6AD200F76ADF /* DataController.swift in Sources */,
+				06A2954B2F5CA6EC00CEDD79 /* BankView.swift in Sources */,
 				53D0298028C5BC0300443F2B /* Currency.swift in Sources */,
 				53D6BDDF2AF73EF100F5728E /* SettingsHapticsView.swift in Sources */,
 				53D6BDD02AF73C4300F5728E /* SettingsNumberEntryView.swift in Sources */,

@@ -34,6 +34,9 @@ struct LogView: View {
 
     // searching
     @State var searchMode = false
+    @State private var showSettings = false
+
+    private let toolbarButtonSize: CGFloat = 44
 
     // top bar
     @State var navBarText = ""
@@ -89,6 +92,27 @@ struct LogView: View {
             .frame(height: 250, alignment: .top)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .liquidGlassBackground()
+            .toolbarBackground(.clear, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                            .symbolRenderingMode(.hierarchical)
+                            .foregroundStyle(Color.PrimaryText)
+                            .scaleEffect(1.2)
+                    }
+                    .accessibilityLabel("Settings")
+                    .buttonStyle(.plain)
+                    .frame(width: toolbarButtonSize, height: toolbarButtonSize)
+                    .glassCapsule()
+                }
+                .sharedBackgroundVisibility(.hidden)
+            }
+            .popover(isPresented: $showSettings) {
+                SettingsView()
+            }
 
         } else {
             VStack(spacing: 0) {
@@ -214,8 +238,24 @@ struct LogView: View {
             .liquidGlassBackground()
             .toolbarBackground(.clear, for: .navigationBar)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                            .symbolRenderingMode(.hierarchical)
+                            .foregroundStyle(Color.PrimaryText)
+                            .scaleEffect(1.2)
+                    }
+                    .accessibilityLabel("Settings")
+                    .buttonStyle(.plain)
+                    .frame(width: toolbarButtonSize, height: toolbarButtonSize)
+                    .glassCapsule()
+                }
+                .sharedBackgroundVisibility(.hidden)
+
                 ToolbarItem(placement: .topBarTrailing) {
-                    HStack(spacing: 12) {
+                    HStack(spacing: 8) {
                         Button {
                             searchMode = true
                         } label: {
@@ -225,8 +265,8 @@ struct LogView: View {
                                 .scaleEffect(1.3)
                         }
                         .accessibilityLabel("Search")
-                        .padding(6)
-                        .contentShape(Rectangle())
+                        .buttonStyle(.plain)
+                        .frame(width: toolbarButtonSize, height: toolbarButtonSize)
 
                         Menu {
                             Picker("Filter", selection: $filter) {
@@ -244,19 +284,19 @@ struct LogView: View {
                                 .foregroundStyle(Color.PrimaryText)
                                 .scaleEffect(1.3)
                         }
-                        .padding(6)
-                        .contentShape(Rectangle())
                         .accessibilityLabel("Filter")
+                        .buttonStyle(.plain)
+                        .frame(width: toolbarButtonSize, height: toolbarButtonSize)
                     }
-                    .buttonStyle(.plain)
-                    .padding(.vertical, 6)
-                    .padding(.horizontal, 10)
                     .glassCapsule()
                 }
                 .sharedBackgroundVisibility(.hidden)
             }
             .fullScreenCover(isPresented: $searchMode) {
                 SearchView()
+            }
+            .popover(isPresented: $showSettings) {
+                SettingsView()
             }
             .onChange(of: syncMonitor.syncStateSummary) { _, newState in
                 if newState == .succeeded && !updatedRecurring {

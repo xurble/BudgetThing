@@ -16,6 +16,7 @@ import WidgetKit
 
 struct SettingsView: View {
   @Environment(\.dynamicTypeSize) var dynamicTypeSize
+  @Environment(\.dismiss) var dismiss
 
   @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing"))
   var colourScheme: Int = 0
@@ -399,6 +400,19 @@ struct SettingsView: View {
       .background(Color(.systemGroupedBackground))
       .navigationTitle("Settings")
       .navigationBarTitleDisplayMode(.large)
+      .toolbar {
+        ToolbarItem(placement: .topBarTrailing) {
+          Button {
+            dismiss()
+          } label: {
+            Image(systemName: "xmark")
+              .font(.system(.subheadline, design: .rounded).weight(.semibold))
+              .foregroundColor(Color.SubtitleText)
+              .padding(8)
+          }
+          .accessibilityLabel("Close")
+        }
+      }
       .onChange(of: currency) { 
         WidgetCenter.shared.reloadAllTimelines()
       }
