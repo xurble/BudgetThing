@@ -28,17 +28,38 @@ struct NumberPad: View {
 
     @State private var engine: CHHapticEngine?
 
+    private static let buttonDiameter: CGFloat = 86
+    private static let buttonSpacing: CGFloat = 12
+    static let preferredSpacing: CGFloat = buttonSpacing
+    static let preferredBottomPadding: CGFloat = buttonSpacing
+    private static let rows: CGFloat = 4
+    private static let columns: CGFloat = 3
+
+    static let preferredHeight: CGFloat = (buttonDiameter * rows) + (buttonSpacing * (rows - 1)) + 8
+
+    private var gridWidth: CGFloat {
+        (Self.buttonDiameter * Self.columns) + (Self.buttonSpacing * (Self.columns - 1))
+    }
+
+    private var gridHeight: CGFloat {
+        (Self.buttonDiameter * Self.rows) + (Self.buttonSpacing * (Self.rows - 1))
+    }
+
     var body: some View {
-        GeometryReader { proxy in
-            VStack(spacing: proxy.size.height * 0.04) {
+        GeometryReader { _ in
+            let diameter = Self.buttonDiameter
+            let verticalSpacing = Self.buttonSpacing
+            let horizontalSpacing = Self.buttonSpacing
+
+            VStack(spacing: verticalSpacing) {
                 ForEach(numPadNumbers, id: \.self) { array in
-                    HStack(spacing: proxy.size.width * 0.05) {
+                    HStack(spacing: horizontalSpacing) {
                         ForEach(array, id: \.self) { singleNumber in
-                            NumberButton(number: singleNumber, size: proxy.size)
+                            NumberButton(number: singleNumber, diameter: diameter)
                         }
                     }
                 }
-                HStack(spacing: proxy.size.width * 0.05) {
+                HStack(spacing: horizontalSpacing) {
                     if numberEntryType == 1 {
                         Button {
                             deleteLastDigit()
@@ -46,10 +67,15 @@ struct NumberPad: View {
                             Image("tag-cross")
                                 .resizable()
                                 .frame(width: 32, height: 32)
-                                .frame(width: proxy.size.width * 0.3, height: proxy.size.height * 0.22)
-                                .background(Color.DarkBackground)
+                                .frame(width: diameter, height: diameter)
+                                .background {
+                                    glassCircle(diameter: diameter, tint: Color.DarkBackground)
+                                }
+                                .overlay {
+                                    glassCircleStroke(diameter: diameter)
+                                }
                                 .foregroundColor(Color.LightIcon)
-                                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                .contentShape(Circle())
                         }
                         .buttonStyle(NumPadButton())
                     } else {
@@ -58,15 +84,20 @@ struct NumberPad: View {
                         } label: {
                             Text(".")
                                 .font(.system(size: 34, weight: .regular, design: .rounded))
-                                .frame(width: proxy.size.width * 0.3, height: proxy.size.height * 0.22)
-                                .background(Color.SecondaryBackground)
+                                .frame(width: diameter, height: diameter)
+                                .background {
+                                    glassCircle(diameter: diameter, tint: Color.SecondaryBackground)
+                                }
+                                .overlay {
+                                    glassCircleStroke(diameter: diameter)
+                                }
                                 .foregroundColor(Color.PrimaryText)
-                                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                .contentShape(Circle())
                         }
                         .buttonStyle(NumPadButton())
                     }
 
-                    NumberButton(number: 0, size: proxy.size)
+                    NumberButton(number: 0, diameter: diameter)
 
                     Button {
                         submit()
@@ -74,16 +105,23 @@ struct NumberPad: View {
                         Image(systemName: "checkmark.square.fill")
                             .font(.system(size: 30, weight: .medium, design: .rounded))
                             .symbolEffect(.bounce.up.byLayer, value: price != 0 && category != nil)
-                            .frame(width: proxy.size.width * 0.3, height: proxy.size.height * 0.22)
+                            .frame(width: diameter, height: diameter)
                             .foregroundColor(Color.LightIcon)
-                            .background(Color.DarkBackground, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            .background {
+                                glassCircle(diameter: diameter, tint: Color.DarkBackground)
+                            }
+                            .overlay {
+                                glassCircleStroke(diameter: diameter)
+                            }
+                            .contentShape(Circle())
                     }
                     .buttonStyle(NumPadButton())
                 }
             }
-            .frame(width: proxy.size.width, height: proxy.size.height)
+            .frame(width: gridWidth, height: gridHeight)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
-        .padding(.bottom, 15)
+        .padding(.bottom, 8)
         .keyboardAwareHeight(showToolbar: showingNotePicker)
         .onAppear(perform: prepareHaptics)
     }
@@ -168,7 +206,7 @@ struct NumberPad: View {
     }
 
     @ViewBuilder
-    private func NumberButton(number: Int, size: CGSize) -> some View {
+    private func NumberButton(number: Int, diameter: CGFloat) -> some View {
         var disabled: Bool {
             price >= 100000000
         }
@@ -205,14 +243,37 @@ struct NumberPad: View {
         } label: {
             Text("\(number)")
                 .font(.system(size: 34, weight: .regular, design: .rounded))
-                .frame(width: size.width * 0.3, height: size.height * 0.22)
-                .background(Color.SecondaryBackground)
+                .frame(width: diameter, height: diameter)
+                .background {
+                    glassCircle(diameter: diameter, tint: Color.SecondaryBackground)
+                }
+                .overlay {
+                    glassCircleStroke(diameter: diameter)
+                }
                 .foregroundColor(Color.PrimaryText)
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .contentShape(Circle())
                 .opacity(disabled ? 0.6 : 1)
         }
         .disabled(disabled)
         .buttonStyle(NumPadButton())
+    }
+
+    @ViewBuilder
+    private func glassCircle(diameter: CGFloat, tint: Color) -> some View {
+        Circle()
+            .fill(Color.clear)
+            .frame(width: diameter, height: diameter)
+            .glassEffect(
+                .regular.tint(tint.opacity(0.5)).interactive(),
+                in: .circle
+            )
+    }
+
+    @ViewBuilder
+    private func glassCircleStroke(diameter: CGFloat) -> some View {
+        Circle()
+            .strokeBorder(Color.Outline.opacity(0.35), lineWidth: 0.75)
+            .frame(width: diameter, height: diameter)
     }
 }
 

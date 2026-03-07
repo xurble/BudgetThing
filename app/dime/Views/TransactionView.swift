@@ -156,9 +156,6 @@ struct TransactionView: View {
 
     @Namespace var animation
 
-    @State var swipingOffset: CGFloat = 0
-    @GestureState var isDragging = false
-
     // show recommendations
 
     @State var textFieldFocused: Bool = false
@@ -260,6 +257,7 @@ struct TransactionView: View {
                 }
                 //                .frame(height: 50, alignment: .top)
                 .frame(maxWidth: .infinity)
+                .padding(.top, proxy.safeAreaInsets.top)
                 .overlay {
                     HStack {
                         Button {
@@ -351,332 +349,240 @@ struct TransactionView: View {
                 }
                 .padding(.top, topEdge)
 
-                ZStack {
-                    // swipe to change between income and expense
-                    Rectangle()
-                        .fill(Color.clear)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .contentShape(Rectangle())
-                        .simultaneousGesture(
-                            DragGesture()
-                                .updating(
-                                    $isDragging,
-                                    body: { _, state, _ in
-                                        state = true
-                                    }
-                                )
-                                .onChanged { gesture in
-                                    let swipe = gesture.translation.width
-
-                                    if income {
-                                        if swipe < 0 {
-                                            swipingOffset = max(-capsuleWidth, -pow(abs(swipe), 0.8)) + capsuleWidth
-                                        }
-
-                                    } else {
-                                        if swipe > 0 {
-                                            swipingOffset = min(capsuleWidth, pow(swipe, 0.8))
-                                        }
-                                    }
-                                }
-                                .onEnded { _ in
-                                    if income {
-                                        if swipingOffset < (capsuleWidth / 2) {
-                                            withAnimation {
-                                                swipingOffset = 0
-                                                income = false
-                                            }
-                                        } else {
-                                            withAnimation {
-                                                swipingOffset = capsuleWidth
-                                            }
-                                        }
-                                    } else {
-                                        if swipingOffset > (capsuleWidth / 2) {
-                                            withAnimation {
-                                                swipingOffset = capsuleWidth
-                                                income = true
-                                            }
-                                        } else {
-                                            withAnimation {
-                                                swipingOffset = 0
-                                            }
-                                        }
-                                    }
-                                }
-                        )
-
-                    // number display and note view
-                    VStack(spacing: 8) {
-                        NumberPadTextView(price: $price, isEditingDecimal: $isEditingDecimal, decimalValuesAssigned: $decimalValuesAssigned)
-                        NoteView(note: $note, focused: $textFieldFocused)
-                    }
+                VStack(spacing: 8) {
+                    NumberPadTextView(price: $price, isEditingDecimal: $isEditingDecimal, decimalValuesAssigned: $decimalValuesAssigned)
+                    NoteView(note: $note, focused: $textFieldFocused)
                 }
+                .frame(minHeight: 0)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                if showingNotePicker {
-                    ScrollView(.horizontal, showsIndicators: false) {
+                VStack(spacing: NumberPad.preferredSpacing) {
+                    if showingNotePicker {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(suggestedTransactions, id: \.self) { transaction in
+                                    Button {
+                                        note = transaction.wrappedNote
+                                        withAnimation {
+                                            if price == 0 {
+                                                price = transaction.wrappedAmount
+                                            }
+                                            if category == nil {
+                                                category = transaction.category
+                                            }
+                                        }
+                                        self.hideKeyboard()
+                                    } label: {
+                                        HStack(spacing: 3) {
+                                            Text(transaction.wrappedNote)
+                                                .foregroundStyle(Color.PrimaryText)
+                                                .lineLimit(1)
+                                                .padding(.vertical, 3.5)
+                                                .padding(.horizontal, 7)
+
+                                            Text("\(currencySymbol)\(Int(round(transaction.wrappedAmount)))")
+                                                .lineLimit(1)
+                                                .foregroundStyle(Color(hex: transaction.wrappedColour))
+                                                .padding(.vertical, 3.5)
+                                                .padding(.horizontal, 5)
+                                                .background(
+                                                    Color(hex: transaction.wrappedColour).opacity(0.23),
+                                                    in: RoundedRectangle(cornerRadius: 6.5, style: .continuous))
+                                        }
+                                        .font(.system(.body, design: .rounded).weight(.semibold))
+                                        .padding(5)
+                                        .background(
+                                            Color.SecondaryBackground,
+                                            in: RoundedRectangle(cornerRadius: 11.5, style: .continuous))
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.bottom, 5)
+                    } else {
                         HStack(spacing: 8) {
-                            ForEach(suggestedTransactions, id: \.self) { transaction in
-                                Button {
-                                    note = transaction.wrappedNote
-                                    withAnimation {
-                                        if price == 0 {
-                                            price = transaction.wrappedAmount
-                                        }
-                                        if category == nil {
-                                            category = transaction.category
-                                        }
+                            HStack(spacing: 7) {
+                                Group {
+                                    if date < Date.now {
+                                        Image(systemName: "calendar")
+                                    } else {
+                                        Image(systemName: "rays")
+                                            .symbolEffect(
+                                                .variableColor.iterative.dimInactiveLayers.nonReversing,
+                                                options: .repeating, value: animateIcon)
                                     }
-                                    self.hideKeyboard()
-                                } label: {
-                                    HStack(spacing: 3) {
-                                        Text(transaction.wrappedNote)
-                                            .foregroundStyle(Color.PrimaryText)
-                                            .lineLimit(1)
-                                            .padding(.vertical, 3.5)
-                                            .padding(.horizontal, 7)
+                                }
+                                .foregroundColor(Color.SubtitleText)
+                                .font(.system(.subheadline, design: .rounded).weight(.semibold))
 
-                                        Text("\(currencySymbol)\(Int(round(transaction.wrappedAmount)))")
+                                Group {
+                                    if isDateToday(date: date) {
+                                        Text("Today, \(getDateString(date: date))")
                                             .lineLimit(1)
-                                            .foregroundStyle(Color(hex: transaction.wrappedColour))
-                                            .padding(.vertical, 3.5)
-                                            .padding(.horizontal, 5)
-                                            .background(
-                                                Color(hex: transaction.wrappedColour).opacity(0.23),
-                                                in: RoundedRectangle(cornerRadius: 6.5, style: .continuous))
+                                    } else {
+                                        Text(getDateString(date: date))
+                                            .lineLimit(1)
                                     }
-                                    .font(.system(.body, design: .rounded).weight(.semibold))
-                                    .padding(5)
-                                    .background(
-                                        Color.SecondaryBackground,
-                                        in: RoundedRectangle(cornerRadius: 11.5, style: .continuous))
+                                }
+                                .font(.system(.body, design: .rounded).weight(.semibold))
+
+                                if showTime {
+                                    Spacer()
+
+                                    Text(getTimeString(date: date))
+                                        .font(.system(.body, design: .rounded).weight(.semibold))
                                 }
                             }
-                        }
-                    }
-                    .padding(.bottom, 5)
-                } else {
-                    HStack(spacing: 8) {
-                        HStack(spacing: 7) {
-                            Group {
-                                if date < Date.now {
-                                    Image(systemName: "calendar")
-                                } else {
-                                    Image(systemName: "rays")
-                                        .symbolEffect(
-                                            .variableColor.iterative.dimInactiveLayers.nonReversing,
-                                            options: .repeating, value: animateIcon)
-                                }
-                            }
-                            .foregroundColor(Color.SubtitleText)
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-
-                            Group {
-                                if isDateToday(date: date) {
-                                    Text("Today, \(getDateString(date: date))")
-                                        .lineLimit(1)
-                                } else {
-                                    Text(getDateString(date: date))
-                                        .lineLimit(1)
-                                }
-                            }
-                            .font(.system(.body, design: .rounded).weight(.semibold))
-
-                            if showTime {
-                                Spacer()
-
-                                Text(getTimeString(date: date))
-                                    .font(.system(.body, design: .rounded).weight(.semibold))
-                            }
-                        }
-                        .foregroundColor(Color.PrimaryText)
-                        .padding(.vertical, 8.5)
-                        .padding(.horizontal, 10)
-                        .animation(.default, value: isDateToday(date: date))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                                .strokeBorder(Color.Outline, lineWidth: 1.5)
-                        )
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            UIApplication.shared.endEditing()
-                            showingDatePicker = true
-                        }
-
-                        if (expenseCategories.count == 0 && !income) || (incomeCategories.count == 0 && income) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "plus")
-                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
-
-                                Text("Category")
-                                    .font(.system(.body, design: .rounded).weight(.semibold))
-                                    .lineLimit(1)
-                            }
+                            .foregroundColor(Color.PrimaryText)
                             .padding(.vertical, 8.5)
                             .padding(.horizontal, 10)
-                            .foregroundColor(categoryButtonTextColor)
-                            .background(
-                                categoryButtonBackgroundColor,
-                                in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                            )
-                            .contentShape(Rectangle())
+                            .animation(.default, value: isDateToday(date: date))
+                            .frame(maxWidth: .infinity, alignment: .leading)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                                    .strokeBorder(categoryButtonOutlineColor, lineWidth: 1.5)
+                                    .strokeBorder(Color.Outline, lineWidth: 1.5)
                             )
-                            .drawingGroup()
-                            .offset(x: shake ? -5 : 0)
                             .contentShape(Rectangle())
                             .onTapGesture {
-                                showCategorySheet = true
+                                UIApplication.shared.endEditing()
+                                showingDatePicker = true
                             }
-                        } else {
 
-                            Group {
-                                if showCategoryPicker {
-                                    HStack(spacing: 10) {
+                            if (expenseCategories.count == 0 && !income) || (incomeCategories.count == 0 && income) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "plus")
+                                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
 
-                                        Text("Close")
-                                            .font(.system(.body, design: .rounded).weight(.semibold))
-                                            .lineLimit(1)
+                                    Text("Category")
+                                        .font(.system(.body, design: .rounded).weight(.semibold))
+                                        .lineLimit(1)
+                                }
+                                .padding(.vertical, 8.5)
+                                .padding(.horizontal, 10)
+                                .foregroundColor(categoryButtonTextColor)
+                                .background(
+                                    categoryButtonBackgroundColor,
+                                    in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
+                                )
+                                .contentShape(Rectangle())
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 11.5, style: .continuous)
+                                        .strokeBorder(categoryButtonOutlineColor, lineWidth: 1.5)
+                                )
+                                .drawingGroup()
+                                .offset(x: shake ? -5 : 0)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    showCategorySheet = true
+                                }
+                            } else {
+
+                                Group {
+                                    if showCategoryPicker {
+                                        HStack(spacing: 10) {
+
+                                            Text("Close")
+                                                .font(.system(.body, design: .rounded).weight(.semibold))
+                                                .lineLimit(1)
 
 //                                        Image(systemName: "xmark.circle.fill")
 //                                            .font(.system(.footnote, design: .rounded).weight(.bold))
-                                    }
-                                    .padding(.vertical, 8.5)
-                                    .padding(.horizontal, 10)
-                                    .frame(width: widthOfCategoryButton)
-                                    .foregroundColor(Color.AlertRed)
-                                    .background(Color.AlertRed.opacity(0.23),
-                                        in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                                    )
-                                } else {
-                                    if let unwrappedCategory = category {
-                                        HStack(spacing: 5) {
-                                            Text(unwrappedCategory.wrappedEmoji)
-                                                .font(.system(.footnote, design: .rounded).weight(.semibold))
-
-                                            Text(unwrappedCategory.wrappedName)
-                                                .font(.system(.body, design: .rounded).weight(.semibold))
-                                                .lineLimit(1)
-                                        }
-                                        .padding(.vertical, 8.5)
-                                        .padding(.horizontal, 10)
-                                        .foregroundColor(Color(hex: unwrappedCategory.wrappedColour))
-                                        .background(
-                                            Color(hex: unwrappedCategory.wrappedColour).opacity(0.35),
-                                            in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                                        )
-    //                                    .popover(
-    //                                        present: $showCategoryPicker,
-    //                                        attributes: {
-    //                                            $0.position = .absolute(
-    //                                                originAnchor: .topRight,
-    //                                                popoverAnchor: .bottomRight
-    //                                            )
-    //                                            $0.rubberBandingMode = .none
-    //                                            $0.sourceFrameInset = UIEdgeInsets(top: -10, left: 0, bottom: 0, right: 0)
-    //                                            $0.presentation.animation = .easeInOut(duration: 0.2)
-    //                                            $0.dismissal.animation = .easeInOut(duration: 0.3)
-    //                                        }
-    //                                    ) {
-    //                                        CategoryPickerView(
-    //                                            category: $category, showPicker: $showCategoryPicker,
-    //                                            showSheet: $showCategorySheet, income: income, darkMode: darkMode
-    //                                        )
-    //                                        .environment(\.managedObjectContext, self.moc)
-    //                                    } background: {
-    //                                        backgroundColor.opacity(0.6)
-    //                                    }
-                                    } else {
-                                        HStack(spacing: 5.5) {
-                                            Image(systemName: "circle.grid.2x2")
-                                                .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                                                .symbolEffect(
-                                                    .bounce.up.byLayer, options: .repeating.speed(0.5),
-                                                    value: showCategoryPicker)
-
-                                            Text("Category")
-                                                .font(.system(.body, design: .rounded).weight(.semibold))
-                                                .lineLimit(1)
                                         }
                                         .padding(.vertical, 8.5)
                                         .padding(.horizontal, 10)
                                         .frame(width: widthOfCategoryButton)
-                                        .foregroundColor(categoryButtonTextColor)
-                                        .background(
-                                            categoryButtonBackgroundColor,
+                                        .foregroundColor(Color.AlertRed)
+                                        .background(Color.AlertRed.opacity(0.23),
                                             in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
                                         )
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 11.5, style: .continuous)
-                                                .strokeBorder(categoryButtonOutlineColor, lineWidth: 1.5)
-                                        )
-                                        .drawingGroup()
-                                        .offset(x: shake ? -5 : 0)
-    //                                    .popover(
-    //                                        present: $showCategoryPicker,
-    //                                        attributes: {
-    //                                            $0.position = .absolute(
-    //                                                originAnchor: .topRight,
-    //                                                popoverAnchor: .bottomRight
-    //                                            )
-    //                                            $0.rubberBandingMode = .none
-    //                                            $0.sourceFrameInset = UIEdgeInsets(top: -10, left: 0, bottom: 0, right: 0)
-    //                                            $0.presentation.animation = .easeInOut(duration: 0.2)
-    //                                            $0.dismissal.animation = .easeInOut(duration: 0.3)
-    //                                        }
-    //                                    ) {
-    //                                        CategoryPickerView(
-    //                                            category: $category, showPicker: $showCategoryPicker,
-    //                                            showSheet: $showCategorySheet, income: income, darkMode: darkMode
-    //                                        )
-    //                                        .environment(\.managedObjectContext, self.moc)
-    //                                    } background: {
-    //                                        backgroundColor.opacity(0.6)
-    //                                    }
+                                    } else {
+                                        if let unwrappedCategory = category {
+                                            HStack(spacing: 5) {
+                                                Text(unwrappedCategory.wrappedEmoji)
+                                                    .font(.system(.footnote, design: .rounded).weight(.semibold))
+
+                                                Text(unwrappedCategory.wrappedName)
+                                                    .font(.system(.body, design: .rounded).weight(.semibold))
+                                                    .lineLimit(1)
+                                            }
+                                            .padding(.vertical, 8.5)
+                                            .padding(.horizontal, 10)
+                                            .foregroundColor(Color(hex: unwrappedCategory.wrappedColour))
+                                            .background(
+                                                Color(hex: unwrappedCategory.wrappedColour).opacity(0.35),
+                                                in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
+                                            )
+
+                                        } else {
+                                            HStack(spacing: 5.5) {
+                                                Image(systemName: "circle.grid.2x2")
+                                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                                                    .symbolEffect(
+                                                        .bounce.up.byLayer, options: .repeating.speed(0.5),
+                                                        value: showCategoryPicker)
+
+                                                Text("Category")
+                                                    .font(.system(.body, design: .rounded).weight(.semibold))
+                                                    .lineLimit(1)
+                                            }
+                                            .padding(.vertical, 8.5)
+                                            .padding(.horizontal, 10)
+                                            .frame(width: widthOfCategoryButton)
+                                            .foregroundColor(categoryButtonTextColor)
+                                            .background(
+                                                categoryButtonBackgroundColor,
+                                                in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
+                                            )
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 11.5, style: .continuous)
+                                                    .strokeBorder(categoryButtonOutlineColor, lineWidth: 1.5)
+                                            )
+                                            .drawingGroup()
+                                            .offset(x: shake ? -5 : 0)
+                                        }
                                     }
-                                }
 
-                            }
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                withAnimation(.easeInOut) {
-                                    showCategoryPicker.toggle()
                                 }
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    withAnimation(.easeInOut) {
+                                        showCategoryPicker.toggle()
+                                    }
 
+                                }
                             }
                         }
                     }
-                    .padding(.bottom, 5)
-                }
 
-                // date and category picker
+                    // date and category picker
 
-                if showCategoryPicker {
-                    NewCategoryPickerView(
-                        category: $category, showPicker: $showCategoryPicker,
-                        showSheet: $showCategorySheet, income: income
-                    )
-                    .transition(AnyTransition.move(edge: .trailing).combined(with: .opacity))
-                } else {
-                    NumberPad(
-                        price: $price,
-                        category: $category,
-                        isEditingDecimal: $isEditingDecimal,
-                        decimalValuesAssigned: $decimalValuesAssigned,
-                        showingNotePicker: showingNotePicker
-                    ) {
-                        submit()
+                    if showCategoryPicker {
+                        NewCategoryPickerView(
+                            category: $category, showPicker: $showCategoryPicker,
+                            showSheet: $showCategorySheet, income: income
+                        )
+                        .frame(height: NumberPad.preferredHeight + NumberPad.preferredBottomPadding, alignment: .top)
+                        .transition(AnyTransition.move(edge: .trailing).combined(with: .opacity))
+                    } else {
+                        NumberPad(
+                            price: $price,
+                            category: $category,
+                            isEditingDecimal: $isEditingDecimal,
+                            decimalValuesAssigned: $decimalValuesAssigned,
+                            showingNotePicker: showingNotePicker
+                        ) {
+                            submit()
+                        }
+                        .frame(height: NumberPad.preferredHeight, alignment: .top)
+                        .padding(.bottom, NumberPad.preferredBottomPadding)
+                        .layoutPriority(1)
+                        .transition(AnyTransition.move(edge: .leading).combined(with: .opacity))
                     }
-                    .transition(AnyTransition.move(edge: .leading).combined(with: .opacity))
                 }
 
             }
-            .padding(17)
-            .frame(width: proxy.size.width, height: proxy.size.height)
+            .padding(.horizontal, 17)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .liquidGlassBackground(opacity: 1)
             .onTapGesture {
                 self.hideKeyboard()
@@ -759,19 +665,6 @@ struct TransactionView: View {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             category = nil
         }
-        .onChange(of: isDragging) { 
-            if !isDragging {
-                if income {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        swipingOffset = capsuleWidth
-                    }
-                } else {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        swipingOffset = 0
-                    }
-                }
-            }
-        }
         .onAppear {
             DispatchQueue.main.async {
                 if let transaction = toEdit {
@@ -798,11 +691,6 @@ struct TransactionView: View {
                 repeatType: $repeatType, repeatCoefficient: $repeatCoefficient, showPicker: $showPicker
             )
             .presentationDetents([.height(230)])
-        }
-        .onChange(of: dynamicTypeSize) { 
-            if income {
-                swipingOffset = capsuleWidth
-            }
         }
     }
 
@@ -991,10 +879,6 @@ struct TransactionView: View {
 
             _income = State(initialValue: transaction.income)
 
-            if transaction.income {
-                _swipingOffset = State(initialValue: 100)
-            }
-
             _date = State(initialValue: transaction.date ?? Date.now)
         }
         self.toEdit = toEdit
@@ -1077,9 +961,10 @@ struct FilteredSearchNewTransactionView: View {
 struct NumPadButton: ButtonStyle {
     public func makeBody(configuration: Self.Configuration) -> some View {
         return configuration.label
-            .scaleEffect(configuration.isPressed ? 0.8 : 1)
-            .animation(.easeOut(duration: 0.3), value: configuration.isPressed)
-            .opacity(configuration.isPressed ? 0.5 : 1)
+            .scaleEffect(configuration.isPressed ? 1.22 : 1)
+            .animation(.spring(response: 0.2, dampingFraction: 0.5), value: configuration.isPressed)
+            .brightness(configuration.isPressed ? 0.12 : 0)
+            .opacity(configuration.isPressed ? 0.98 : 1)
     }
 }
 
@@ -1671,3 +1556,11 @@ struct ButtonView: View {
             .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }
+#Preview {
+    let dataController = DataController.shared
+
+    TransactionView(toEdit: nil)
+        .environment(\.managedObjectContext, dataController.container.viewContext)
+        .environmentObject(dataController)
+}
+
