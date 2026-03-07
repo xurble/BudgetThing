@@ -9,7 +9,6 @@ import CloudKitSyncMonitor
 import CoreData
 import Foundation
 import SwiftUIIntrospect
-import Popovers
 import SwiftUI
 
 struct LogView: View {
@@ -43,7 +42,6 @@ struct LogView: View {
     let subtitleText = ["today", "this week", "this month", "this year"]
 
     // show filter menu
-    @State var showFilter = false
     @State var filter = FilterType.all
     @State private var showInsights = false
 
@@ -230,8 +228,16 @@ struct LogView: View {
                         .padding(6)
                         .contentShape(Rectangle())
 
-                        Button {
-                            showFilter = true
+                        Menu {
+                            Picker("Filter", selection: $filter) {
+                                ForEach(FilterType.allCases, id: \.self) { filterType in
+                                    Label(
+                                        LocalizedStringKey(filterType.rawValue),
+                                        systemImage: FilterType.imageDictionary[filterType] ?? "line.3.horizontal.decrease.circle"
+                                    )
+                                    .tag(filterType)
+                                }
+                            }
                         } label: {
                             Image(systemName: "line.3.horizontal.decrease.circle")
                                 .symbolRenderingMode(.hierarchical)
@@ -241,18 +247,6 @@ struct LogView: View {
                         .padding(6)
                         .contentShape(Rectangle())
                         .accessibilityLabel("Filter")
-                        .popover(present: $showFilter, attributes: {
-                            $0.position = .absolute(
-                                originAnchor: .bottomRight,
-                                popoverAnchor: .topRight
-                            )
-                            $0.rubberBandingMode = .none
-                            $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
-                            $0.presentation.animation = .easeInOut(duration: 0.2)
-                            $0.dismissal.animation = .easeInOut(duration: 0.3)
-                        }) {
-                            FilterPickerView(filterType: $filter, showMenu: $showFilter)
-                        }
                     }
                     .buttonStyle(.plain)
                     .padding(.vertical, 6)
@@ -408,7 +402,6 @@ struct LogInsightsView: View {
     let showCents: Bool
     let currencySymbol: String
 
-    @State var showMenu1 = false
     let subtitleText = ["today", "this week", "this month", "this year", "all time"]
 
     @AppStorage("logInsightsTimeFrame", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var timeframe = 2
@@ -505,8 +498,13 @@ struct LogInsightsView: View {
                     Text(LocalizedStringKey(headingText))
                         .font(.system(.body, design: .rounded).weight(.medium))
                         .foregroundColor(Color.PrimaryText.opacity(0.9))
-                    Button {
-                        showMenu1 = true
+                    Menu {
+                        Picker("Timeframe", selection: $timeframe) {
+                            ForEach(subtitleText.indices, id: \.self) { index in
+                                Text(LocalizedStringKey(subtitleText[index]))
+                                    .tag(index + 1)
+                            }
+                        }
                     } label: {
                         Text(LocalizedStringKey(subtitleText[timeframe - 1]))
                             .padding(2)
@@ -514,18 +512,6 @@ struct LogInsightsView: View {
                             .font(.system(.body, design: .rounded).weight(.medium))
                             .foregroundColor(Color.PrimaryText.opacity(9))
                             .overlay(Capsule().stroke(Color.Outline, lineWidth: 1.3))
-                    }
-                    .popover(present: $showMenu1, attributes: {
-                        $0.position = .absolute(
-                            originAnchor: .bottom,
-                            popoverAnchor: .top
-                        )
-                        $0.rubberBandingMode = .none
-                        $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
-                        $0.presentation.animation = .easeInOut(duration: 0.2)
-                        $0.dismissal.animation = .easeInOut(duration: 0.3)
-                    }) {
-                        TimePickerView(showMenu: $showMenu1, timeframe: $timeframe)
                     }
                 }
 
@@ -1932,58 +1918,17 @@ struct CategoryStepperView: View {
 struct IncomeFilterToggleView: View {
     @Binding var income: Bool
 
-    @Namespace var animation
-
     var body: some View {
-        HStack(spacing: 0) {
+        Picker("", selection: $income) {
             Text("Expense")
-//                .font(.system(size: 17, weight: .semibold, design: .rounded))
-                .font(.system(.body, design: .rounded).weight(.semibold))
-                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                .foregroundColor(income == false ? Color.PrimaryText : Color.SubtitleText)
-                .padding(5.5)
-                .padding(.horizontal, 8)
-                .background {
-                    if income == false {
-                        Capsule()
-                            .fill(Color.SecondaryBackground)
-                            .matchedGeometryEffect(id: "TAB1", in: animation)
-                    }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    DispatchQueue.main.async {
-                        withAnimation(.easeIn(duration: 0.15)) {
-                            income = false
-                        }
-                    }
-                }
-
+                .tag(false)
             Text("filter-picker-income")
-//                .font(.system(size: 17, weight: .semibold, design: .rounded))
-                .font(.system(.body, design: .rounded).weight(.semibold))
-                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                .foregroundColor(income == true ? Color.PrimaryText : Color.SubtitleText)
-                .padding(5.5)
-                .padding(.horizontal, 8)
-                .background {
-                    if income == true {
-                        Capsule()
-                            .fill(Color.SecondaryBackground)
-                            .matchedGeometryEffect(id: "TAB1", in: animation)
-                    }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    DispatchQueue.main.async {
-                        withAnimation(.easeIn(duration: 0.15)) {
-                            income = true
-                        }
-                    }
-                }
+                .tag(true)
         }
-        .padding(3)
-        .overlay(Capsule().stroke(Color.Outline.opacity(0.4), lineWidth: 1.3))
+        .pickerStyle(.segmented)
+        .font(.system(.body, design: .rounded).weight(.semibold))
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .labelsHidden()
     }
 }
 

@@ -1,3 +1,10 @@
+//
+//  LiquidGlass.swift
+//  BudgetThing
+//
+//  Created by Gareth Simpson on 3/3/26.
+//
+
 import SwiftUI
 
 struct LiquidGlassBackground: View {
@@ -58,6 +65,37 @@ struct GlassCard<Content: View>: View {
     }
 }
 
+struct ToastStyle {
+    static let cornerRadius: CGFloat = 9
+    static let tintOpacity: Double = 0.2
+}
+
+struct ToastAnimationStyle {
+    static let insertionScale: CGFloat = 0.6
+    static let insertionOffset: CGFloat = 18
+    static let removalOffset: CGFloat = 150
+    static let springResponse: Double = 0.5
+    static let springDampingFraction: Double = 0.6
+    static let springBlendDuration: Double = 0.1
+
+    static var transition: AnyTransition {
+        .asymmetric(
+            insertion: .offset(y: -insertionOffset)
+                .combined(with: .scale(scale: insertionScale, anchor: .top))
+                .combined(with: .opacity),
+            removal: .offset(y: -removalOffset)
+        )
+    }
+
+    static var animation: Animation {
+        .spring(
+            response: springResponse,
+            dampingFraction: springDampingFraction,
+            blendDuration: springBlendDuration
+        )
+    }
+}
+
 extension View {
     func liquidGlassBackground() -> some View {
         background(LiquidGlassBackground())
@@ -73,6 +111,18 @@ extension View {
 
     func glassRoundedRect(cornerRadius: CGFloat = 18, tint: Color? = nil) -> some View {
         glassEffect(glassStyle(for: tint), in: .rect(cornerRadius: cornerRadius))
+    }
+
+    func toastGlassRoundedRect(tint: Color) -> some View {
+        background(
+            RoundedRectangle(cornerRadius: ToastStyle.cornerRadius, style: .continuous)
+                .fill(.ultraThinMaterial)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: ToastStyle.cornerRadius, style: .continuous)
+                .fill(tint.opacity(ToastStyle.tintOpacity))
+        )
+        .compositingGroup()
     }
 
     private func glassStyle(for tint: Color?) -> Glass {

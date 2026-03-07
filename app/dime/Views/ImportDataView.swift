@@ -247,8 +247,8 @@ struct ImportDataView: View {
                                 .foregroundColor(Color.AlertRed)
                         }
                         .padding(8)
-                        .background(Color.AlertRed.opacity(0.23), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                        .transition(AnyTransition.opacity.combined(with: .move(edge: .top)))
+                        .toastGlassRoundedRect(tint: Color.AlertRed)
+                        .transition(ToastAnimationStyle.transition)
                         .frame(width: 250)
                     }
                 }
@@ -786,7 +786,7 @@ struct ImportDataView: View {
             NewCategoryAlert(income: $income, bottomSpacers: false, budgetMode: false)
                 .presentationDetents([.height(270)])
         }
-        .animation(.easeOut(duration: 0.2), value: showToast)
+        .animation(ToastAnimationStyle.animation, value: showToast)
         .onChange(of: showToast) { _, newValue in
             if newValue {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {

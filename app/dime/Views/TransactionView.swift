@@ -7,7 +7,6 @@
 
 import Combine
 import Foundation
-import Popovers
 import SwiftUI
 
 struct TransactionView: View {
@@ -33,7 +32,6 @@ struct TransactionView: View {
     @State private var date = Date.now
     @State private var repeatType = 0
     @State private var repeatCoefficient = 1
-    @State private var showRecurring = false
     @State var income = false
 
     var transactionTypeString: String {
@@ -82,8 +80,6 @@ struct TransactionView: View {
 
     @AppStorage("bottomEdge", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing"))
     var bottomEdge: Double = 15
-
-    @State private var offset: CGFloat = 0
 
     let repeatOverlays = ["D", "W", "M"]
     let numberArray = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
@@ -241,11 +237,8 @@ struct TransactionView: View {
                                 .foregroundColor(Color.AlertRed)
                         }
                         .padding(8)
-                        .background(
-                            Color.AlertRed.opacity(0.23),
-                            in: RoundedRectangle(cornerRadius: 9, style: .continuous)
-                        )
-                        .transition(AnyTransition.opacity.combined(with: .move(edge: .top)))
+                        .toastGlassRoundedRect(tint: Color.AlertRed)
+                        .transition(ToastAnimationStyle.transition)
                         .frame(maxWidth: dynamicTypeSize > .xLarge ? 250 : 200)
                     } else {
                         Picker("", selection: $income) {
@@ -297,8 +290,30 @@ struct TransactionView: View {
                             .accessibilityLabel("delete transaction")
                         }
 
-                        Button {
-                            showRecurring = true
+                        Menu {
+                            Button("None") {
+                                repeatType = 0
+                                repeatCoefficient = 1
+                            }
+                            Button("Daily") {
+                                repeatType = 1
+                                repeatCoefficient = 1
+                            }
+                            Button("Weekly") {
+                                repeatType = 2
+                                repeatCoefficient = 1
+                            }
+                            Button("Monthly") {
+                                repeatType = 3
+                                repeatCoefficient = 1
+                            }
+                            Button("Custom...") {
+                                if repeatType == 0 || repeatCoefficient < 2 {
+                                    repeatType = 2
+                                    repeatCoefficient = 2
+                                }
+                                showPicker = true
+                            }
                         } label: {
                             if repeatType > 0 {
                                 Image(systemName: "repeat")
@@ -325,27 +340,7 @@ struct TransactionView: View {
                                     .contentShape(Circle())
                             }
                         }
-                        .accessibilityRemoveTraits(.isButton)
                         .accessibilityLabel(repeatButtonAccessibility)
-                        .popover(
-                            present: $showRecurring,
-                            attributes: {
-                                $0.position = .absolute(
-                                    originAnchor: .bottom,
-                                    popoverAnchor: .top
-                                )
-                                $0.rubberBandingMode = .none
-                                $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
-                                $0.presentation.animation = .easeInOut(duration: 0.2)
-                                $0.dismissal.animation = .easeInOut(duration: 0.3)
-                            }
-                        ) {
-                            RecurringPickerView(
-                                repeatType: $repeatType, repeatCoefficient: $repeatCoefficient,
-                                showMenu: $showRecurring, showPicker: $showPicker)
-                        } background: {
-                            backgroundColor.opacity(0.6)
-                        }
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -681,101 +676,29 @@ struct TransactionView: View {
             .onTapGesture {
                 self.hideKeyboard()
             }
-            .fullScreenCover(isPresented: $deleteMode) {
-                ZStack(alignment: .bottom) {
-                    Color.clear
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            deleteMode = false
-                            toDelete = nil
+            .confirmationDialog(
+                "Delete Expense?",
+                isPresented: $deleteMode,
+                titleVisibility: .visible
+            ) {
+                Button("Delete", role: .destructive) {
+                    withAnimation {
+                        if let itemToDelete = toDelete {
+                            moc.delete(itemToDelete)
                         }
-
-                    VStack(alignment: .leading, spacing: 1.5) {
-                        Text("Delete Expense?")
-                            .font(.system(size: 20, weight: .medium, design: .rounded))
-                            .foregroundColor(.PrimaryText)
-
-                        Text("This action cannot be undone.")
-                            .font(.system(size: 16, weight: .medium, design: .rounded))
-                            .foregroundColor(.SubtitleText)
-                            .padding(.bottom, 15)
-
-                        Button {
-                            deleteMode = false
-
-                            withAnimation {
-                                if let itemToDelete = toDelete {
-                                    moc.delete(itemToDelete)
-                                }
-                                dataController.save()
-                            }
-
-                            dismiss()
-
-                        } label: {
-                            Text("Delete")
-                                .font(.system(size: 20, weight: .semibold, design: .rounded))
-                                .foregroundColor(.white)
-                                .frame(height: 45)
-                                .frame(maxWidth: .infinity)
-                                .background(
-                                    Color.AlertRed, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                        }
-                        .padding(.bottom, 8)
-
-                        Button {
-                            withAnimation(.easeOut(duration: 0.7)) {
-                                deleteMode = false
-                                toDelete = nil
-                            }
-
-                        } label: {
-                            Text("Cancel")
-                                .font(.system(size: 20, weight: .semibold, design: .rounded))
-                                .foregroundColor(Color.PrimaryText.opacity(0.9))
-                                .frame(height: 45)
-                                .frame(maxWidth: .infinity)
-                                .background(
-                                    Color.SecondaryBackground,
-                                    in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                        }
+                        dataController.save()
                     }
-                    .padding(13)
-                    .background(
-                        RoundedRectangle(cornerRadius: 13).fill(Color.PrimaryBackground).shadow(
-                            color: systemColorScheme == .dark ? Color.clear : Color.gray.opacity(0.25), radius: 6)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 13).stroke(
-                            systemColorScheme == .dark ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3)
-                    )
-                    .offset(y: offset)
-                    .gesture(
-                        DragGesture()
-                            .onChanged { gesture in
-                                if gesture.translation.height < 0 {
-                                    offset = gesture.translation.height / 3
-                                } else {
-                                    offset = gesture.translation.height
-                                }
-                            }
-                            .onEnded { value in
-                                if value.translation.height > 20 {
-                                    deleteMode = false
-                                    toDelete = nil
-                                } else {
-                                    withAnimation {
-                                        offset = 0
-                                    }
-                                }
-                            }
-                    )
-                    .padding(.horizontal, 17)
-                    .padding(.bottom, bottomEdge == 0 ? 12 : bottomEdge - 3)
+
+                    deleteMode = false
+                    toDelete = nil
+                    dismiss()
                 }
-                .edgesIgnoringSafeArea(.all)
-                .background(BackgroundBlurView())
+                Button("Cancel", role: .cancel) {
+                    deleteMode = false
+                    toDelete = nil
+                }
+            } message: {
+                Text("This action cannot be undone.")
             }
             .overlay {
                 ZStack(alignment: .bottom) {
@@ -815,7 +738,7 @@ struct TransactionView: View {
             }
         }
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-        .animation(.easeOut(duration: 0.2), value: showToast)
+        .animation(ToastAnimationStyle.animation, value: showToast)
         .ignoresSafeArea(.keyboard, edges: .all)
         .frame(maxHeight: .infinity)
         .liquidGlassBackground(opacity: 0.95)

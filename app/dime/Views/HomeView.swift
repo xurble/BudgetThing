@@ -63,7 +63,6 @@ struct HomeView: View {
     @EnvironmentObject var tabBarManager: TabBarManager
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
-    @State var showPopup = false
     @FetchRequest(sortDescriptors: []) private var transactions: FetchedResults<Transaction>
 
     @AppStorage("confetti", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var confetti: Bool = false
@@ -91,6 +90,31 @@ struct HomeView: View {
         FabBarAction(systemImage: "plus", accessibilityLabel: "Add Transaction") {
             presentAddTransaction()
         }
+    }
+
+    private var shouldStopRecurring: Bool {
+        if let toDelete = transactionManager.toDelete {
+            return transactionManager.future && toDelete.wrappedDate < Date.now && toDelete.recurringType > 0
+        }
+
+        return false
+    }
+
+    private var deleteDialogTitle: String {
+        if shouldStopRecurring {
+            return "Stop Recurring?"
+        }
+
+        let note = transactionManager.toDelete?.wrappedNote ?? ""
+        if note.isEmpty {
+            return "Delete Transaction?"
+        }
+
+        return "Delete '\(note)'?"
+    }
+
+    private var deleteDialogMessage: String {
+        shouldStopRecurring ? "The transaction will no longer be automatically logged." : "This action cannot be undone."
     }
 
     var body: some View {
@@ -141,23 +165,8 @@ struct HomeView: View {
                 action: fabBarAction,
                 isVisible: !tabBarManager.hideTab
             )
-            .allowsHitTesting(showPopup ? false : true)
             .environmentObject(toastPresenter)
             .environmentObject(transactionManager)
-
-            if showPopup {
-                Rectangle()
-                    .fill(Color.clear)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        transactionManager.showPopup = false
-                    }
-            }
-
-            DeleteTransactionAlert()
-                .offset(y: showPopup ? 0 : 300)
-                .environmentObject(transactionManager)
 
             if appLockVM.isAppLockEnabled && !appLockVM.isAppUnLocked {
                 AppLockView()
@@ -190,10 +199,36 @@ struct HomeView: View {
             dataController.save()
             transactionManager.toDelete = nil
         })
-        .onChange(of: transactionManager.showPopup) { _, newValue in
-            withAnimation {
-                showPopup = newValue
+        .confirmationDialog(
+            deleteDialogTitle,
+            isPresented: $transactionManager.showPopup,
+            titleVisibility: .visible
+        ) {
+            Button(shouldStopRecurring ? "Stop Recurring" : "Delete", role: .destructive) {
+                guard let toDelete = transactionManager.toDelete else {
+                    transactionManager.showPopup = false
+                    return
+                }
+
+                transactionManager.showPopup = false
+
+                if shouldStopRecurring {
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        toDelete.recurringType = 0
+                        dataController.save()
+                    }
+                } else {
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        moc.delete(toDelete)
+                        transactionManager.showToast = true
+                    }
+                }
             }
+            Button("Cancel", role: .cancel) {
+                transactionManager.showPopup = false
+            }
+        } message: {
+            Text(deleteDialogMessage)
         }
         .fullScreenCover(item: $transactionManager.toEdit, onDismiss: {
             transactionManager.toEdit = nil

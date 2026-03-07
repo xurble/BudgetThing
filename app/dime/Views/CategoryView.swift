@@ -7,7 +7,6 @@
 
 import Combine
 import CoreHaptics
-import Popovers
 import SwiftUI
 import UIKit
 
@@ -19,7 +18,6 @@ struct CategoryView: View {
     var mode: CategoryViewMode
 //    @Environment(\.colorScheme) var colorScheme
     @State var income = false
-    @Namespace var animation
 
     @State var newCategory = false
 
@@ -39,56 +37,17 @@ struct CategoryView: View {
             CategoryListView(income: $income, mode: mode, showToast: $showToast, toastTitle: $toastTitle, toastImage: $toastImage, positive: $positive)
 
             HStack {
-                HStack(spacing: 0) {
+                Picker("", selection: $income) {
                     Text("Expense")
-                        .font(.system(.body, design: .rounded).weight(.semibold))
-                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                        .font(.system(size: 18, weight: .semibold, design: .rounded))
-                        .foregroundColor(income == false ? Color.PrimaryText : Color.SubtitleText)
-                        .padding(6)
-                        .padding(.horizontal, 8)
-                        .background {
-                            if income == false {
-                                Capsule()
-                                    .fill(Color.SecondaryBackground)
-                                    .matchedGeometryEffect(id: "TAB1", in: animation)
-                            }
-                        }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            DispatchQueue.main.async {
-                                withAnimation(.easeIn(duration: 0.15)) {
-                                    income = false
-                                }
-                            }
-                        }
-
+                        .tag(false)
                     Text("Income")
-                        .font(.system(.body, design: .rounded).weight(.semibold))
-                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                        .font(.system(size: 18, weight: .semibold, design: .rounded))
-                        .foregroundColor(income == true ? Color.PrimaryText : Color.SubtitleText)
-                        .padding(6)
-                        .padding(.horizontal, 8)
-                        .background {
-                            if income == true {
-                                Capsule()
-                                    .fill(Color.SecondaryBackground)
-                                    .matchedGeometryEffect(id: "TAB1", in: animation)
-                            }
-                        }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            DispatchQueue.main.async {
-                                withAnimation(.easeIn(duration: 0.15)) {
-                                    income = true
-                                }
-                            }
-                        }
+                        .tag(true)
                 }
-                .padding(3)
+                .pickerStyle(.segmented)
+                .font(.system(.body, design: .rounded).weight(.semibold))
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                .labelsHidden()
                 .layoutPriority(1)
-                .overlay(Capsule().stroke(Color.Outline.opacity(0.4), lineWidth: 1.3))
 
                 Spacer()
 
@@ -148,8 +107,6 @@ struct CategoryListView: View {
     @AppStorage("categorySuggestions", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var showSuggestions: Bool = true
     @State var suggestionsToast = false
 
-    @State private var offset: CGFloat = 0
-
     @FetchRequest private var categories: FetchedResults<Category>
 
     @State var isEditing = false
@@ -204,8 +161,8 @@ struct CategoryListView: View {
                         .foregroundColor(toastColor)
                 }
                 .padding(10)
-                .background(toastColor.opacity(0.23), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                .transition(AnyTransition.opacity.combined(with: .move(edge: .top)))
+                .toastGlassRoundedRect(tint: toastColor)
+                .transition(ToastAnimationStyle.transition)
                 .frame(maxWidth: 250)
                 .frame(height: 35)
                 .padding(20)
@@ -489,100 +446,34 @@ struct CategoryListView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .liquidGlassBackground()
-        .animation(.easeOut(duration: 0.2), value: showToast)
+        .animation(ToastAnimationStyle.animation, value: showToast)
         .onChange(of: toDelete) { 
             if toDelete != nil {
                 deleteMode = true
             }
         }
-        .fullScreenCover(isPresented: $deleteMode, onDismiss: {
-            toDelete = nil
-        }) {
-            ZStack(alignment: .bottom) {
-                Color.clear
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        deleteMode = false
+        .confirmationDialog(
+            "Delete '\(toDelete?.wrappedName ?? "")'?",
+            isPresented: $deleteMode,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                withAnimation {
+                    if let gonnaDelete = toDelete {
+                        moc.delete(gonnaDelete)
                     }
 
-                VStack(alignment: .leading, spacing: 1.5) {
-                    Text("Delete '\(toDelete?.wrappedName ?? "")'?")
-                        .font(.system(size: 20, weight: .medium, design: .rounded))
-                        .foregroundColor(.PrimaryText)
-
-                    Text("This action cannot be undone, and all \(toDelete?.wrappedName ?? "") transactions would be deleted.")
-                        .font(.system(size: 16, weight: .medium, design: .rounded))
-                        .foregroundColor(.SubtitleText)
-                        .padding(.bottom, 15)
-
-                    Button {
-                        withAnimation {
-                            if let gonnaDelete = toDelete {
-                                moc.delete(gonnaDelete)
-                            }
-
-                            dataController.save()
-                        }
-
-                        toDelete = nil
-                        deleteMode = false
-
-                    } label: {
-                        Text("Delete")
-                            .font(.system(size: 20, weight: .semibold, design: .rounded))
-                            .foregroundColor(.white)
-                            .frame(height: 45)
-                            .frame(maxWidth: .infinity)
-                            .background(Color.AlertRed, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                    }
-                    .padding(.bottom, 8)
-
-                    Button {
-                        withAnimation(.easeOut(duration: 0.7)) {
-                            deleteMode = false
-                            offset = 0
-                        }
-
-                    } label: {
-                        Text("Cancel")
-                            .font(.system(size: 20, weight: .semibold, design: .rounded))
-                            .foregroundColor(Color.PrimaryText.opacity(0.9))
-                            .frame(height: 45)
-                            .frame(maxWidth: .infinity)
-                            //                        .background(Color("13").opacity(0.23), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                            .background(Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                    }
+                    dataController.save()
                 }
-                .padding(13)
-                .background(RoundedRectangle(cornerRadius: 13).fill(Color.PrimaryBackground).shadow(color: systemColorScheme == .dark ? Color.clear : Color.gray.opacity(0.25), radius: 6))
-                .overlay(RoundedRectangle(cornerRadius: 13).stroke(systemColorScheme == .dark ? Color.gray.opacity(0.1) : Color.clear, lineWidth: 1.3))
-                .offset(y: offset)
-                .gesture(
-                    DragGesture()
-                        .onChanged { gesture in
-                            if gesture.translation.height < 0 {
-                                offset = gesture.translation.height / 3
-                            } else {
-                                offset = gesture.translation.height
-                            }
-                        }
-                        .onEnded { value in
-                            if value.translation.height > 20 {
-                                deleteMode = false
-                                offset = 0
-                            } else {
-                                withAnimation {
-                                    offset = 0
-                                }
-                            }
-                        }
-                )
-                .padding(.horizontal, 17)
-                .padding(.bottom, bottomEdge == 0 ? 13 : bottomEdge)
+
+                toDelete = nil
+                deleteMode = false
             }
-            .edgesIgnoringSafeArea(.all)
-            .background(BackgroundBlurView())
+            Button("Cancel", role: .cancel) {
+                deleteMode = false
+            }
+        } message: {
+            Text("This action cannot be undone, and all \(toDelete?.wrappedName ?? "") transactions would be deleted.")
         }
         .sheet(item: $toEdit, onDismiss: {
             toEdit = nil
@@ -660,7 +551,6 @@ struct NewCategoryAlert: View {
     @Environment(\.colorScheme) var systemColorScheme
     @EnvironmentObject var dataController: DataController
 
-    @Namespace var animation
 
     // existing categories
 
@@ -671,7 +561,6 @@ struct NewCategoryAlert: View {
     // state
     @State private var newName = ""
     @State private var newEmoji = ""
-    @State private var showingColourPicker = false
     @State private var selectedColour: String = "#FFFFFF"
 
     @FocusState var focusedField: FocusedField?
@@ -720,8 +609,8 @@ struct NewCategoryAlert: View {
                                 .foregroundColor(toastColor)
                         }
                         .padding(6)
-                        .background(toastColor.opacity(0.23), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                        .transition(AnyTransition.opacity.combined(with: .move(edge: .top)))
+                        .toastGlassRoundedRect(tint: toastColor)
+                        .transition(ToastAnimationStyle.transition)
                         .frame(maxWidth: 200)
                     } else {
                         if expenseCategories.count == 24 {
@@ -737,56 +626,16 @@ struct NewCategoryAlert: View {
 //                                .font(.system(size: 18, weight: .semibold, design: .rounded))
                                 .padding(.top, 4)
                         } else {
-                            HStack(spacing: 0) {
+                            Picker("", selection: $income) {
                                 Text("Expense")
-                                    .font(.system(.callout, design: .rounded).weight(.semibold))
-                                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                                    .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                    .foregroundColor(income == false ? Color.PrimaryText : Color.SubtitleText)
-                                    .padding(5)
-                                    .padding(.horizontal, 7)
-                                    .background {
-                                        if income == false {
-                                            Capsule()
-                                                .fill(Color.SecondaryBackground)
-                                                .matchedGeometryEffect(id: "TAB1", in: animation)
-                                        }
-                                    }
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        DispatchQueue.main.async {
-                                            withAnimation(.easeIn(duration: 0.15)) {
-                                                income = false
-                                            }
-                                        }
-                                    }
-
+                                    .tag(false)
                                 Text("Income")
-                                    .font(.system(.callout, design: .rounded).weight(.semibold))
-                                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                                    .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                    .foregroundColor(income == true ? Color.PrimaryText : Color.SubtitleText)
-                                    .padding(5)
-                                    .padding(.horizontal, 7)
-                                    .background {
-                                        if income == true {
-                                            Capsule()
-                                                .fill(Color.SecondaryBackground)
-                                                .matchedGeometryEffect(id: "TAB1", in: animation)
-                                        }
-                                    }
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        DispatchQueue.main.async {
-                                            withAnimation(.easeIn(duration: 0.15)) {
-                                                income = true
-                                            }
-                                        }
-                                    }
+                                    .tag(true)
                             }
-                            .padding(3)
-                            .background(Capsule().fill(Color.PrimaryBackground).shadow(color: systemColorScheme == .light ? Color.Outline : Color.clear, radius: 6))
-                            .overlay(Capsule().stroke(systemColorScheme == .light ? Color.clear : Color.Outline.opacity(0.4), lineWidth: 1.3))
+                            .pickerStyle(.segmented)
+                            .font(.system(.callout, design: .rounded).weight(.semibold))
+                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                            .labelsHidden()
                         }
                     }
                 }
@@ -824,7 +673,7 @@ struct NewCategoryAlert: View {
                         .frame(width: 80, height: 80, alignment: .center)
                         .background {
                             RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                .strokeBorder((focusedField == .emoji && !showingColourPicker) ? Color.SubtitleText : Color.clear, lineWidth: 2.2)
+                                .strokeBorder(focusedField == .emoji ? Color.SubtitleText : Color.clear, lineWidth: 2.2)
                                 .background(RoundedRectangle(cornerRadius: 13, style: .continuous).fill(Color.SecondaryBackground))
                         }
 
@@ -841,36 +690,31 @@ struct NewCategoryAlert: View {
 
                 HStack {
                     if !income {
-                        Button {
-                            showingColourPicker = true
+                        Menu {
+                            Picker("Color", selection: $selectedColour) {
+                                ForEach(availableColours, id: \.self) { colorHex in
+                                    ColorMenuItemView(colorHex: colorHex)
+                                        .tag(colorHex)
+                                }
+
+                                if !availableColours.contains(selectedColour) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "paintpalette.fill")
+                                        Text("Custom")
+                                    }
+                                    .tag(selectedColour)
+                                }
+                            }
+                            Button("Custom...") {
+                                customSelectedColor = Color(hex: selectedColour)
+                                showNativePicker = true
+                            }
                         } label: {
                             RoundedRectangle(cornerRadius: 11, style: .continuous)
                                 .fill(Color(hex: selectedColour))
                                 .padding(8)
                                 .background(Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
                                 .frame(width: 50, height: 50)
-                                .overlay {
-                                    if showingColourPicker {
-                                        RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                            .stroke(Color.SubtitleText, lineWidth: 2.2)
-                                    }
-                                }
-                        }
-                        .popover(present: $showingColourPicker, attributes: {
-                            $0.position = .absolute(
-                                originAnchor: .topLeft,
-                                popoverAnchor: .bottomLeft
-                            )
-                            $0.rubberBandingMode = .none
-                            $0.sourceFrameInset = UIEdgeInsets(top: -10, left: 0, bottom: 0, right: 0)
-                            $0.presentation.animation = .easeInOut(duration: 0.2)
-                            $0.dismissal.animation = .easeInOut(duration: 0.3)
-                        }) {
-                            ColourPickerView(selectedColor: $selectedColour, showMenu: $showingColourPicker, showNativePicker: $showNativePicker)
-                                .environment(\.managedObjectContext, self.moc)
-
-                        } background: {
-                            Color.PrimaryBackground.opacity(0.3)
                         }
                     }
 //
@@ -901,7 +745,7 @@ struct NewCategoryAlert: View {
                         .frame(height: 50)
                         .background {
                             RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                .strokeBorder((focusedField == .name && !showingColourPicker) ? Color.SubtitleText : Color.clear, lineWidth: 2.2)
+                                .strokeBorder(focusedField == .name ? Color.SubtitleText : Color.clear, lineWidth: 2.2)
                                 .background(RoundedRectangle(cornerRadius: 13, style: .continuous).fill(Color.SecondaryBackground))
                         }
                     //
@@ -923,7 +767,7 @@ struct NewCategoryAlert: View {
         }
         .frame(maxHeight: .infinity, alignment: .top)
         .liquidGlassBackground()
-        .animation(.easeOut(duration: 0.2), value: showToast)
+        .animation(ToastAnimationStyle.animation, value: showToast)
         .onChange(of: expenseCategories.count) { 
             if expenseCategories.count == 24 {
                 dismiss()
@@ -1130,7 +974,6 @@ struct EditCategoryAlert: View {
     @Environment(\.colorScheme) var systemColorScheme
     @EnvironmentObject var dataController: DataController
 
-    @Namespace var animation
 
     // existing categories
 
@@ -1139,7 +982,7 @@ struct EditCategoryAlert: View {
     // state
     @State private var newName = ""
     @State private var newEmoji = ""
-    @State private var showingColourPicker = false
+    @State private var availableColours: [String] = Color.colorArray
     @State private var selectedColour: String = "#FFFFFF"
 
     @FocusState var focusedField: FocusedField?
@@ -1199,8 +1042,8 @@ struct EditCategoryAlert: View {
                                 .foregroundColor(Color.AlertRed)
                         }
                         .padding(6)
-                        .background(Color.AlertRed.opacity(0.23), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                        .transition(AnyTransition.opacity.combined(with: .move(edge: .top)))
+                        .toastGlassRoundedRect(tint: Color.AlertRed)
+                        .transition(ToastAnimationStyle.transition)
                         .frame(maxWidth: 200)
                     } else {
                         Text(toEdit.income ? "Income" : "Expense")
@@ -1243,7 +1086,7 @@ struct EditCategoryAlert: View {
                         .frame(width: 80, height: 80, alignment: .center)
                         .background {
                             RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                .strokeBorder((focusedField == .emoji && !showingColourPicker) ? Color.SubtitleText : Color.clear, lineWidth: 2.2)
+                                .strokeBorder(focusedField == .emoji ? Color.SubtitleText : Color.clear, lineWidth: 2.2)
                                 .background(RoundedRectangle(cornerRadius: 13, style: .continuous).fill(Color.SecondaryBackground))
                         }
 
@@ -1260,36 +1103,31 @@ struct EditCategoryAlert: View {
 
                 HStack {
                     if !toEdit.income {
-                        Button {
-                            showingColourPicker = true
+                        Menu {
+                            Picker("Color", selection: $selectedColour) {
+                                ForEach(availableColours, id: \.self) { colorHex in
+                                    ColorMenuItemView(colorHex: colorHex)
+                                        .tag(colorHex)
+                                }
+
+                                if !availableColours.contains(selectedColour) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "paintpalette.fill")
+                                        Text("Custom")
+                                    }
+                                    .tag(selectedColour)
+                                }
+                            }
+                            Button("Custom...") {
+                                customSelectedColor = Color(hex: selectedColour)
+                                showNativePicker = true
+                            }
                         } label: {
                             RoundedRectangle(cornerRadius: 11, style: .continuous)
                                 .fill(Color(hex: selectedColour))
                                 .padding(8)
                                 .background(Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
                                 .frame(width: 50, height: 50)
-                                .overlay {
-                                    if showingColourPicker {
-                                        RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                            .stroke(Color.SubtitleText, lineWidth: 2.2)
-                                    }
-                                }
-                        }
-                        .popover(present: $showingColourPicker, attributes: {
-                            $0.position = .absolute(
-                                originAnchor: .topLeft,
-                                popoverAnchor: .bottomLeft
-                            )
-                            $0.rubberBandingMode = .none
-                            $0.sourceFrameInset = UIEdgeInsets(top: -10, left: 0, bottom: 0, right: 0)
-                            $0.presentation.animation = .easeInOut(duration: 0.2)
-                            $0.dismissal.animation = .easeInOut(duration: 0.3)
-                        }) {
-                            ColourPickerView(selectedColor: $selectedColour, showMenu: $showingColourPicker, showNativePicker: $showNativePicker, toEdit: toEdit)
-                                .environment(\.managedObjectContext, self.moc)
-
-                        } background: {
-                            Color.PrimaryBackground.opacity(0.3)
                         }
                     }
 
@@ -1301,7 +1139,7 @@ struct EditCategoryAlert: View {
                         .foregroundColor(Color.PrimaryText)
                         .background {
                             RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                .strokeBorder((focusedField == .name && !showingColourPicker) ? Color.SubtitleText : Color.clear, lineWidth: 2.2)
+                                .strokeBorder(focusedField == .name ? Color.SubtitleText : Color.clear, lineWidth: 2.2)
                                 .background(RoundedRectangle(cornerRadius: 13, style: .continuous).fill(Color.SecondaryBackground))
                         }
 
@@ -1323,7 +1161,7 @@ struct EditCategoryAlert: View {
         }
         .frame(maxHeight: .infinity, alignment: .top)
         .liquidGlassBackground()
-        .animation(.easeOut(duration: 0.2), value: showToast)
+        .animation(ToastAnimationStyle.animation, value: showToast)
         .onChange(of: showToast) { _, newValue in
             if newValue {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -1331,10 +1169,34 @@ struct EditCategoryAlert: View {
                 }
             }
         }
-        .fullScreenCover(item: $toDelete, onDismiss: {
-            toDelete = nil
-        }) { category in
-            DeleteCategoryAlert(toDelete: category, deleted: $deleteMode)
+        .confirmationDialog(
+            alertMessage,
+            isPresented: Binding(
+                get: { toDelete != nil },
+                set: { newValue in
+                    if !newValue {
+                        toDelete = nil
+                    }
+                }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                if let categoryToDelete = toDelete {
+                    withAnimation {
+                        moc.delete(categoryToDelete)
+                        dataController.save()
+                    }
+                }
+
+                toDelete = nil
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) {
+                toDelete = nil
+            }
+        } message: {
+            Text("This action cannot be undone, and all \(toDelete?.wrappedName ?? "") transactions would be deleted.")
         }
         .onChange(of: expenseCategories.count) { 
             if expenseCategories.count == 24 {
@@ -1346,13 +1208,20 @@ struct EditCategoryAlert: View {
             selectedColour = customSelectedColor.toHex() ?? "#FFFFFF"
         }
         .colorPickerSheet(isPresented: $showNativePicker, selection: $customSelectedColor, supportsAlpha: false, title: "")
-        .onChange(of: deleteMode) { 
-            dismiss()
-        }
         .onAppear {
             newName = toEdit.wrappedName
             newEmoji = toEdit.wrappedEmoji
             selectedColour = toEdit.wrappedColour
+
+            if !toEdit.income {
+                availableColours = Color.colorArray
+                expenseCategories.forEach { category in
+                    if category.objectID != toEdit.objectID,
+                       availableColours.contains(category.wrappedColour) {
+                        availableColours.remove(at: availableColours.firstIndex(of: category.wrappedColour) ?? 0)
+                    }
+                }
+            }
         }
     }
 
@@ -1789,6 +1658,19 @@ struct NormalTextField: UIViewRepresentable {
             parent.action()
 
             return true
+        }
+    }
+}
+
+struct ColorMenuItemView: View {
+    let colorHex: String
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(Color(hex: colorHex))
+                .frame(width: 12, height: 12)
+            Text(colorHex.uppercased())
         }
     }
 }

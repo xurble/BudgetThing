@@ -7,13 +7,11 @@
 
 import Foundation
 import SwiftUIIntrospect
-import Popovers
 import SwiftUI
 
 struct InsightsView: View {
     @FetchRequest(sortDescriptors: []) private var transactions: FetchedResults<Transaction>
 
-    @State private var showTimeMenu = false
     @AppStorage("chartTimeFrame", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var chartType = 1
 
     private var didSave = NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
@@ -69,8 +67,12 @@ struct InsightsView: View {
                         .accessibility(addTraits: .isHeader)
                     Spacer()
 
-                    Button {
-                        showTimeMenu = true
+                    Menu {
+                        Picker("Chart Timeframe", selection: $chartType) {
+                            Text("week").tag(1)
+                            Text("month").tag(2)
+                            Text("year").tag(3)
+                        }
                     } label: {
                         HStack(spacing: 4.5) {
                             Text(chartTypeString)
@@ -83,18 +85,6 @@ struct InsightsView: View {
                         .padding(.horizontal, 6)
                         .foregroundColor(Color.PrimaryText.opacity(0.9))
                         .background(Color.Outline, in: RoundedRectangle(cornerRadius: 6))
-                    }
-                    .popover(present: $showTimeMenu, attributes: {
-                        $0.position = .absolute(
-                            originAnchor: .bottomRight,
-                            popoverAnchor: .topRight
-                        )
-                        $0.rubberBandingMode = .none
-                        $0.sourceFrameInset = UIEdgeInsets(top: 0, left: 0, bottom: -10, right: 0)
-                        $0.presentation.animation = .easeInOut(duration: 0.2)
-                        $0.dismissal.animation = .easeInOut(duration: 0.3)
-                    }) {
-                        ChartTimePickerView(showMenu: $showTimeMenu)
                     }
                 }
                 .padding(.horizontal, 30)
