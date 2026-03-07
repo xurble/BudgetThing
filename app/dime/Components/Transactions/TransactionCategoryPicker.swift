@@ -37,9 +37,9 @@ struct NewCategoryPickerView: View {
                     .padding(.horizontal, 11)
                     .padding(.vertical, 9)
                     .foregroundColor(Color(hex: item.wrappedColour))
-                    .background(
-                        Color(hex: item.wrappedColour).opacity(0.35),
-                        in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
+                    .glassRoundedRect(
+                        cornerRadius: 11.5,
+                        tint: Color(hex: item.wrappedColour).opacity(0.35)
                     )
                     .contentShape(Rectangle())
                     .overlay {

@@ -460,9 +460,9 @@ struct TransactionView: View {
                                 .padding(.vertical, 8.5)
                                 .padding(.horizontal, 10)
                                 .foregroundColor(categoryButtonTextColor)
-                                .background(
-                                    categoryButtonBackgroundColor,
-                                    in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
+                                .glassRoundedRect(
+                                    cornerRadius: 11.5,
+                                    tint: categoryButtonBackgroundColor
                                 )
                                 .contentShape(Rectangle())
                                 .overlay(
@@ -492,8 +492,9 @@ struct TransactionView: View {
                                         .padding(.horizontal, 10)
                                         .frame(width: widthOfCategoryButton)
                                         .foregroundColor(Color.AlertRed)
-                                        .background(Color.AlertRed.opacity(0.23),
-                                            in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
+                                        .glassRoundedRect(
+                                            cornerRadius: 11.5,
+                                            tint: Color.AlertRed.opacity(0.23)
                                         )
                                     } else {
                                         if let unwrappedCategory = category {
@@ -508,9 +509,9 @@ struct TransactionView: View {
                                             .padding(.vertical, 8.5)
                                             .padding(.horizontal, 10)
                                             .foregroundColor(Color(hex: unwrappedCategory.wrappedColour))
-                                            .background(
-                                                Color(hex: unwrappedCategory.wrappedColour).opacity(0.35),
-                                                in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
+                                            .glassRoundedRect(
+                                                cornerRadius: 11.5,
+                                                tint: Color(hex: unwrappedCategory.wrappedColour).opacity(0.35)
                                             )
 
                                         } else {
@@ -529,9 +530,9 @@ struct TransactionView: View {
                                             .padding(.horizontal, 10)
                                             .frame(width: widthOfCategoryButton)
                                             .foregroundColor(categoryButtonTextColor)
-                                            .background(
-                                                categoryButtonBackgroundColor,
-                                                in: RoundedRectangle(cornerRadius: 11.5, style: .continuous)
+                                            .glassRoundedRect(
+                                                cornerRadius: 11.5,
+                                                tint: categoryButtonBackgroundColor
                                             )
                                             .overlay(
                                                 RoundedRectangle(cornerRadius: 11.5, style: .continuous)
