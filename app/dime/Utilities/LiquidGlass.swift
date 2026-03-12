@@ -10,10 +10,11 @@ import SwiftUI
 struct LiquidGlassBackground: View {
     var body: some View {
         ZStack {
+
             LinearGradient(
                 colors: [
                     Color.PrimaryBackground,
-                    Color.SecondaryBackground.opacity(0.75),
+                    Color.SecondaryBackground,
                     Color.PrimaryBackground
                 ],
                 startPoint: .topLeading,
@@ -22,7 +23,7 @@ struct LiquidGlassBackground: View {
 
             RadialGradient(
                 colors: [
-                    Color.SecondaryBackground.opacity(0.6),
+                    Color.SecondaryBackground,
                     Color.clear
                 ],
                 center: .topTrailing,
