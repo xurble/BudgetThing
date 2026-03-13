@@ -118,11 +118,7 @@ struct CategoryListView: View {
     @Query(sort: [SortDescriptor(\Category.order)]) private var allCategories: [Category]
 
     // delete mode
-    @State private var deleteMode = false
     @State private var toDelete: Category?
-    var alertMessage: String {
-        "Delete '" + (toDelete?.wrappedName ?? "") + "'?"
-    }
 
     // edit mode
     @State private var toEdit: Category?
@@ -451,33 +447,16 @@ struct CategoryListView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .liquidGlassBackground()
         .animation(ToastAnimationStyle.animation, value: showToast)
-        .onChange(of: toDelete) { 
-            if toDelete != nil {
-                deleteMode = true
+        .sheet(item: $toDelete, onDismiss: {
+            toDelete = nil
+        }) { category in
+            CategoryDeletePickerView(
+                categoryToDelete: category,
+                income: income
+            ) { action in
+                handleDeleteAction(action, for: category)
             }
-        }
-        .confirmationDialog(
-            "Delete '\(toDelete?.wrappedName ?? "")'?",
-            isPresented: $deleteMode,
-            titleVisibility: .visible
-        ) {
-            Button("Delete", role: .destructive) {
-                withAnimation {
-                    if let gonnaDelete = toDelete {
-                        modelContext.delete(gonnaDelete)
-                    }
-
-                    dataController.save(context: modelContext)
-                }
-
-                toDelete = nil
-                deleteMode = false
-            }
-            Button("Cancel", role: .cancel) {
-                deleteMode = false
-            }
-        } message: {
-            Text("This action cannot be undone, and all \(toDelete?.wrappedName ?? "") transactions would be deleted.")
+            .presentationDetents([.medium, .large])
         }
         .sheet(item: $toEdit, onDismiss: {
             toEdit = nil
@@ -531,6 +510,74 @@ struct CategoryListView: View {
         dataController.save(context: modelContext)
     }
 
+    private func handleDeleteAction(_ action: CategoryDeletionAction, for category: Category) {
+        switch action {
+        case .move(let destination):
+            moveItems(from: category, to: destination)
+            modelContext.delete(category)
+        case .delete:
+            deleteItems(for: category)
+            modelContext.delete(category)
+        }
+
+        dataController.save(context: modelContext)
+    }
+
+    private func moveItems(from source: Category, to destination: Category) {
+        let transactions = fetchTransactions(for: source)
+        for transaction in transactions {
+            transaction.category = destination
+        }
+
+        let templates = fetchTemplates(for: source)
+        for template in templates {
+            template.category = destination
+        }
+
+        let budgets = fetchBudgets(for: source)
+        for budget in budgets {
+            budget.category = destination
+        }
+    }
+
+    private func deleteItems(for category: Category) {
+        let transactions = fetchTransactions(for: category)
+        for transaction in transactions {
+            modelContext.delete(transaction)
+        }
+
+        let templates = fetchTemplates(for: category)
+        for template in templates {
+            modelContext.delete(template)
+        }
+
+        let budgets = fetchBudgets(for: category)
+        for budget in budgets {
+            modelContext.delete(budget)
+        }
+    }
+
+    private func fetchTransactions(for category: Category) -> [Transaction] {
+        guard let categoryId = category.id else { return [] }
+        let predicate = #Predicate<Transaction> { $0.category?.id == categoryId }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        return dataController.results(for: descriptor, context: modelContext)
+    }
+
+    private func fetchTemplates(for category: Category) -> [TemplateTransaction] {
+        guard let categoryId = category.id else { return [] }
+        let predicate = #Predicate<TemplateTransaction> { $0.category?.id == categoryId }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        return dataController.results(for: descriptor, context: modelContext)
+    }
+
+    private func fetchBudgets(for category: Category) -> [Budget] {
+        guard let categoryId = category.id else { return [] }
+        let predicate = #Predicate<Budget> { $0.category?.id == categoryId }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        return dataController.results(for: descriptor, context: modelContext)
+    }
+
     init(income: Binding<Bool>, mode: CategoryViewMode, showToast: Binding<Bool>, toastTitle: Binding<String>, toastImage: Binding<String>, positive: Binding<Bool>) {
         let isIncome = income.wrappedValue
         _categories = Query(
@@ -544,6 +591,128 @@ struct CategoryListView: View {
         _toastImage = toastImage
         _positive = positive
         self.mode = mode
+    }
+}
+
+private enum CategoryDeletionAction {
+    case move(Category)
+    case delete
+}
+
+private struct CategoryDeletePickerView: View {
+    let categoryToDelete: Category
+    let onSelection: (CategoryDeletionAction) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @Query private var categories: [Category]
+
+    private let layout = [
+        GridItem(.flexible(), spacing: 10),
+        GridItem(.flexible())
+    ]
+
+    init(
+        categoryToDelete: Category,
+        income: Bool,
+        onSelection: @escaping (CategoryDeletionAction) -> Void
+    ) {
+        _categories = Query(
+            filter: #Predicate<Category> { $0.income == income },
+            sort: [SortDescriptor(\.order, order: .reverse)]
+        )
+        self.categoryToDelete = categoryToDelete
+        self.onSelection = onSelection
+    }
+
+    var body: some View {
+        VStack(spacing: 16) {
+            VStack(spacing: 6) {
+                Text("Move \"\(categoryToDelete.wrappedName)\" transactions to")
+                    .font(.system(.headline, design: .rounded).weight(.semibold))
+                    .multilineTextAlignment(.center)
+
+                Text("Pick a category or delete to remove them.")
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundColor(.secondary)
+            }
+
+            ScrollView(showsIndicators: false) {
+                LazyVGrid(columns: layout, spacing: 10) {
+                    ForEach(availableCategories) { item in
+                        HStack(spacing: 7) {
+                            Text(item.wrappedEmoji)
+                                .font(.system(.subheadline, design: .rounded))
+
+                            Text(item.wrappedName)
+                                .font(.system(.body, design: .rounded).weight(.semibold))
+                                .lineLimit(1)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 11)
+                        .padding(.vertical, 9)
+                        .foregroundColor(Color(hex: item.wrappedColour))
+                        .glassRoundedRect(
+                            cornerRadius: 11.5,
+                            tint: Color(hex: item.wrappedColour).opacity(0.35)
+                        )
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            onSelection(.move(item))
+                            dismiss()
+                        }
+                    }
+
+                    deleteTile
+                }
+            }
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+
+            Button("Cancel") {
+                dismiss()
+            }
+            .font(.system(.body, design: .rounded).weight(.semibold))
+            .foregroundColor(Color.SubtitleText)
+            .padding(.vertical, 9)
+            .padding(.horizontal, 18)
+            .background(
+                RoundedRectangle(cornerRadius: 11.5, style: .continuous)
+                    .fill(Color.SecondaryBackground)
+            )
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+    }
+
+    private var availableCategories: [Category] {
+        if let deleteId = categoryToDelete.id {
+            return categories.filter { $0.id != deleteId }
+        }
+
+        return categories.filter { $0 !== categoryToDelete }
+    }
+
+    private var deleteTile: some View {
+        HStack(spacing: 7) {
+            Image(systemName: "trash.fill")
+                .font(.system(.subheadline, design: .rounded))
+
+            Text("Delete Category")
+                .font(.system(.body, design: .rounded).weight(.semibold))
+                .lineLimit(1)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 11)
+        .padding(.vertical, 9)
+        .foregroundColor(Color.AlertRed)
+        .glassRoundedRect(
+            cornerRadius: 11.5,
+            tint: Color.AlertRed.opacity(0.12)
+        )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onSelection(.delete)
+            dismiss()
+        }
     }
 }
 
@@ -1015,11 +1184,7 @@ struct EditCategoryAlert: View {
     @State var toastImage = ""
 
     // delete mode
-    @State private var deleteMode = false
     @State private var toDelete: Category?
-    var alertMessage: String {
-        "Delete '" + (toDelete?.wrappedName ?? "") + "'?"
-    }
 
     @State var showNativePicker: Bool = false
     @State var customSelectedColor = Color.white
@@ -1198,34 +1363,16 @@ struct EditCategoryAlert: View {
                 }
             }
         }
-        .confirmationDialog(
-            alertMessage,
-            isPresented: Binding(
-                get: { toDelete != nil },
-                set: { newValue in
-                    if !newValue {
-                        toDelete = nil
-                    }
-                }
-            ),
-            titleVisibility: .visible
-        ) {
-            Button("Delete", role: .destructive) {
-                if let categoryToDelete = toDelete {
-                    withAnimation {
-                        modelContext.delete(categoryToDelete)
-                        dataController.save(context: modelContext)
-                    }
-                }
-
-                toDelete = nil
-                dismiss()
+        .sheet(item: $toDelete, onDismiss: {
+            toDelete = nil
+        }) { category in
+            CategoryDeletePickerView(
+                categoryToDelete: category,
+                income: category.income
+            ) { action in
+                handleDeleteAction(action, for: category)
             }
-            Button("Cancel", role: .cancel) {
-                toDelete = nil
-            }
-        } message: {
-            Text("This action cannot be undone, and all \(toDelete?.wrappedName ?? "") transactions would be deleted.")
+            .presentationDetents([.medium, .large])
         }
         .onChange(of: expenseCategories.count) { 
             if expenseCategories.count == 24 {
@@ -1252,6 +1399,76 @@ struct EditCategoryAlert: View {
                 }
             }
         }
+    }
+
+    private func handleDeleteAction(_ action: CategoryDeletionAction, for category: Category) {
+        switch action {
+        case .move(let destination):
+            moveItems(from: category, to: destination)
+            modelContext.delete(category)
+        case .delete:
+            deleteItems(for: category)
+            modelContext.delete(category)
+        }
+
+        dataController.save(context: modelContext)
+        toDelete = nil
+        dismiss()
+    }
+
+    private func moveItems(from source: Category, to destination: Category) {
+        let transactions = fetchTransactions(for: source)
+        for transaction in transactions {
+            transaction.category = destination
+        }
+
+        let templates = fetchTemplates(for: source)
+        for template in templates {
+            template.category = destination
+        }
+
+        let budgets = fetchBudgets(for: source)
+        for budget in budgets {
+            budget.category = destination
+        }
+    }
+
+    private func deleteItems(for category: Category) {
+        let transactions = fetchTransactions(for: category)
+        for transaction in transactions {
+            modelContext.delete(transaction)
+        }
+
+        let templates = fetchTemplates(for: category)
+        for template in templates {
+            modelContext.delete(template)
+        }
+
+        let budgets = fetchBudgets(for: category)
+        for budget in budgets {
+            modelContext.delete(budget)
+        }
+    }
+
+    private func fetchTransactions(for category: Category) -> [Transaction] {
+        guard let categoryId = category.id else { return [] }
+        let predicate = #Predicate<Transaction> { $0.category?.id == categoryId }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        return dataController.results(for: descriptor, context: modelContext)
+    }
+
+    private func fetchTemplates(for category: Category) -> [TemplateTransaction] {
+        guard let categoryId = category.id else { return [] }
+        let predicate = #Predicate<TemplateTransaction> { $0.category?.id == categoryId }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        return dataController.results(for: descriptor, context: modelContext)
+    }
+
+    private func fetchBudgets(for category: Category) -> [Budget] {
+        guard let categoryId = category.id else { return [] }
+        let predicate = #Predicate<Budget> { $0.category?.id == categoryId }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        return dataController.results(for: descriptor, context: modelContext)
     }
 
     func verification() {
