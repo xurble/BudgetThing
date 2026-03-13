@@ -559,8 +559,8 @@ struct SettingsView: View {
   }
 
   func exportData() {
-    let fetchRequest = dataController.fetchRequestForExport()
-    let transactions = dataController.results(for: fetchRequest)
+    let descriptor = dataController.fetchDescriptorForExport()
+    let transactions = dataController.results(for: descriptor)
 
     let fileName = "export.csv"
     let path = NSURL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(fileName)

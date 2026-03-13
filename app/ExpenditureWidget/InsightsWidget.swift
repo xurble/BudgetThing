@@ -54,11 +54,11 @@ struct InsightsProvider: IntentTimelineProvider {
     func loadData(type: InsightsTimePeriod, income: Bool) -> (amount: Double, maximum: Double, average: Double, numberOfDays: Int, dates: [Date], dateDictionary: [Date: Double], categories: [HoldingCategory]) {
 //        let dataController = DataController()
         let dataController = DataController.shared
-        let itemRequest = dataController.fetchRequestForWidgetInsights(type: type, income: income)
-        let categoryRequest = dataController.fetchRequestForCategories(income: income)
+        let itemRequest = dataController.fetchDescriptorForWidgetInsights(type: type, income: income)
+        let categoryDescriptor = dataController.fetchDescriptorForCategories(income: income)
 
-        let categories = dataController.results(for: categoryRequest)
-        let transactions = dataController.results(for: itemRequest.fetchRequest)
+        let categories = dataController.results(for: categoryDescriptor)
+        let transactions = dataController.results(for: itemRequest.descriptor)
         var iterativeDate = itemRequest.date
 
         switch type {

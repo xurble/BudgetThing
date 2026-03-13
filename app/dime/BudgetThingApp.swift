@@ -5,6 +5,7 @@
 //  Created by Rafael Soh on 11/7/22.
 //
 
+import SwiftData
 import SwiftUI
 
 @main
@@ -19,7 +20,7 @@ struct BudgetThingApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(\.managedObjectContext, dataController.container.viewContext)
+                .modelContainer(dataController.modelContainer)
                 .environmentObject(appLockVM)
                 .environmentObject(dataController)
                 .environmentObject(unlockManager)

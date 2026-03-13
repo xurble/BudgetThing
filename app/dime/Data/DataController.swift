@@ -5,8 +5,8 @@
 //  Created by Rafael Soh on 3/6/22.
 //
 
-import CoreData
 import Foundation
+import SwiftData
 import SwiftUI
 import WidgetKit
 
@@ -29,62 +29,74 @@ enum CustomError: Swift.Error, CustomLocalizedStringResourceConvertible {
 class DataController: ObservableObject, @unchecked Sendable {
     static let shared = DataController()
 
-    var container = NSPersistentCloudKitContainer(name: "MainModel")
+    let modelContainer: ModelContainer
+    let mainContext: ModelContext
 
     init() {
-        let description = NSPersistentStoreDescription()
-
-        description.shouldMigrateStoreAutomatically = true
-        description.shouldInferMappingModelAutomatically = true
-        description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
-        description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
-
-//        let keyValueStore = NSUbiquitousKeyValueStore.default
-//
-//        if keyValueStore.object(forKey: "icloud_sync") == nil {
-//            keyValueStore.set(true, forKey: "icloud_sync")
-//        }
-//
-//        if !keyValueStore.bool(forKey: "icloud_sync") {
-//            description.cloudKitContainerOptions = nil
-//        } else {
-//            description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.farm.poplar.BudgetThingData")
-//        }
-
-        // Set to true to disable CloudKit when you get "Invalid bundle ID for container"
-        // (fix the container ↔ bundle ID in Apple Developer portal, then set back to false).
-        let cloudKitDisabled = false
-        if cloudKitDisabled {
-            description.cloudKitContainerOptions = nil
-        } else {
-            description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.farm.poplar.BudgetThingData")
-        }
-
         let groupID = "group.farm.poplar.budgetthing"
+        let baseURL = FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: groupID)
+        let storeURL = baseURL?.appendingPathComponent("SwiftData.sqlite")
 
-        if let url = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID) {
-            description.url = url.appendingPathComponent("Main.sqlite")
+        let cloudKitDisabled = false
+        let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = cloudKitDisabled
+            ? .none
+            : .private("iCloud.farm.poplar.BudgetThingData")
+
+        if let baseURL {
+            Self.removeLegacyStoreIfNeeded(at: baseURL)
         }
 
-        container.persistentStoreDescriptions = [description]
+        let container: ModelContainer
 
-        container.loadPersistentStores { description, error in
-
-            if let error = error as NSError? {
-                fatalError("Unresolved error \(error), \(error.userInfo) for \(description)")
+        do {
+            if let storeURL {
+                let config = ModelConfiguration(
+                    "MainModel",
+                    url: storeURL,
+                    allowsSave: true,
+                    cloudKitDatabase: cloudKitDatabase
+                )
+                container = try ModelContainer(
+                    for: Budget.self,
+                    Category.self,
+                    MainBudget.self,
+                    TemplateTransaction.self,
+                    Transaction.self,
+                    configurations: config
+                )
+            } else {
+                let config = ModelConfiguration(cloudKitDatabase: cloudKitDatabase)
+                container = try ModelContainer(
+                    for: Budget.self,
+                    Category.self,
+                    MainBudget.self,
+                    TemplateTransaction.self,
+                    Transaction.self,
+                    configurations: config
+                )
             }
-
-            self.container.viewContext.automaticallyMergesChangesFromParent = true
+        } catch {
+            fatalError("Unresolved error \(error.localizedDescription)")
         }
-/*
-        #if DEBUG
-                do {
-                try container.initializeCloudKitSchema(options: [])
-            } catch {
-                print(error)
+
+        modelContainer = container
+        mainContext = ModelContext(container)
+    }
+
+    private static func removeLegacyStoreIfNeeded(at baseURL: URL) {
+        let legacyNames = [
+            "Main.sqlite",
+            "Main.sqlite-shm",
+            "Main.sqlite-wal"
+        ]
+
+        for name in legacyNames {
+            let url = baseURL.appendingPathComponent(name)
+            if FileManager.default.fileExists(atPath: url.path) {
+                try? FileManager.default.removeItem(at: url)
             }
-        #endif
-*/
+        }
     }
 
     // internal variables
@@ -112,28 +124,22 @@ class DataController: ObservableObject, @unchecked Sendable {
     // adding or deleting
 
     func deleteAll() {
-        let fetchRequest1: NSFetchRequest<NSFetchRequestResult> = Transaction.fetchRequest()
-        let batchDeleteRequest1 = NSBatchDeleteRequest(fetchRequest: fetchRequest1)
-        _ = try? container.viewContext.executeAndMergeChanges(using: batchDeleteRequest1)
-
-        let fetchRequest2: NSFetchRequest<NSFetchRequestResult> = Category.fetchRequest()
-        let batchDeleteRequest2 = NSBatchDeleteRequest(fetchRequest: fetchRequest2)
-        _ = try? container.viewContext.executeAndMergeChanges(using: batchDeleteRequest2)
-
-        let fetchRequest3: NSFetchRequest<NSFetchRequestResult> = Budget.fetchRequest()
-        let batchDeleteRequest3 = NSBatchDeleteRequest(fetchRequest: fetchRequest3)
-        _ = try? container.viewContext.executeAndMergeChanges(using: batchDeleteRequest3)
-
-        let fetchRequest4: NSFetchRequest<NSFetchRequestResult> = MainBudget.fetchRequest()
-        let batchDeleteRequest4 = NSBatchDeleteRequest(fetchRequest: fetchRequest4)
-        _ = try? container.viewContext.executeAndMergeChanges(using: batchDeleteRequest4)
+        do {
+            try mainContext.delete(model: Transaction.self)
+            try mainContext.delete(model: Category.self)
+            try mainContext.delete(model: Budget.self)
+            try mainContext.delete(model: MainBudget.self)
+            try mainContext.save()
+        } catch {
+            print("Failed to delete all data: \(error)")
+        }
     }
 
     func save() {
-        save(context: container.viewContext)
+        save(context: mainContext)
     }
 
-    private func save(context: NSManagedObjectContext) {
+    private func save(context: ModelContext) {
         if context.hasChanges {
             try? context.save()
             DispatchQueue.main.async {
@@ -144,16 +150,16 @@ class DataController: ObservableObject, @unchecked Sendable {
 
     func updateRecurringTransaction(
         transaction: Transaction,
-        context: NSManagedObjectContext? = nil,
+        context: ModelContext? = nil,
         shouldSave: Bool = true
     ) {
-        let context = context ?? container.viewContext
+        let context = context ?? mainContext
 
         if transaction.nextTransactionDate < Calendar.current.startOfDay(for: Date.now) {
             var holdingDate = transaction.nextTransactionDate
 
             while holdingDate <= Calendar.current.startOfDay(for: Date.now) {
-                let newTransaction = Transaction(context: context)
+                let newTransaction = Transaction()
                 newTransaction.note = transaction.wrappedNote
                 newTransaction.category = transaction.category
                 newTransaction.amount = transaction.wrappedAmount
@@ -187,6 +193,8 @@ class DataController: ObservableObject, @unchecked Sendable {
                     newTransaction.recurringType = 0
                 }
 
+                context.insert(newTransaction)
+
                 holdingDate = newDate!
             }
 
@@ -197,7 +205,7 @@ class DataController: ObservableObject, @unchecked Sendable {
             }
 
         } else if Calendar.current.isDateInToday(transaction.nextTransactionDate) {
-            let newTransaction = Transaction(context: context)
+            let newTransaction = Transaction()
             newTransaction.note = transaction.wrappedNote
             newTransaction.category = transaction.category
             newTransaction.amount = transaction.wrappedAmount
@@ -218,6 +226,8 @@ class DataController: ObservableObject, @unchecked Sendable {
 
             transaction.recurringType = 0
 
+            context.insert(newTransaction)
+
             if shouldSave {
                 save(context: context)
             }
@@ -225,7 +235,7 @@ class DataController: ObservableObject, @unchecked Sendable {
     }
 
     func updateRecurringTransactions() {
-        let recurringTransactions = results(for: fetchRequestForRecurringTransactions())
+        let recurringTransactions = results(for: fetchDescriptorForRecurringTransactions())
 
         recurringTransactions.forEach { transaction in
             updateRecurringTransaction(transaction: transaction)
@@ -233,20 +243,21 @@ class DataController: ObservableObject, @unchecked Sendable {
     }
 
     func updateRecurringTransactionsInBackground() {
-        container.performBackgroundTask { context in
-            let request = self.fetchRequestForRecurringTransactions()
+        Task(priority: .utility) {
+            let context = ModelContext(modelContainer)
+            let descriptor = fetchDescriptorForRecurringTransactions()
 
             do {
-                let recurringTransactions = try context.fetch(request)
+                let recurringTransactions = try context.fetch(descriptor)
                 recurringTransactions.forEach { transaction in
-                    self.updateRecurringTransaction(
+                    updateRecurringTransaction(
                         transaction: transaction,
                         context: context,
                         shouldSave: false
                     )
                 }
 
-                self.save(context: context)
+                save(context: context)
             } catch {
                 print("Failed to update recurring transactions: \(error)")
             }
@@ -254,8 +265,8 @@ class DataController: ObservableObject, @unchecked Sendable {
     }
 
     func updateBudgetDates() {
-        let budgets = results(for: fetchRequestForBudgets())
-        let mainBudget = results(for: fetchRequestForMainBudget())
+        let budgets = results(for: fetchDescriptorForBudgets())
+        let mainBudget = results(for: fetchDescriptorForMainBudget())
 
         budgets.forEach { budget in
             while budget.endDate <= Date.now {
@@ -273,7 +284,7 @@ class DataController: ObservableObject, @unchecked Sendable {
     }
 
     func newTransaction(note: String, category: Category?, income: Bool, amount: Double, date: Date, repeatType: Int, repeatCoefficient: Int, delay _: Bool) -> Transaction {
-        let transaction = Transaction(context: container.viewContext)
+        let transaction = Transaction()
 
         if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
             transaction.note = category?.wrappedName ?? ""
@@ -306,6 +317,7 @@ class DataController: ObservableObject, @unchecked Sendable {
             updateRecurringTransaction(transaction: transaction)
         }
 
+        mainContext.insert(transaction)
         save()
 
         return transaction
@@ -323,24 +335,22 @@ class DataController: ObservableObject, @unchecked Sendable {
 
     // fetching
 
-    func fetchRequestForRecurringTransactions() -> NSFetchRequest<Transaction> {
-        let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-        itemRequest.predicate = NSPredicate(format: "%K > %i", #keyPath(Transaction.recurringType), 0)
-        return itemRequest
+    func fetchDescriptorForRecurringTransactions() -> FetchDescriptor<Transaction> {
+        let predicate = #Predicate<Transaction> { $0.recurringType > 0 }
+        return FetchDescriptor(predicate: predicate)
     }
 
     func getTemplateTransaction(order: Int) -> TemplateTransaction? {
-        let itemRequest: NSFetchRequest<TemplateTransaction> = TemplateTransaction.fetchRequest()
-
-        itemRequest.predicate = NSPredicate(format: "order == %d", order)
-
-        let results = results(for: itemRequest)
+        let orderValue = Int16(order)
+        let predicate = #Predicate<TemplateTransaction> { $0.order == orderValue }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        let results = results(for: descriptor)
 
         if results.count > 1 {
             let output = results.first
 
             for i in 1 ..< results.count {
-                container.viewContext.delete(results[i])
+                mainContext.delete(results[i])
             }
 
             save()
@@ -352,13 +362,12 @@ class DataController: ObservableObject, @unchecked Sendable {
     }
 
     func getAllTemplateTransactions() -> [TemplateTransaction] {
-        let itemRequest: NSFetchRequest<TemplateTransaction> = TemplateTransaction.fetchRequest()
-
-        return results(for: itemRequest)
+        let descriptor = FetchDescriptor<TemplateTransaction>()
+        return results(for: descriptor)
     }
 
-    func fetchRequestForRecentTransactions(type: TimePeriod) -> NSFetchRequest<Transaction> {
-        let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+    func fetchDescriptorForRecentTransactions(type: TimePeriod) -> FetchDescriptor<Transaction> {
+        var descriptor = FetchDescriptor<Transaction>()
 
         var calendar = Calendar(identifier: .gregorian)
 
@@ -367,107 +376,79 @@ class DataController: ObservableObject, @unchecked Sendable {
 
         switch type {
         case .unknown:
-            return itemRequest
+            return descriptor
         case .day:
             let today = calendar.startOfDay(for: Date.now)
             let nextDay = calendar.date(byAdding: .day, value: 1, to: today)!
-
-            let startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), today as CVarArg)
-            let endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), nextDay as CVarArg)
-
-            let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate])
-
-            itemRequest.predicate = andPredicate
-            itemRequest.sortDescriptors = [
-                NSSortDescriptor(keyPath: \Transaction.date, ascending: false)
-            ]
-
-            return itemRequest
+            let predicate = #Predicate<Transaction> {
+                $0.date >= today && $0.date < nextDay
+            }
+            descriptor.predicate = predicate
+            descriptor.sortBy = [SortDescriptor(\.date, order: .reverse)]
+            return descriptor
         case .week:
             let dateComponents = calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: Date.now)
 
             let thisWeek = calendar.date(from: dateComponents)!
             let nextWeek = calendar.date(byAdding: .day, value: 7, to: thisWeek)!
-
-            let startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), thisWeek as CVarArg)
-            let endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), nextWeek as CVarArg)
-
-            let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate])
-
-            itemRequest.predicate = andPredicate
-            itemRequest.sortDescriptors = [
-                NSSortDescriptor(keyPath: \Transaction.date, ascending: false)
-            ]
-
-            return itemRequest
+            let predicate = #Predicate<Transaction> {
+                $0.date >= thisWeek && $0.date < nextWeek
+            }
+            descriptor.predicate = predicate
+            descriptor.sortBy = [SortDescriptor(\.date, order: .reverse)]
+            return descriptor
         case .month:
             let dateComponents = calendar.dateComponents([.month, .year], from: Date.now)
 
             let thisMonth = calendar.date(from: dateComponents)!
             let nextMonth = calendar.date(byAdding: .month, value: 1, to: thisMonth)!
-
-            let startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), thisMonth as CVarArg)
-            let endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), nextMonth as CVarArg)
-
-            let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate])
-
-            itemRequest.predicate = andPredicate
-            itemRequest.sortDescriptors = [
-                NSSortDescriptor(keyPath: \Transaction.date, ascending: false)
-            ]
-
-            return itemRequest
+            let predicate = #Predicate<Transaction> {
+                $0.date >= thisMonth && $0.date < nextMonth
+            }
+            descriptor.predicate = predicate
+            descriptor.sortBy = [SortDescriptor(\.date, order: .reverse)]
+            return descriptor
         case .year:
             let dateComponents = calendar.dateComponents([.year], from: Date.now)
 
             let thisYear = calendar.date(from: dateComponents)!
             let nextYear = calendar.date(byAdding: .year, value: 1, to: thisYear)!
-
-            let startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), thisYear as CVarArg)
-            let endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), nextYear as CVarArg)
-
-            let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate])
-
-            itemRequest.predicate = andPredicate
-            itemRequest.sortDescriptors = [
-                NSSortDescriptor(keyPath: \Transaction.date, ascending: false)
-            ]
-
-            return itemRequest
+            let predicate = #Predicate<Transaction> {
+                $0.date >= thisYear && $0.date < nextYear
+            }
+            descriptor.predicate = predicate
+            descriptor.sortBy = [SortDescriptor(\.date, order: .reverse)]
+            return descriptor
         }
     }
 
-    func fetchRequestForExport() -> NSFetchRequest<Transaction> {
-        let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-        itemRequest.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
-        return itemRequest
+    func fetchDescriptorForExport() -> FetchDescriptor<Transaction> {
+        var descriptor = FetchDescriptor<Transaction>()
+        descriptor.sortBy = [SortDescriptor(\.date, order: .reverse)]
+        return descriptor
     }
 
-    func fetchRequestForCategoriesMigration(income: Bool? = nil) -> NSFetchRequest<Category> {
-        let itemRequest: NSFetchRequest<Category> = Category.fetchRequest()
-        itemRequest.sortDescriptors = [NSSortDescriptor(key: "dateCreated", ascending: true)]
+    func fetchDescriptorForCategoriesMigration(income: Bool? = nil) -> FetchDescriptor<Category> {
+        var descriptor = FetchDescriptor<Category>()
+        descriptor.sortBy = [SortDescriptor(\.dateCreated)]
 
         if let unwrappedIncome = income {
-            itemRequest.predicate = NSPredicate(format: "income = %d", unwrappedIncome)
-            return itemRequest
-        } else {
-            return itemRequest
+            descriptor.predicate = #Predicate<Category> { $0.income == unwrappedIncome }
         }
+
+        return descriptor
     }
 
-    func fetchRequestForCategories(income: Bool) -> NSFetchRequest<Category> {
-        let itemRequest: NSFetchRequest<Category> = Category.fetchRequest()
-        itemRequest.sortDescriptors = [NSSortDescriptor(key: "order", ascending: true)]
-        itemRequest.predicate = NSPredicate(format: "income = %d", income)
-        return itemRequest
+    func fetchDescriptorForCategories(income: Bool) -> FetchDescriptor<Category> {
+        var descriptor = FetchDescriptor<Category>()
+        descriptor.sortBy = [SortDescriptor(\.order)]
+        descriptor.predicate = #Predicate<Category> { $0.income == income }
+        return descriptor
     }
 
     func getAllCategories(income: Bool) -> [Category] {
-        let request: NSFetchRequest<Category> = Category.fetchRequest()
-        request.sortDescriptors = [NSSortDescriptor(key: "order", ascending: true)]
-        request.predicate = NSPredicate(format: "income = %d", income)
-
-        return results(for: request)
+        let descriptor = fetchDescriptorForCategories(income: income)
+        return results(for: descriptor)
     }
 
     func getSuggestedNotes(searchQuery: String, category: Category?, income: Bool) -> [Transaction] {
@@ -475,28 +456,26 @@ class DataController: ObservableObject, @unchecked Sendable {
         guard !trimmedQuery.isEmpty else {
             return []
         }
+        var descriptor = FetchDescriptor<Transaction>()
+        descriptor.sortBy = [SortDescriptor(\.date, order: .reverse)]
+        descriptor.predicate = #Predicate<Transaction> { $0.income == income }
 
-        let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-        itemRequest.sortDescriptors = [NSSortDescriptor(keyPath: \Transaction.date, ascending: false)]
-
-        let beginPredicate = NSPredicate(format: "%K BEGINSWITH[cd] %@", #keyPath(Transaction.note), trimmedQuery)
-        let containPredicate = NSPredicate(format: "%K CONTAINS[cd] %@", #keyPath(Transaction.note), trimmedQuery)
-        let compound = NSCompoundPredicate(orPredicateWithSubpredicates: [beginPredicate, containPredicate])
-
-        let incomePredicate = NSPredicate(format: "income = %d", income)
+        let fetchedTransactions = results(for: descriptor)
+        let filteredByCategory: [Transaction]
 
         if let unwrappedCategory = category {
-            let categoryPredicate = NSPredicate(format: "%K == %@", #keyPath(Transaction.category), unwrappedCategory)
-
-            let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [compound, categoryPredicate, incomePredicate])
-
-            itemRequest.predicate = andPredicate
+            let categoryId = unwrappedCategory.id
+            filteredByCategory = fetchedTransactions.filter { transaction in
+                transaction.category?.id == categoryId
+            }
         } else {
-            let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [compound, incomePredicate])
-            itemRequest.predicate = andPredicate
+            filteredByCategory = fetchedTransactions
         }
 
-        let transactions = results(for: itemRequest)
+        let transactions = filteredByCategory.filter { transaction in
+            let note = transaction.wrappedNote
+            return note.localizedCaseInsensitiveContains(trimmedQuery)
+        }
 
         var seen = [Transaction]()
         let filtered = transactions.filter { entity -> Bool in
@@ -516,39 +495,35 @@ class DataController: ObservableObject, @unchecked Sendable {
     }
 
     func findCategory(withId id: UUID) throws -> Category {
-        let request: NSFetchRequest<Category> = Category.fetchRequest()
-        request.fetchLimit = 1
-        request.predicate = NSPredicate(format: "id = %@", id as CVarArg)
+        let predicate = #Predicate<Category> { $0.id == id }
+        var descriptor = FetchDescriptor<Category>(predicate: predicate)
+        descriptor.fetchLimit = 1
+        let results = (try? mainContext.fetch(descriptor)) ?? []
 
-        do {
-            guard let foundCategory = try container.viewContext.fetch(request).first else {
-                throw CustomError.notFound
-            }
-            return foundCategory
-        } catch {
+        guard let foundCategory = results.first else {
             throw CustomError.notFound
         }
+
+        return foundCategory
     }
 
     func getAllBudgets() -> [Budget] {
-        let request: NSFetchRequest<Budget> = Budget.fetchRequest()
-        request.sortDescriptors = [NSSortDescriptor(key: "dateCreated", ascending: true)]
-        return results(for: request)
+        var descriptor = FetchDescriptor<Budget>()
+        descriptor.sortBy = [SortDescriptor(\.dateCreated)]
+        return results(for: descriptor)
     }
 
     func findBudget(withId id: UUID) throws -> Budget {
-        let request: NSFetchRequest<Budget> = Budget.fetchRequest()
-        request.fetchLimit = 1
-        request.predicate = NSPredicate(format: "id = %@", id as CVarArg)
+        let predicate = #Predicate<Budget> { $0.id == id }
+        var descriptor = FetchDescriptor<Budget>(predicate: predicate)
+        descriptor.fetchLimit = 1
+        let results = (try? mainContext.fetch(descriptor)) ?? []
 
-        do {
-            guard let foundBudget = try container.viewContext.fetch(request).first else {
-                throw CustomError.notFound
-            }
-            return foundBudget
-        } catch {
+        guard let foundBudget = results.first else {
             throw CustomError.notFound
         }
+
+        return foundBudget
     }
 
     func categoryCheck(name: String, emoji: String, income: Bool) -> (error: CategoryError, order: Int64) {
@@ -561,8 +536,8 @@ class DataController: ObservableObject, @unchecked Sendable {
         }
 
         if income {
-            let fetchRequest = fetchRequestForCategories(income: true)
-            let incomeCategories = results(for: fetchRequest)
+            let descriptor = fetchDescriptorForCategories(income: true)
+            let incomeCategories = results(for: descriptor)
 
             var emojiArray = [String]()
             var nameArray = [String]()
@@ -583,8 +558,8 @@ class DataController: ObservableObject, @unchecked Sendable {
                 return (CategoryError.none, newItemOrder)
             }
         } else {
-            let fetchRequest = fetchRequestForCategories(income: false)
-            let expenseCategories = results(for: fetchRequest)
+            let descriptor = fetchDescriptorForCategories(income: false)
+            let expenseCategories = results(for: descriptor)
 
             var emojiArray = [String]()
             var nameArray = [String]()
@@ -617,8 +592,8 @@ class DataController: ObservableObject, @unchecked Sendable {
         }
 
         if toEdit.income {
-            let fetchRequest = fetchRequestForCategories(income: true)
-            var incomeCategories = results(for: fetchRequest)
+            let descriptor = fetchDescriptorForCategories(income: true)
+            var incomeCategories = results(for: descriptor)
 
             if let position = incomeCategories.firstIndex(of: toEdit) {
                 incomeCategories.remove(at: position)
@@ -643,8 +618,8 @@ class DataController: ObservableObject, @unchecked Sendable {
                 return (CategoryError.none, newItemOrder)
             }
         } else {
-            let fetchRequest = fetchRequestForCategories(income: false)
-            var expenseCategories = results(for: fetchRequest)
+            let descriptor = fetchDescriptorForCategories(income: false)
+            var expenseCategories = results(for: descriptor)
 
             if let position = expenseCategories.firstIndex(of: toEdit) {
                 expenseCategories.remove(at: position)
@@ -671,118 +646,86 @@ class DataController: ObservableObject, @unchecked Sendable {
         }
     }
 
-    func fetchRequestForBudgets() -> NSFetchRequest<Budget> {
-        let itemRequest: NSFetchRequest<Budget> = Budget.fetchRequest()
-
-        return itemRequest
+    func fetchDescriptorForBudgets() -> FetchDescriptor<Budget> {
+        FetchDescriptor<Budget>()
     }
 
-    func fetchRequestForMainBudget() -> NSFetchRequest<MainBudget> {
-        let itemRequest: NSFetchRequest<MainBudget> = MainBudget.fetchRequest()
-
-        return itemRequest
+    func fetchDescriptorForMainBudget() -> FetchDescriptor<MainBudget> {
+        FetchDescriptor<MainBudget>()
     }
 
-    func fetchRequestForLogView(type: Int, optionalIncome: Bool?, categoryFilters: [Category] = []) -> NSFetchRequest<Transaction> {
-        let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+    func fetchDescriptorForLogView(type: Int, optionalIncome: Bool?, categoryFilters: [Category] = []) -> FetchDescriptor<Transaction> {
+        var descriptor = FetchDescriptor<Transaction>()
 
         var calendar = Calendar(identifier: .gregorian)
 
         calendar.firstWeekday = UserDefaults(suiteName: "group.farm.poplar.budgetthing")!.integer(forKey: "firstWeekday")
         calendar.minimumDaysInFirstWeek = 4
 
-        let dateCapPredicate = NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg)
+        let now = Date.now
 
         // all time
         if type == 5 {
-            let andPredicate: NSCompoundPredicate
-            let superPredicate: NSCompoundPredicate
-
-            var categoryPredicates = [NSPredicate]()
-
-            for category in categoryFilters {
-                categoryPredicates.append(NSPredicate(format: "%K == %@", #keyPath(Transaction.category), category))
-            }
-
-            let categoryCompoundPredicate = NSCompoundPredicate(type: .or, subpredicates: categoryPredicates)
-
             if let income = optionalIncome {
-                let incomePredicate = NSPredicate(format: "income = %d", income)
-
-                andPredicate = NSCompoundPredicate(type: .and, subpredicates: [incomePredicate, dateCapPredicate])
-
-                superPredicate = NSCompoundPredicate(type: .and, subpredicates: [andPredicate, categoryCompoundPredicate])
+                descriptor.predicate = #Predicate<Transaction> {
+                    $0.income == income && $0.date <= now
+                }
             } else {
-                andPredicate = NSCompoundPredicate(type: .and, subpredicates: [dateCapPredicate])
-
-                superPredicate = NSCompoundPredicate(type: .and, subpredicates: [andPredicate, categoryCompoundPredicate])
+                descriptor.predicate = #Predicate<Transaction> { $0.date <= now }
             }
 
-            if categoryFilters.isEmpty {
-                itemRequest.predicate = andPredicate
-            } else {
-                itemRequest.predicate = superPredicate
-            }
-
-            return itemRequest
-        } else {
-            let startPredicate: NSPredicate
-
-            if type == 1 {
-                let today = calendar.startOfDay(for: Date.now)
-                startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), today as CVarArg)
-            } else if type == 2 {
-                let dateComponents = calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: Date.now)
-                let thisWeek = calendar.date(from: dateComponents)!
-                startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), thisWeek as CVarArg)
-            } else if type == 3 {
-                let startOfMonth = UserDefaults(suiteName: "group.farm.poplar.budgetthing")!.integer(forKey: "firstDayOfMonth")
-
-                let thisMonth = getStartOfMonth(startDay: startOfMonth)
-                startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), thisMonth as CVarArg)
-            } else {
-                let dateComponents = calendar.dateComponents([.year], from: Date.now)
-                let thisYear = calendar.date(from: dateComponents)!
-                startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), thisYear as CVarArg)
-            }
-
-            let andPredicate: NSCompoundPredicate
-            let superPredicate: NSCompoundPredicate
-
-            var categoryPredicates = [NSPredicate]()
-
-            for category in categoryFilters {
-                categoryPredicates.append(NSPredicate(format: "%K == %@", #keyPath(Transaction.category), category))
-            }
-
-            let categoryCompoundPredicate = NSCompoundPredicate(type: .or, subpredicates: categoryPredicates)
-
-            if let income = optionalIncome {
-                let incomePredicate = NSPredicate(format: "income = %d", income)
-
-                andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, incomePredicate, dateCapPredicate])
-
-                superPredicate = NSCompoundPredicate(type: .and, subpredicates: [andPredicate, categoryCompoundPredicate])
-            } else {
-                andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, dateCapPredicate])
-
-                superPredicate = NSCompoundPredicate(type: .and, subpredicates: [andPredicate, categoryCompoundPredicate])
-            }
-
-            if categoryFilters.isEmpty {
-                itemRequest.predicate = andPredicate
-            } else {
-                itemRequest.predicate = superPredicate
-            }
-
-            return itemRequest
+            return descriptor
         }
 
+        let startDate: Date
+
+        if type == 1 {
+            let today = calendar.startOfDay(for: now)
+            startDate = today
+        } else if type == 2 {
+            let dateComponents = calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: now)
+            let thisWeek = calendar.date(from: dateComponents)!
+            startDate = thisWeek
+        } else if type == 3 {
+            let startOfMonth = UserDefaults(suiteName: "group.farm.poplar.budgetthing")!.integer(forKey: "firstDayOfMonth")
+
+            let thisMonth = getStartOfMonth(startDay: startOfMonth)
+            startDate = thisMonth
+        } else {
+            let dateComponents = calendar.dateComponents([.year], from: now)
+            let thisYear = calendar.date(from: dateComponents)!
+            startDate = thisYear
+        }
+
+        if let income = optionalIncome {
+            descriptor.predicate = #Predicate<Transaction> {
+                $0.date >= startDate && $0.date <= now && $0.income == income
+            }
+        } else {
+            descriptor.predicate = #Predicate<Transaction> {
+                $0.date >= startDate && $0.date <= now
+            }
+        }
+
+        return descriptor
     }
 
     func getShortcutInsights(type: Int, timeframe: Int, optionalIncome: Bool?, categories: [Category]) -> Double {
-        let fetchRequest = fetchRequestForLogView(type: timeframe, optionalIncome: optionalIncome, categoryFilters: categories)
-        let allTransactions = results(for: fetchRequest)
+        let descriptor = fetchDescriptorForLogView(type: timeframe, optionalIncome: optionalIncome, categoryFilters: categories)
+        let resultsTransactions = results(for: descriptor)
+        let allTransactions: [Transaction]
+
+        if categories.isEmpty {
+            allTransactions = resultsTransactions
+        } else {
+            let categoryIds = Set(categories.compactMap { $0.id })
+            allTransactions = resultsTransactions.filter { transaction in
+                guard let categoryId = transaction.category?.id else {
+                    return false
+                }
+                return categoryIds.contains(categoryId)
+            }
+        }
 
         if type == 1 {
             var total = 0.0
@@ -808,8 +751,8 @@ class DataController: ObservableObject, @unchecked Sendable {
     }
 
     func getLogViewTotalSpent(type: Int) -> Double {
-        let fetchRequest = fetchRequestForLogView(type: type, optionalIncome: false)
-        let allTransactions = results(for: fetchRequest)
+        let descriptor = fetchDescriptorForLogView(type: type, optionalIncome: false)
+        let allTransactions = results(for: descriptor)
 
         var total = 0.0
 
@@ -821,8 +764,8 @@ class DataController: ObservableObject, @unchecked Sendable {
     }
 
     func getLogViewTotalIncome(type: Int) -> Double {
-        let fetchRequest = fetchRequestForLogView(type: type, optionalIncome: true)
-        let allTransactions = results(for: fetchRequest)
+        let descriptor = fetchDescriptorForLogView(type: type, optionalIncome: true)
+        let allTransactions = results(for: descriptor)
 
         var total = 0.0
 
@@ -834,8 +777,8 @@ class DataController: ObservableObject, @unchecked Sendable {
     }
 
     func getLogViewTotalNet(type: Int) -> (value: Double, positive: Bool) {
-        let fetchRequest = fetchRequestForLogView(type: type, optionalIncome: nil)
-        let allTransactions = results(for: fetchRequest)
+        let descriptor = fetchDescriptorForLogView(type: type, optionalIncome: nil)
+        let allTransactions = results(for: descriptor)
 
         var total = 0.0
 
@@ -858,8 +801,8 @@ class DataController: ObservableObject, @unchecked Sendable {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date.now)
 
-        let fetchRequest = fetchRequestForLineGraph(optionalIncome: nil)
-        let transactions = results(for: fetchRequest)
+        let descriptor = fetchDescriptorForLineGraph(optionalIncome: nil)
+        let transactions = results(for: descriptor)
 
         var holdingDataPoints = [LineGraphDataPoint]()
         var totalForDay = 0.0
@@ -1014,8 +957,8 @@ class DataController: ObservableObject, @unchecked Sendable {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date.now)
 
-        let fetchRequest = fetchRequestForLineGraph(optionalIncome: income)
-        let transactions = results(for: fetchRequest)
+        let descriptor = fetchDescriptorForLineGraph(optionalIncome: income)
+        let transactions = results(for: descriptor)
 
         var holdingDataPoints = [LineGraphDataPoint]()
         var totalForDay = 0.0
@@ -1154,81 +1097,77 @@ class DataController: ObservableObject, @unchecked Sendable {
     }
 
     func getBudgetLeftover(budget: Budget? = nil, overallBudget: MainBudget? = nil) -> Double {
-        let itemRequest: NSFetchRequest<Transaction>
+        let descriptor: FetchDescriptor<Transaction>
         let budgetAmount: Double
 
         if let unwrappedOverallBudget = overallBudget {
-            itemRequest = fetchRequestForMainBudgetTransactions(budget: unwrappedOverallBudget)
+            descriptor = fetchDescriptorForMainBudgetTransactions(budget: unwrappedOverallBudget)
             budgetAmount = unwrappedOverallBudget.amount
         } else if let unwrappedBudget = budget {
-            itemRequest = fetchRequestForBudgetTransactions(budget: unwrappedBudget)
+            descriptor = fetchDescriptorForBudgetTransactions(budget: unwrappedBudget)
             budgetAmount = unwrappedBudget.amount
         } else {
-            itemRequest = Transaction.fetchRequest()
+            descriptor = FetchDescriptor<Transaction>()
             budgetAmount = 0
         }
 
-        let transactions = results(for: itemRequest)
+        let transactions = results(for: descriptor)
+        let filteredTransactions: [Transaction]
+
+        if let categoryId = budget?.category?.id {
+            filteredTransactions = transactions.filter { $0.category?.id == categoryId }
+        } else {
+            filteredTransactions = transactions
+        }
 
         var totalSpent = 0.0
 
-        transactions.forEach { transaction in
+        filteredTransactions.forEach { transaction in
             totalSpent += transaction.wrappedAmount
         }
 
         return budgetAmount - totalSpent
     }
 
-    func fetchRequestForMainBudgetTransactions(budget: MainBudget) -> NSFetchRequest<Transaction> {
-        let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-
-        let startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), budget.startDate! as CVarArg)
-        let endPredicate = NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg)
-        let incomePredicate = NSPredicate(format: "income = %d", false)
-
-        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, incomePredicate])
-
-        itemRequest.predicate = andPredicate
-
-        return itemRequest
+    func fetchDescriptorForMainBudgetTransactions(budget: MainBudget) -> FetchDescriptor<Transaction> {
+        let startDate = budget.startDate
+        let now = Date.now
+        let predicate = #Predicate<Transaction> {
+            $0.date >= startDate && $0.date <= now && $0.income == false
+        }
+        return FetchDescriptor(predicate: predicate)
     }
 
-    func fetchRequestForBudgetTransactions(budget: Budget) -> NSFetchRequest<Transaction> {
-        let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-
-        let startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), budget.startDate! as CVarArg)
-        let endPredicate = NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg)
-        let categoryPredicate = NSPredicate(format: "%K == %@", #keyPath(Transaction.category), budget.category!)
-        let incomePredicate = NSPredicate(format: "income = %d", false)
-
-        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, categoryPredicate, incomePredicate])
-
-        itemRequest.predicate = andPredicate
-
-        return itemRequest
+    func fetchDescriptorForBudgetTransactions(budget: Budget) -> FetchDescriptor<Transaction> {
+        let startDate = budget.startDate
+        let now = Date.now
+        let predicate = #Predicate<Transaction> {
+            $0.date >= startDate &&
+            $0.date <= now &&
+            $0.income == false
+        }
+        return FetchDescriptor(predicate: predicate)
     }
 
-    func fetchRequestForLineGraph(optionalIncome: Bool?) -> NSFetchRequest<Transaction> {
-        let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-        itemRequest.sortDescriptors = [NSSortDescriptor(keyPath: \Transaction.date, ascending: true)]
+    func fetchDescriptorForLineGraph(optionalIncome: Bool?) -> FetchDescriptor<Transaction> {
+        var descriptor = FetchDescriptor<Transaction>()
+        descriptor.sortBy = [SortDescriptor(\.date)]
 
         if let income = optionalIncome {
-            itemRequest.predicate = NSPredicate(format: "income = %d", income)
-            return itemRequest
-        } else {
-            return itemRequest
+            descriptor.predicate = #Predicate<Transaction> { $0.income == income }
         }
+
+        return descriptor
     }
 
-    func fetchRequestForLogViewCategoryFilter(income: Bool) -> NSFetchRequest<Transaction> {
-        let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-        itemRequest.predicate = NSPredicate(format: "income = %d", income)
-        return itemRequest
+    func fetchDescriptorForLogViewCategoryFilter(income: Bool) -> FetchDescriptor<Transaction> {
+        let predicate = #Predicate<Transaction> { $0.income == income }
+        return FetchDescriptor(predicate: predicate)
     }
 
     func getInsights(type: Int, date: Date, income: Bool) -> (amount: Double, maximum: Double, average: Double, numberOfDays: Int, dates: [Date], dateDictionary: [Date: Double]) {
-        let currentItemRequest: NSFetchRequest<Transaction> = fetchRequestForInsights(type: type, date: date, income: income)
-        let currentTransactions = results(for: currentItemRequest)
+        let descriptor = fetchDescriptorForInsights(type: type, date: date, income: income)
+        let currentTransactions = results(for: descriptor)
 
         var iterativeDate = date
 
@@ -1409,24 +1348,23 @@ class DataController: ObservableObject, @unchecked Sendable {
         }
     }
 
-    func fetchRequestForInsights(type: Int, date: Date, income: Bool? = nil) -> NSFetchRequest<Transaction> {
-        let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+    func fetchDescriptorForInsights(type: Int, date: Date, income: Bool? = nil) -> FetchDescriptor<Transaction> {
+        var descriptor = FetchDescriptor<Transaction>()
 
         var calendar = Calendar(identifier: .gregorian)
 
         calendar.firstWeekday = UserDefaults(suiteName: "group.farm.poplar.budgetthing")!.integer(forKey: "firstWeekday")
         calendar.minimumDaysInFirstWeek = 4
 
-        let startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), date as CVarArg)
-
-        let endPredicate: NSPredicate
+        let startDate = date
+        let endDate: Date
 
         if type == 1 {
             if calendar.isDate(date, equalTo: Date.now, toGranularity: .weekOfYear) {
-                endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
+                endDate = Date.now
             } else {
                 let next = calendar.date(byAdding: .day, value: 7, to: date) ?? Date.now
-                endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), next as CVarArg)
+                endDate = next
             }
         } else if type == 2 {
             let next = calendar.date(byAdding: .month, value: 1, to: date) ?? Date.now
@@ -1434,9 +1372,9 @@ class DataController: ObservableObject, @unchecked Sendable {
 //            let endOfPeriod = calendar.date(byAdding: .day, value: -1, to: next) ?? Date.now
 //
             if next > Date.now {
-                endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
+                endDate = Date.now
             } else {
-                endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), next as CVarArg)
+                endDate = next
             }
 //
 //            if calendar.isDate(date, equalTo: Date.now, toGranularity: .month) {
@@ -1447,31 +1385,28 @@ class DataController: ObservableObject, @unchecked Sendable {
 //            }
         } else {
             if calendar.isDate(date, equalTo: Date.now, toGranularity: .year) {
-                endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
+                endDate = Date.now
             } else {
                 let next = calendar.date(byAdding: .year, value: 1, to: date) ?? Date.now
-                endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), next as CVarArg)
+                endDate = next
             }
         }
 
-        let andPredicate: NSCompoundPredicate
-
         if let unwrappedIncome = income {
-            let incomePredicate = NSPredicate(format: "income = %d", unwrappedIncome)
-
-            andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, incomePredicate, endPredicate])
+            descriptor.predicate = #Predicate<Transaction> {
+                $0.date >= startDate && $0.date < endDate && $0.income == unwrappedIncome
+            }
         } else {
-            andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate])
+            descriptor.predicate = #Predicate<Transaction> {
+                $0.date >= startDate && $0.date < endDate
+            }
         }
-
-        itemRequest.predicate = andPredicate
-
-        return itemRequest
+        return descriptor
     }
 
     func getInsightsSummary(type: Int, date: Date) -> (spent: Double, income: Double, net: Double, positive: Bool, average: Double) {
-        let itemRequest: NSFetchRequest<Transaction> = fetchRequestForInsights(type: type, date: date)
-        let currentTransactions = results(for: itemRequest)
+        let descriptor = fetchDescriptorForInsights(type: type, date: date)
+        let currentTransactions = results(for: descriptor)
 
         var holdingSpent = 0.0
         var holdingIncome = 0.0
@@ -1540,142 +1475,105 @@ class DataController: ObservableObject, @unchecked Sendable {
         }
     }
 
-    func fetchRequestForWidgetInsights(type: InsightsTimePeriod, income: Bool) -> (fetchRequest: NSFetchRequest<Transaction>, date: Date) {
-        let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+    func fetchDescriptorForWidgetInsights(type: InsightsTimePeriod, income: Bool) -> (descriptor: FetchDescriptor<Transaction>, date: Date) {
+        var descriptor = FetchDescriptor<Transaction>()
 
         var calendar = Calendar(identifier: .gregorian)
 
         calendar.firstWeekday = UserDefaults(suiteName: "group.farm.poplar.budgetthing")!.integer(forKey: "firstWeekday")
         calendar.minimumDaysInFirstWeek = 4
 
-        let endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
-
-        let incomePredicate = NSPredicate(format: "income = %d", income)
-
+        let now = Date.now
         let startDate: Date
-        let startPredicate: NSPredicate
+        let endDate = now
 
         switch type {
         case .unknown:
-            startDate = Date.now
-            startPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
+            startDate = now
+            descriptor.predicate = #Predicate<Transaction> { $0.date < now && $0.income == income }
         case .week:
-            let dateComponents = calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: Date.now)
+            let dateComponents = calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: now)
 
             startDate = calendar.date(from: dateComponents)!
-
-            startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), startDate as CVarArg)
+            descriptor.predicate = #Predicate<Transaction> {
+                $0.date >= startDate && $0.date < endDate && $0.income == income
+            }
         case .month:
             let startOfMonth = UserDefaults(suiteName: "group.farm.poplar.budgetthing")!.integer(forKey: "firstDayOfMonth")
 
             startDate = getStartOfMonth(startDay: startOfMonth)
-
-            startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), startDate as CVarArg)
+            descriptor.predicate = #Predicate<Transaction> {
+                $0.date >= startDate && $0.date < endDate && $0.income == income
+            }
         case .year:
-            let dateComponents = calendar.dateComponents([.year], from: Date.now)
+            let dateComponents = calendar.dateComponents([.year], from: now)
 
             startDate = calendar.date(from: dateComponents)!
-
-            startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), startDate as CVarArg)
+            descriptor.predicate = #Predicate<Transaction> {
+                $0.date >= startDate && $0.date < endDate && $0.income == income
+            }
         }
 
-        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, incomePredicate])
+        if type != .unknown {
+            descriptor.sortBy = [SortDescriptor(\.date, order: .reverse)]
+        }
 
-        itemRequest.predicate = andPredicate
-        itemRequest.sortDescriptors = [
-            NSSortDescriptor(keyPath: \Transaction.date, ascending: false)
-        ]
-
-        return (itemRequest, startDate)
+        return (descriptor, startDate)
     }
 
-    func fetchRequestForRecentTransactionsWithCount(type: TimePeriod, count: Int) -> NSFetchRequest<Transaction> {
-        let itemRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+    func fetchDescriptorForRecentTransactionsWithCount(type: TimePeriod, count: Int) -> FetchDescriptor<Transaction> {
+        var descriptor = FetchDescriptor<Transaction>()
 
         var calendar = Calendar(identifier: .gregorian)
 
         calendar.firstWeekday = UserDefaults(suiteName: "group.farm.poplar.budgetthing")!.integer(forKey: "firstWeekday")
         calendar.minimumDaysInFirstWeek = 4
 
+        let now = Date.now
+
         switch type {
         case .unknown:
-            return itemRequest
+            return descriptor
         case .day:
-            let today = calendar.startOfDay(for: Date.now)
-
-            let startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), today as CVarArg)
-            let endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
-
-            let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate])
-
-            itemRequest.predicate = andPredicate
-            itemRequest.sortDescriptors = [
-                NSSortDescriptor(keyPath: \Transaction.date, ascending: false)
-            ]
-            itemRequest.fetchLimit = count
-
-            return itemRequest
+            let today = calendar.startOfDay(for: now)
+            descriptor.predicate = #Predicate<Transaction> { $0.date >= today && $0.date < now }
+            descriptor.sortBy = [SortDescriptor(\.date, order: .reverse)]
+            descriptor.fetchLimit = count
+            return descriptor
         case .week:
-            let dateComponents = calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: Date.now)
+            let dateComponents = calendar.dateComponents([.weekOfYear, .yearForWeekOfYear], from: now)
 
             let thisWeek = calendar.date(from: dateComponents)!
-
-            let startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), thisWeek as CVarArg)
-            let endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
-
-            let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate])
-
-            itemRequest.predicate = andPredicate
-            itemRequest.sortDescriptors = [
-                NSSortDescriptor(keyPath: \Transaction.date, ascending: false)
-            ]
-            itemRequest.fetchLimit = count
-
-            return itemRequest
+            descriptor.predicate = #Predicate<Transaction> { $0.date >= thisWeek && $0.date < now }
+            descriptor.sortBy = [SortDescriptor(\.date, order: .reverse)]
+            descriptor.fetchLimit = count
+            return descriptor
         case .month:
-            let dateComponents = calendar.dateComponents([.month, .year], from: Date.now)
+            let dateComponents = calendar.dateComponents([.month, .year], from: now)
 
             let thisMonth = calendar.date(from: dateComponents)!
-
-            let startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), thisMonth as CVarArg)
-            let endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
-
-            let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate])
-
-            itemRequest.predicate = andPredicate
-            itemRequest.sortDescriptors = [
-                NSSortDescriptor(keyPath: \Transaction.date, ascending: false)
-            ]
-            itemRequest.fetchLimit = count
-
-            return itemRequest
+            descriptor.predicate = #Predicate<Transaction> { $0.date >= thisMonth && $0.date < now }
+            descriptor.sortBy = [SortDescriptor(\.date, order: .reverse)]
+            descriptor.fetchLimit = count
+            return descriptor
         case .year:
-            let dateComponents = calendar.dateComponents([.year], from: Date.now)
+            let dateComponents = calendar.dateComponents([.year], from: now)
 
             let thisYear = calendar.date(from: dateComponents)!
-
-            let startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), thisYear as CVarArg)
-            let endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
-
-            let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate])
-
-            itemRequest.predicate = andPredicate
-            itemRequest.sortDescriptors = [
-                NSSortDescriptor(keyPath: \Transaction.date, ascending: false)
-            ]
-            itemRequest.fetchLimit = count
-
-            return itemRequest
+            descriptor.predicate = #Predicate<Transaction> { $0.date >= thisYear && $0.date < now }
+            descriptor.sortBy = [SortDescriptor(\.date, order: .reverse)]
+            descriptor.fetchLimit = count
+            return descriptor
         }
     }
 
     func fetchRequestForMainBudgetWidget() -> (found: Bool, totalSpent: Double, budgetAmount: Double, percentage: Double, type: Int, startDate: Date) {
-        let holding = results(for: fetchRequestForMainBudget())
+        let holding = results(for: fetchDescriptorForMainBudget())
 
         if let budget = holding.first {
-            let itemRequest = fetchRequestForMainBudgetTransactions(budget: budget)
+            let descriptor = fetchDescriptorForMainBudgetTransactions(budget: budget)
 //
-            let transactions = results(for: itemRequest)
+            let transactions = results(for: descriptor)
 
             var holdingTotal = 0.0
             transactions.forEach { transaction in
@@ -1687,36 +1585,28 @@ class DataController: ObservableObject, @unchecked Sendable {
             let calendar = Calendar.current
 
             if budget.type == 1 {
-                let components = calendar.dateComponents([.minute], from: budget.startDate!, to: Date.now)
-                percentageOfDays = Double(components.minute!) / 1440
+                let components = calendar.dateComponents([.minute], from: budget.startDate, to: Date.now)
+                percentageOfDays = Double(components.minute ?? 0) / 1440
             } else {
-                let components1 = calendar.dateComponents([.day], from: budget.startDate!, to: budget.endDate)
-                let numberOfDays = components1.day!
+                let components1 = calendar.dateComponents([.day], from: budget.startDate, to: budget.endDate)
+                let numberOfDays = components1.day ?? 0
 
-                let components2 = calendar.dateComponents([.day], from: budget.startDate!, to: Date.now)
-                let numberOfDaysPast = components2.day!
+                let components2 = calendar.dateComponents([.day], from: budget.startDate, to: Date.now)
+                let numberOfDaysPast = components2.day ?? 0
 
-                percentageOfDays = Double(numberOfDaysPast) / Double(numberOfDays)
+                percentageOfDays = numberOfDays == 0 ? 0 : Double(numberOfDaysPast) / Double(numberOfDays)
             }
 
-            return (true, holdingTotal, budget.amount, percentageOfDays, Int(budget.type), budget.startDate!)
+            return (true, holdingTotal, budget.amount, percentageOfDays, Int(budget.type), budget.startDate)
 
         } else {
             return (false, 0, 0, 0, 0, Date.now)
         }
     }
 
-    func results<T: NSManagedObject>(for fetchRequest: NSFetchRequest<T>) -> [T] {
-        return (try? container.viewContext.fetch(fetchRequest)) ?? []
-    }
-}
-
-public extension NSManagedObjectContext {
-    func executeAndMergeChanges(using batchDeleteRequest: NSBatchDeleteRequest) throws {
-        batchDeleteRequest.resultType = .resultTypeObjectIDs
-        let result = try execute(batchDeleteRequest) as? NSBatchDeleteResult
-        let changes: [AnyHashable: Any] = [NSDeletedObjectsKey: result?.result as? [NSManagedObjectID] ?? []]
-        NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: [self])
+    func results<T: PersistentModel>(for descriptor: FetchDescriptor<T>, context: ModelContext? = nil) -> [T] {
+        let context = context ?? mainContext
+        return (try? context.fetch(descriptor)) ?? []
     }
 }
 

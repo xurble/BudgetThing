@@ -6,13 +6,14 @@
 //
 
 import Foundation
+import SwiftData
 import SwiftUI
 
 struct NewCategoryPickerView: View {
     @Binding var category: Category?
     @Binding var showPicker: Bool
     @Binding var showingCategoryView: Bool
-    @FetchRequest private var categories: FetchedResults<Category>
+    @Query private var categories: [Category]
     @Environment(\.colorScheme) var colorScheme
 
     let layout = [
@@ -105,10 +106,10 @@ struct NewCategoryPickerView: View {
         category: Binding<Category?>?, showPicker: Binding<Bool>, showSheet: Binding<Bool>,
         income: Bool
     ) {
-        _categories = FetchRequest<Category>(
-            sortDescriptors: [
-                SortDescriptor(\.order, order: .reverse)
-            ], predicate: NSPredicate(format: "income = %d", income))
+        _categories = Query(
+            filter: #Predicate<Category> { $0.income == income },
+            sort: [SortDescriptor(\.order, order: .reverse)]
+        )
 
         _category = category ?? Binding.constant(nil)
         _showPicker = showPicker

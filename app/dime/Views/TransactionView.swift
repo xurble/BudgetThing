@@ -7,15 +7,14 @@
 
 import Combine
 import Foundation
+import SwiftData
 import SwiftUI
 
 struct TransactionView: View {
-    @FetchRequest(sortDescriptors: [], predicate: NSPredicate(format: "income = %d", false)) private
-    var expenseCategories: FetchedResults<Category>
-    @FetchRequest(sortDescriptors: [], predicate: NSPredicate(format: "income = %d", true)) private
-    var incomeCategories: FetchedResults<Category>
+    @Query(filter: #Predicate<Category> { $0.income == false }) private var expenseCategories: [Category]
+    @Query(filter: #Predicate<Category> { $0.income == true }) private var incomeCategories: [Category]
 
-    @Environment(\.managedObjectContext) var moc
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var dataController: DataController
     @Environment(\.dismiss) var dismiss
 
@@ -596,7 +595,7 @@ struct TransactionView: View {
                 Button("Delete", role: .destructive) {
                     withAnimation {
                         if let itemToDelete = toDelete {
-                            moc.delete(itemToDelete)
+                            modelContext.delete(itemToDelete)
                         }
                         dataController.save()
                     }
@@ -832,7 +831,7 @@ struct TransactionView: View {
             return
         }
 
-        let transaction = Transaction(context: moc)
+        let transaction = Transaction()
 
         if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
             transaction.note = category?.wrappedName ?? ""
@@ -865,7 +864,8 @@ struct TransactionView: View {
             dataController.updateRecurringTransaction(transaction: transaction)
         }
 
-        try? moc.save()
+        modelContext.insert(transaction)
+        dataController.save()
 
         dismiss()
     }
@@ -880,7 +880,7 @@ struct TransactionView: View {
 
             _income = State(initialValue: transaction.income)
 
-            _date = State(initialValue: transaction.date ?? Date.now)
+            _date = State(initialValue: transaction.date)
         }
         self.toEdit = toEdit
     }
@@ -896,16 +896,23 @@ struct TransactionView: View {
 }
 
 struct FilteredSearchNewTransactionView: View {
-    @FetchRequest<Transaction> private var transactions: FetchedResults<Transaction>
+    @Query(sort: [SortDescriptor(\Transaction.date, order: .reverse)]) private var transactions: [Transaction]
 
     var searchQuery: String
     var category: Category?
 
     var body: some View {
         ScrollView(.horizontal) {
-            if transactions.count > 0 && category != nil {
+            let trimmedQuery = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+            let filtered = transactions.filter { transaction in
+                let matchesQuery = transaction.wrappedNote.localizedCaseInsensitiveContains(trimmedQuery)
+                let matchesCategory = category == nil ? true : (transaction.category == category)
+                return matchesQuery && matchesCategory
+            }
+
+            if !filtered.isEmpty {
                 HStack {
-                    ForEach(filterOutDupes(day: transactions)) { transaction in
+                    ForEach(filterOutDupes(day: filtered)) { transaction in
                         Text(transaction.wrappedNote)
                     }
                 }
@@ -914,37 +921,11 @@ struct FilteredSearchNewTransactionView: View {
     }
 
     init(searchQuery: String, category: Category?) {
-        let beginPredicate = NSPredicate(
-            format: "%K BEGINSWITH[cd] %@", #keyPath(Transaction.note), searchQuery)
-        let containPredicate = NSPredicate(
-            format: "%K CONTAINS[cd] %@", #keyPath(Transaction.note), searchQuery)
-        let compound = NSCompoundPredicate(orPredicateWithSubpredicates: [
-            beginPredicate, containPredicate
-        ])
-
-        if let unwrappedCategory = category {
-            let categoryPredicate = NSPredicate(
-                format: "%K == %@", #keyPath(Transaction.category), unwrappedCategory)
-
-            let andPredicate = NSCompoundPredicate(
-                type: .and, subpredicates: [compound, categoryPredicate])
-
-            _transactions = FetchRequest<Transaction>(
-                sortDescriptors: [
-                    SortDescriptor(\.date, order: .reverse)
-                ], predicate: andPredicate)
-        } else {
-            _transactions = FetchRequest<Transaction>(
-                sortDescriptors: [
-                    SortDescriptor(\.date, order: .reverse)
-                ], predicate: compound)
-        }
-
         self.searchQuery = searchQuery
         self.category = category
     }
 
-    func filterOutDupes(day: FetchedResults<Transaction>) -> [Transaction] {
+    func filterOutDupes(day: [Transaction]) -> [Transaction] {
         var seen = [Transaction]()
         let filtered = day.filter { entity -> Bool in
             if seen.contains(where: { $0.wrappedNote == entity.wrappedNote }) {
@@ -980,7 +961,7 @@ struct CategoryPickerView: View {
     @Binding var category: Category?
     @Binding var showPicker: Bool
     @Binding var showingCategoryView: Bool
-    @FetchRequest private var categories: FetchedResults<Category>
+    @Query private var categories: [Category]
 
     let initialCategory: Category?
 
@@ -1131,10 +1112,10 @@ struct CategoryPickerView: View {
         category: Binding<Category?>?, showPicker: Binding<Bool>, showSheet: Binding<Bool>,
         income: Bool, darkMode: Bool
     ) {
-        _categories = FetchRequest<Category>(
-            sortDescriptors: [
-                SortDescriptor(\.order, order: .reverse)
-            ], predicate: NSPredicate(format: "income = %d", income))
+        _categories = Query(
+            filter: #Predicate<Category> { $0.income == income },
+            sort: [SortDescriptor(\Category.order, order: .reverse)]
+        )
         self.darkMode = darkMode
         initialCategory = category?.wrappedValue
         _category = category ?? Binding.constant(nil)
@@ -1561,7 +1542,7 @@ struct ButtonView: View {
     let dataController = DataController.shared
 
     TransactionView(toEdit: nil)
-        .environment(\.managedObjectContext, dataController.container.viewContext)
+        .modelContainer(dataController.modelContainer)
         .environmentObject(dataController)
 }
 

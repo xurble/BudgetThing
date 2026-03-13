@@ -5,6 +5,7 @@
 //  Created by Rafael Soh on 15/7/23.
 //
 
+import SwiftData
 import SwiftUI
 
 struct PickerStyle: ViewModifier {
@@ -26,12 +27,12 @@ struct InstructionHeadings {
 }
 
 struct BrandNewBudgetView: View {
-    @FetchRequest private var categories: FetchedResults<Category>
+    @Query private var categories: [Category]
 
     @AppStorage("firstWeekday", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var firstWeekday: Int = 1
     @AppStorage("firstDayOfMonth", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var firstDayOfMonth: Int = 1
 
-    @Environment(\.managedObjectContext) var moc
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var dataController: DataController
 
     @Environment(\.dismiss) var dismiss
@@ -150,98 +151,209 @@ struct BrandNewBudgetView: View {
         ]
     }
 
-    var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Button {
-                    if showBackButton {
-                        withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
-                            if progress == 3 && !categoryBudget && !editMode {
-                                progress -= 2
-                            } else if progress == 5 && budgetTimeFrame == .day {
-                                progress -= 2
-                            } else if progress > 1 {
-                                progress -= 1
-                            }
+    private var headerView: some View {
+        HStack {
+            Button {
+                if showBackButton {
+                    withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
+                        if progress == 3 && !categoryBudget && !editMode {
+                            progress -= 2
+                        } else if progress == 5 && budgetTimeFrame == .day {
+                            progress -= 2
+                        } else if progress > 1 {
+                            progress -= 1
                         }
-                    } else {
-                        dismiss()
                     }
-                } label: {
-                    Image(systemName: showBackButton ? "chevron.left" : "xmark")
-                        .font(.system(.callout, design: .rounded).weight(.semibold))
-
-                        .foregroundColor(Color.SubtitleText)
-                        .padding(8)
-                        .background(Color.SecondaryBackground, in: Circle())
+                } else {
+                    dismiss()
                 }
-                .contentTransition(.symbolEffect(.replace.downUp.wholeSymbol))
+            } label: {
+                Image(systemName: showBackButton ? "chevron.left" : "xmark")
+                    .font(.system(.callout, design: .rounded).weight(.semibold))
+
+                    .foregroundColor(Color.SubtitleText)
+                    .padding(8)
+                    .background(Color.SecondaryBackground, in: Circle())
+            }
+            .contentTransition(.symbolEffect(.replace.downUp.wholeSymbol))
+
+            Spacer()
+
+            CustomCapsuleProgress(percent: (Double(progress) - initialProgress + 1) / (6 - initialProgress), width: 4, topStroke: Color.DarkBackground, bottomStroke: Color.SecondaryBackground)
+                .frame(width: 60)
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .overlay {
+            if showToast {
+                HStack(spacing: 6.5) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .foregroundColor(Color.AlertRed)
+
+                    Text(toastMessage)
+                        .font(.system(.callout, design: .rounded).weight(.semibold))
+                        .foregroundColor(Color.AlertRed)
+                }
+                .padding(8)
+                .toastGlassRoundedRect(tint: Color.AlertRed)
+                .transition(ToastAnimationStyle.transition)
+                .frame(width: 250)
+            }
+        }
+        .padding(.bottom, 50)
+        .animation(.easeInOut, value: showBackButton)
+    }
+
+    private var instructionsView: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack {
+                Text(instructions[progress - 1].title)
+                    .foregroundColor(.PrimaryText)
+                    .font(.system(.title2, design: .rounded).weight(.semibold))
+
+                if progress == 2 {
+                    Button {
+                        showingCategoryView = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.system(.footnote, design: .rounded).weight(.semibold))
+                            .foregroundColor(Color.SubtitleText)
+                            .padding(4)
+                            .background(Color.SecondaryBackground, in: Circle())
+                            .contentShape(Circle())
+                    }
+                }
 
                 Spacer()
-
-                CustomCapsuleProgress(percent: (Double(progress) - initialProgress + 1) / (6 - initialProgress), width: 4, topStroke: Color.DarkBackground, bottomStroke: Color.SecondaryBackground)
-                    .frame(width: 60)
             }
-            .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .overlay {
-                if showToast {
-                    HStack(spacing: 6.5) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                            .foregroundColor(Color.AlertRed)
+            .frame(maxWidth: .infinity)
 
-                        Text(toastMessage)
-                            .font(.system(.callout, design: .rounded).weight(.semibold))
-                            .foregroundColor(Color.AlertRed)
+            Text(instructions[progress - 1].subtitle)
+                .foregroundColor(.SubtitleText)
+                .font(.system(.body, design: .rounded).weight(.medium))
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(height: labelHeight, alignment: .top)
+    }
+
+    @ViewBuilder private var stepView: some View {
+        if progress == 1 {
+            VStack {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack {
+                        Text("Overall Budget")
+                        Spacer()
+
+                        if !categoryBudget {
+                            Checkmark()
+                        }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .foregroundColor(Color.PrimaryText)
+                    .font(.system(.title3, design: .rounded).weight(.medium))
+//                    .font(.system(size: 20, weight: .medium, design: .rounded))
                     .padding(8)
-                    .toastGlassRoundedRect(tint: Color.AlertRed)
-                    .transition(ToastAnimationStyle.transition)
-                    .frame(width: 250)
-                }
-            }
-            .padding(.bottom, 50)
-            .animation(.easeInOut, value: showBackButton)
-
-            VStack(alignment: .leading, spacing: 5) {
-                HStack {
-                    Text(instructions[progress - 1].title)
-                        .foregroundColor(.PrimaryText)
-                        .font(.system(.title2, design: .rounded).weight(.semibold))
-
-                    if progress == 2 {
-                        Button {
-                            showingCategoryView = true
-                        } label: {
-                            Image(systemName: "plus")
-                                .font(.system(.footnote, design: .rounded).weight(.semibold))
-                                .foregroundColor(Color.SubtitleText)
-                                .padding(4)
-                                .background(Color.SecondaryBackground, in: Circle())
-                                .contentShape(Circle())
+                    .background {
+                        if !categoryBudget {
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color.SecondaryBackground)
+                                .matchedGeometryEffect(id: "TAB1", in: animation)
+                        }
+                    }
+//                    .frame(height: 40)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        withAnimation(.easeIn(duration: 0.15)) {
+                            categoryBudget = false
                         }
                     }
 
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity)
+                    HStack {
+                        Text("Category Budget")
+                        Spacer()
 
-                Text(instructions[progress - 1].subtitle)
-                    .foregroundColor(.SubtitleText)
-                    .font(.system(.body, design: .rounded).weight(.medium))
+                        if categoryBudget {
+                            Checkmark()
+                        }
+                    }
                     .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .frame(height: labelHeight, alignment: .top)
+                    .foregroundColor(Color.PrimaryText)
+                    .font(.system(.title3, design: .rounded).weight(.medium))
+                    .padding(8)
+//                    .frame(height: 40)
+                    .background {
+                        if categoryBudget {
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color.SecondaryBackground)
+                                .matchedGeometryEffect(id: "TAB1", in: animation)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        withAnimation(.easeIn(duration: 0.15)) {
+                            categoryBudget = true
+                        }
+                    }
+                }
+                .modifier(PickerStyle(colorScheme: colorScheme))
 
-            if progress == 1 {
-                VStack {
-                    VStack(alignment: .leading, spacing: 0) {
+                Spacer()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if progress == 2 {
+            VStack {
+                if categories.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "tray.full.fill")
+                            .font(.system(.largeTitle, design: .rounded))
+//                            .font(.system(size: 38, weight: .regular, design: .rounded))
+                            .foregroundColor(Color.SubtitleText.opacity(0.7))
+                            .padding(.top, 20)
+
+                        Text("No remaining\ncategories.")
+                            .font(.system(.title3, design: .rounded).weight(.medium))
+//                            .font(.system(size: 21, weight: .medium, design: .rounded))
+                            .multilineTextAlignment(.center)
+                            .foregroundColor(Color.SubtitleText.opacity(0.7))
+                            .padding(.bottom, 20)
+
+                        Spacer()
+                    }
+                    .frame(maxHeight: .infinity)
+
+                } else {
+                    ScrollView(showsIndicators: false) {
+                        VStack(spacing: 10) {
+                            ForEach(getRows(), id: \.self) { rows in
+
+                                HStack(spacing: 10) {
+                                    ForEach(rows) { row in
+
+                                        // Row View....
+                                        RowView(category: row)
+                                    }
+                                }
+                            }
+                        }
+                        .padding(15)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 15)
+                }
+
+                Spacer()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if progress == 3 {
+            VStack {
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(BudgetTimeFrame.allCases, id: \.self) { time in
                         HStack {
-                            Text("Overall Budget")
+                            Text(LocalizedStringKey(time.rawValue))
                             Spacer()
 
-                            if !categoryBudget {
+                            if time == budgetTimeFrame {
                                 Checkmark()
                             }
                         }
@@ -250,270 +362,171 @@ struct BrandNewBudgetView: View {
                         .font(.system(.title3, design: .rounded).weight(.medium))
 //                        .font(.system(size: 20, weight: .medium, design: .rounded))
                         .padding(8)
-                        .background {
-                            if !categoryBudget {
-                                RoundedRectangle(cornerRadius: 6)
-                                    .fill(Color.SecondaryBackground)
-                                    .matchedGeometryEffect(id: "TAB1", in: animation)
-                            }
-                        }
-//                        .frame(height: 40)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            withAnimation(.easeIn(duration: 0.15)) {
-                                categoryBudget = false
-                            }
-                        }
-
-                        HStack {
-                            Text("Category Budget")
-                            Spacer()
-
-                            if categoryBudget {
-                                Checkmark()
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .foregroundColor(Color.PrimaryText)
-                        .font(.system(.title3, design: .rounded).weight(.medium))
-                        .padding(8)
 //                        .frame(height: 40)
                         .background {
-                            if categoryBudget {
+                            if time == budgetTimeFrame {
                                 RoundedRectangle(cornerRadius: 6)
                                     .fill(Color.SecondaryBackground)
-                                    .matchedGeometryEffect(id: "TAB1", in: animation)
+                                    .matchedGeometryEffect(id: "TAB2", in: animation)
                             }
                         }
                         .contentShape(Rectangle())
                         .onTapGesture {
                             withAnimation(.easeIn(duration: 0.15)) {
-                                categoryBudget = true
+                                budgetTimeFrame = time
                             }
                         }
-                    }
-                    .modifier(PickerStyle(colorScheme: colorScheme))
-
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if progress == 2 {
-                VStack {
-                    if categories.isEmpty {
-                        VStack(spacing: 12) {
-                            Image(systemName: "tray.full.fill")
-                                .font(.system(.largeTitle, design: .rounded))
-//                                .font(.system(size: 38, weight: .regular, design: .rounded))
-                                .foregroundColor(Color.SubtitleText.opacity(0.7))
-                                .padding(.top, 20)
-
-                            Text("No remaining\ncategories.")
-                                .font(.system(.title3, design: .rounded).weight(.medium))
-//                                .font(.system(size: 21, weight: .medium, design: .rounded))
-                                .multilineTextAlignment(.center)
-                                .foregroundColor(Color.SubtitleText.opacity(0.7))
-                                .padding(.bottom, 20)
-
-                            Spacer()
-                        }
-                        .frame(maxHeight: .infinity)
-
-                    } else {
-                        ScrollView(showsIndicators: false) {
-                            VStack(spacing: 10) {
-                                ForEach(getRows(), id: \.self) { rows in
-
-                                    HStack(spacing: 10) {
-                                        ForEach(rows) { row in
-
-                                            // Row View....
-                                            RowView(category: row)
-                                        }
-                                    }
-                                }
-                            }
-                            .padding(15)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.bottom, 15)
-                    }
-
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if progress == 3 {
-                VStack {
-                    VStack(alignment: .leading, spacing: 0) {
-                        ForEach(BudgetTimeFrame.allCases, id: \.self) { time in
-                            HStack {
-                                Text(LocalizedStringKey(time.rawValue))
-                                Spacer()
-
-                                if time == budgetTimeFrame {
-                                    Checkmark()
-                                }
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .foregroundColor(Color.PrimaryText)
-                            .font(.system(.title3, design: .rounded).weight(.medium))
-//                            .font(.system(size: 20, weight: .medium, design: .rounded))
-                            .padding(8)
-//                            .frame(height: 40)
-                            .background {
-                                if time == budgetTimeFrame {
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .fill(Color.SecondaryBackground)
-                                        .matchedGeometryEffect(id: "TAB2", in: animation)
-                                }
-                            }
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                withAnimation(.easeIn(duration: 0.15)) {
-                                    budgetTimeFrame = time
-                                }
-                            }
-                        }
-                    }
-                    .modifier(PickerStyle(colorScheme: colorScheme))
-
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if progress == 4 {
-                VStack {
-                    switch budgetTimeFrame {
-                    case .day:
-                        EmptyView()
-                    case .week:
-                        ScrollView(showsIndicators: false) {
-                            ScrollViewReader { value in
-                                VStack(alignment: .leading, spacing: 0) {
-                                    ForEach(weekdays, id: \.self) { day in
-                                        HStack {
-                                            Text(LocalizedStringKey(day))
-                                            Spacer()
-
-                                            if chosenDayWeek == (weekdays.firstIndex(of: day)! + 1) {
-                                                Checkmark()
-                                            }
-                                        }
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .foregroundColor(Color.PrimaryText)
-                                        .font(.system(.title3, design: .rounded).weight(.medium))
-//                                        .font(.system(size: 20, weight: .medium, design: .rounded))
-                                        .padding(8)
-//                                        .frame(height: 40)
-                                        .background {
-                                            if chosenDayWeek == (weekdays.firstIndex(of: day)! + 1) {
-                                                RoundedRectangle(cornerRadius: 6)
-                                                    .fill(Color.SecondaryBackground)
-//                                                    .matchedGeometryEffect(id: "TAB3", in: animation)
-                                            }
-                                        }
-                                        .id(weekdays.firstIndex(of: day)! + 1)
-                                        .contentShape(Rectangle())
-                                        .onTapGesture {
-                                            withAnimation(.easeIn(duration: 0.15)) {
-                                                chosenDayWeek = (weekdays.firstIndex(of: day)! + 1)
-                                            }
-                                        }
-                                    }
-                                }
-                                .onAppear {
-                                    value.scrollTo(chosenDayWeek)
-                                }
-                            }
-                        }
-                        .modifier(PickerStyle(colorScheme: colorScheme))
-                        .frame(height: min(heightOfPicker, 250))
-                    case .month:
-                        ScrollView(showsIndicators: false) {
-                            ScrollViewReader { value in
-                                VStack(alignment: .leading, spacing: 0) {
-                                    ForEach(1 ..< 29) { day in
-                                        HStack {
-                                            if Int(day) == 1 {
-                                                Text("Start of month")
-                                            } else {
-                                                Text("\(getOrdinal(day)) of month")
-                                            }
-
-                                            Spacer()
-
-                                            if chosenDayMonth == day {
-                                                Checkmark()
-                                            }
-                                        }
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .foregroundColor(Color.PrimaryText)
-                                        .font(.system(.title3, design: .rounded).weight(.medium))
-                                        .padding(8)
-                                        .background {
-                                            if chosenDayMonth == day {
-                                                RoundedRectangle(cornerRadius: 6)
-                                                    .fill(Color.SecondaryBackground)
-//                                                    .matchedGeometryEffect(id: "TAB3", in: animation)
-                                            }
-                                        }
-                                        .contentShape(Rectangle())
-                                        .id(day)
-                                        .onTapGesture {
-                                            withAnimation(.easeIn(duration: 0.15)) {
-                                                chosenDayMonth = day
-                                            }
-                                        }
-                                    }
-                                }
-                                .onAppear {
-                                    value.scrollTo(chosenDayMonth)
-                                }
-                            }
-                        }
-                        .modifier(PickerStyle(colorScheme: colorScheme))
-                        .frame(height: min(heightOfPicker, 250))
-                    case .year:
-                        // in: oneYearAgo...Date.now,
-                        DatePicker("Date", selection: $chosenDayYear, in: oneYearAgo ... Date.now, displayedComponents: .date)
-                            .datePickerStyle(.graphical)
-                            .tint(Color.AlertRed)
-                            .padding(.horizontal, 5)
-                            .modifier(PickerStyle(colorScheme: colorScheme))
-                    }
-
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if progress == 5 {
-                VStack(spacing: 10) {
-                    NumberPadTextView(
-                      price: $price,
-                      isEditingDecimal: $isEditingDecimal,
-                      decimalValuesAssigned: $decimalValuesAssigned
-                    )
-
-                    if budgetTimeFrame != .day && price > 0 {
-                        Text(amountPerDayString)
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-//                            .font(.system(size: 15, weight: .semibold, design: .rounded))
-                            .foregroundColor(Color.SubtitleText)
-                            .padding(4)
-                            .padding(.horizontal, 7)
-                            .background(Color.SecondaryBackground, in: Capsule())
-                    }
-
-                    Spacer()
-
-                    NumberPad(
-                      price: $price,
-                      category: $category,
-                      isEditingDecimal: $isEditingDecimal,
-                      decimalValuesAssigned: $decimalValuesAssigned
-                    ) {
-                      submit()
                     }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .modifier(PickerStyle(colorScheme: colorScheme))
+
+                Spacer()
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if progress == 4 {
+            VStack {
+                switch budgetTimeFrame {
+                case .day:
+                    EmptyView()
+                case .week:
+                    ScrollView(showsIndicators: false) {
+                        ScrollViewReader { value in
+                            VStack(alignment: .leading, spacing: 0) {
+                                ForEach(weekdays, id: \.self) { day in
+                                    HStack {
+                                        Text(LocalizedStringKey(day))
+                                        Spacer()
+
+                                        if chosenDayWeek == (weekdays.firstIndex(of: day)! + 1) {
+                                            Checkmark()
+                                        }
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .foregroundColor(Color.PrimaryText)
+                                    .font(.system(.title3, design: .rounded).weight(.medium))
+//                                    .font(.system(size: 20, weight: .medium, design: .rounded))
+                                    .padding(8)
+//                                    .frame(height: 40)
+                                    .background {
+                                        if chosenDayWeek == (weekdays.firstIndex(of: day)! + 1) {
+                                            RoundedRectangle(cornerRadius: 6)
+                                                .fill(Color.SecondaryBackground)
+//                                                .matchedGeometryEffect(id: "TAB3", in: animation)
+                                        }
+                                    }
+                                    .id(weekdays.firstIndex(of: day)! + 1)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        withAnimation(.easeIn(duration: 0.15)) {
+                                            chosenDayWeek = (weekdays.firstIndex(of: day)! + 1)
+                                        }
+                                    }
+                                }
+                            }
+                            .onAppear {
+                                value.scrollTo(chosenDayWeek)
+                            }
+                        }
+                    }
+                    .modifier(PickerStyle(colorScheme: colorScheme))
+                    .frame(height: min(heightOfPicker, 250))
+                case .month:
+                    ScrollView(showsIndicators: false) {
+                        ScrollViewReader { value in
+                            VStack(alignment: .leading, spacing: 0) {
+                                ForEach(1 ..< 29) { day in
+                                    HStack {
+                                        if Int(day) == 1 {
+                                            Text("Start of month")
+                                        } else {
+                                            Text("\(getOrdinal(day)) of month")
+                                        }
+
+                                        Spacer()
+
+                                        if chosenDayMonth == day {
+                                            Checkmark()
+                                        }
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .foregroundColor(Color.PrimaryText)
+                                    .font(.system(.title3, design: .rounded).weight(.medium))
+                                    .padding(8)
+                                    .background {
+                                        if chosenDayMonth == day {
+                                            RoundedRectangle(cornerRadius: 6)
+                                                .fill(Color.SecondaryBackground)
+//                                                .matchedGeometryEffect(id: "TAB3", in: animation)
+                                        }
+                                    }
+                                    .contentShape(Rectangle())
+                                    .id(day)
+                                    .onTapGesture {
+                                        withAnimation(.easeIn(duration: 0.15)) {
+                                            chosenDayMonth = day
+                                        }
+                                    }
+                                }
+                            }
+                            .onAppear {
+                                value.scrollTo(chosenDayMonth)
+                            }
+                        }
+                    }
+                    .modifier(PickerStyle(colorScheme: colorScheme))
+                    .frame(height: min(heightOfPicker, 250))
+                case .year:
+                    // in: oneYearAgo...Date.now,
+                    DatePicker("Date", selection: $chosenDayYear, in: oneYearAgo ... Date.now, displayedComponents: .date)
+                        .datePickerStyle(.graphical)
+                        .tint(Color.AlertRed)
+                        .padding(.horizontal, 5)
+                        .modifier(PickerStyle(colorScheme: colorScheme))
+                }
+
+                Spacer()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if progress == 5 {
+            VStack(spacing: 10) {
+                NumberPadTextView(
+                  price: $price,
+                  isEditingDecimal: $isEditingDecimal,
+                  decimalValuesAssigned: $decimalValuesAssigned
+                )
+
+                if budgetTimeFrame != .day && price > 0 {
+                    Text(amountPerDayString)
+                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+//                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .foregroundColor(Color.SubtitleText)
+                        .padding(4)
+                        .padding(.horizontal, 7)
+                        .background(Color.SecondaryBackground, in: Capsule())
+                }
+
+                Spacer()
+
+                NumberPad(
+                  price: $price,
+                  category: $category,
+                  isEditingDecimal: $isEditingDecimal,
+                  decimalValuesAssigned: $decimalValuesAssigned
+                ) {
+                  submit()
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            headerView
+
+            instructionsView
+
+            stepView
 
             if progress < 5 {
                 Button {
@@ -577,13 +590,13 @@ struct BrandNewBudgetView: View {
                         budgetTimeFrame = .day
                     case 2:
                         budgetTimeFrame = .week
-                        chosenDayWeek = Calendar.current.dateComponents([.weekday], from: unwrappedEditedBudget.startDate!).weekday!
+                        chosenDayWeek = Calendar.current.dateComponents([.weekday], from: unwrappedEditedBudget.startDate).weekday!
                     case 3:
                         budgetTimeFrame = .month
-                        chosenDayMonth = Calendar.current.dateComponents([.day], from: unwrappedEditedBudget.startDate!).day!
+                        chosenDayMonth = Calendar.current.dateComponents([.day], from: unwrappedEditedBudget.startDate).day!
                     case 4:
                         budgetTimeFrame = .year
-                        chosenDayYear = unwrappedEditedBudget.startDate!
+                        chosenDayYear = unwrappedEditedBudget.startDate
                     default:
                         budgetTimeFrame = .week
                     }
@@ -620,13 +633,13 @@ struct BrandNewBudgetView: View {
                         budgetTimeFrame = .day
                     case 2:
                         budgetTimeFrame = .week
-                        chosenDayWeek = Calendar.current.dateComponents([.weekday], from: unwrappedEditedMainBudget.startDate!).weekday!
+                        chosenDayWeek = Calendar.current.dateComponents([.weekday], from: unwrappedEditedMainBudget.startDate).weekday!
                     case 3:
                         budgetTimeFrame = .month
-                        chosenDayMonth = Calendar.current.dateComponents([.day], from: unwrappedEditedMainBudget.startDate!).day!
+                        chosenDayMonth = Calendar.current.dateComponents([.day], from: unwrappedEditedMainBudget.startDate).day!
                     case 4:
                         budgetTimeFrame = .year
-                        chosenDayYear = unwrappedEditedMainBudget.startDate!
+                        chosenDayYear = unwrappedEditedMainBudget.startDate
                     default:
                         budgetTimeFrame = .week
                     }
@@ -758,7 +771,7 @@ struct BrandNewBudgetView: View {
         }
 
         if categoryBudget {
-            let newBudget = Budget(context: moc)
+            let newBudget = Budget()
 
             if let unwrappedCategory = selectedCategory {
                 newBudget.category = unwrappedCategory
@@ -769,11 +782,15 @@ struct BrandNewBudgetView: View {
             newBudget.dateCreated = Date.now
             newBudget.type = Int16(budgetType)
             newBudget.id = UUID()
+
+            modelContext.insert(newBudget)
         } else {
-            let newBudget = MainBudget(context: moc)
+            let newBudget = MainBudget()
             newBudget.startDate = startDate
             newBudget.amount = price
             newBudget.type = Int16(budgetType)
+
+            modelContext.insert(newBudget)
         }
 
         dataController.save()
@@ -906,16 +923,10 @@ struct BrandNewBudgetView: View {
         self.toEditBudget = toEditBudget
         self.toEditMainBudget = toEditMainBudget
 
-        let budgetPredicate = NSPredicate(format: "%K == nil", #keyPath(Category.budget))
-        let incomePredicate = NSPredicate(format: "income = %d", false)
-
-        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [budgetPredicate, incomePredicate])
-
-//        self.toEdit = toEdit
-
-        _categories = FetchRequest<Category>(sortDescriptors: [
-            SortDescriptor(\.order)
-        ], predicate: andPredicate)
+        _categories = Query(
+            filter: #Predicate<Category> { $0.budget == nil && $0.income == false },
+            sort: [SortDescriptor(\.order)]
+        )
     }
 }
 

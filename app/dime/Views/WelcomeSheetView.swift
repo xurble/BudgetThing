@@ -17,10 +17,6 @@ struct WelcomeSheetFeatureRow: Hashable {
 struct WelcomeSheetView: View {
     @Environment(\.dismiss) var dismiss
 
-    @FetchRequest(sortDescriptors: [
-        SortDescriptor(\.dateCreated)
-    ]) private var categories: FetchedResults<Category>
-
     @State var firstPage = true
     @State var visibleLines: Int = 0
 

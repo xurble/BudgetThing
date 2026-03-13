@@ -62,51 +62,57 @@ struct LockBudgetWidgetProvider: IntentTimelineProvider {
 //        let dataController = DataController()
         let dataController = DataController.shared
 
-        if let objectIDURL = URL(string: budgetId) {
-            let managedObjectID = dataController.container.persistentStoreCoordinator.managedObjectID(forURIRepresentation: objectIDURL)!
+        if let budgetUUID = UUID(uuidString: budgetId) {
+            let budgets = dataController.results(for: dataController.fetchDescriptorForBudgets())
 
-            let budget = dataController.container.viewContext.object(with: managedObjectID) as! Budget
+            if let budget = budgets.first(where: { $0.id == budgetUUID }) {
+                let descriptor = dataController.fetchDescriptorForBudgetTransactions(budget: budget)
+                let transactions = dataController.results(for: descriptor)
+                let filteredTransactions: [Transaction]
 
-            let fetchRequest = dataController.fetchRequestForBudgetTransactions(budget: budget)
+                if let categoryId = budget.category?.id {
+                    filteredTransactions = transactions.filter { $0.category?.id == categoryId }
+                } else {
+                    filteredTransactions = transactions
+                }
 
-            let transactions = dataController.results(for: fetchRequest)
+                var holdingTotal = 0.0
 
-            var holdingTotal = 0.0
+                filteredTransactions.forEach { transaction in
+                    holdingTotal += transaction.wrappedAmount
+                }
 
-            transactions.forEach { transaction in
-                holdingTotal += transaction.wrappedAmount
+                let returnBudget = HoldingBudget(type: Int(budget.type), emoji: budget.wrappedEmoji, name: budget.wrappedName, colour: budget.wrappedColour, budgetAmount: budget.amount)
+
+                let timeLeft: String
+
+                let calendar = Calendar.current
+
+                if budget.type == 1 {
+                    let components = calendar.dateComponents([.hour], from: budget.startDate, to: Date.now)
+
+                    timeLeft = String(localized: "\(24 - (components.hour ?? 0)) hours left")
+                } else if budget.type == 2 {
+                    let components = calendar.dateComponents([.day], from: budget.startDate, to: Date.now)
+
+                    timeLeft = String(localized: "\(7 - (components.day ?? 0)) days left")
+                } else {
+                    let components1 = calendar.dateComponents([.day], from: budget.startDate, to: budget.endDate)
+                    let numberOfDays = components1.day ?? 0
+
+                    let components2 = calendar.dateComponents([.day], from: budget.startDate, to: Date.now)
+                    let numberOfDaysPast = components2.day ?? 0
+
+                    let daysLeftNumber = Int(numberOfDays - numberOfDaysPast)
+                    timeLeft = String(localized: "\(daysLeftNumber) days left")
+                }
+
+                return (holdingTotal, timeLeft, returnBudget)
             }
-
-            let returnBudget = HoldingBudget(type: Int(budget.type), emoji: budget.wrappedEmoji, name: budget.wrappedName, colour: budget.wrappedColour, budgetAmount: budget.amount)
-
-            let timeLeft: String
-
-            let calendar = Calendar.current
-
-            if budget.type == 1 {
-                let components = calendar.dateComponents([.hour], from: budget.startDate!, to: Date.now)
-
-                timeLeft = String(localized: "\(24 - components.hour!) hours left")
-            } else if budget.type == 2 {
-                let components = calendar.dateComponents([.day], from: budget.startDate!, to: Date.now)
-
-                timeLeft = String(localized: "\(7 - components.day!) days left")
-            } else {
-                let components1 = calendar.dateComponents([.day], from: budget.startDate!, to: budget.endDate)
-                let numberOfDays = components1.day!
-
-                let components2 = calendar.dateComponents([.day], from: budget.startDate!, to: Date.now)
-                let numberOfDaysPast = components2.day!
-
-                let daysLeftNumber = Int(numberOfDays - numberOfDaysPast)
-                timeLeft = String(localized: "\(daysLeftNumber) days left")
-            }
-
-            return (holdingTotal, timeLeft, returnBudget)
-        } else {
-            let budget = HoldingBudget(type: 1, emoji: "failed", name: "", colour: "", budgetAmount: 0)
-            return (0, "", budget)
         }
+
+        let budget = HoldingBudget(type: 1, emoji: "failed", name: "", colour: "", budgetAmount: 0)
+        return (0, "", budget)
     }
 }
 
