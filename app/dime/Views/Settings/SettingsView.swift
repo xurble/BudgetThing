@@ -17,6 +17,7 @@ import WidgetKit
 struct SettingsView: View {
   @Environment(\.dynamicTypeSize) var dynamicTypeSize
   @Environment(\.dismiss) var dismiss
+  @Environment(\.presentationMode) var presentationMode
 
   @AppStorage("colourScheme", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing"))
   var colourScheme: Int = 0
@@ -171,7 +172,10 @@ struct SettingsView: View {
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
           Button {
-            dismiss()
+            DispatchQueue.main.async {
+              dismiss()
+              presentationMode.wrappedValue.dismiss()
+            }
           } label: {
             Image(systemName: "xmark")
               .font(.system(.subheadline, design: .rounded).weight(.semibold))
