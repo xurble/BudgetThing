@@ -31,6 +31,9 @@ class DataController: ObservableObject, @unchecked Sendable {
 
     let modelContainer: ModelContainer
     let mainContext: ModelContext
+    let storeURL: URL?
+    let cloudKitEnabled: Bool
+    let cloudKitDatabase: ModelConfiguration.CloudKitDatabase
 
     init() {
         let groupID = "group.farm.poplar.budgetthing"
@@ -38,10 +41,10 @@ class DataController: ObservableObject, @unchecked Sendable {
             .containerURL(forSecurityApplicationGroupIdentifier: groupID)
         let storeURL = baseURL?.appendingPathComponent("SwiftData.sqlite")
 
-        let cloudKitDisabled = false
-        let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = cloudKitDisabled
-            ? .none
-            : .private("iCloud.farm.poplar.BudgetThingData")
+        let cloudKitEnabled = UserDefaults(suiteName: groupID)?.bool(forKey: "icloud_sync") ?? NSUbiquitousKeyValueStore.default.bool(forKey: "icloud_sync")
+        let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = cloudKitEnabled
+            ? .private("iCloud.farm.poplar.BudgetThingData")
+            : .none
 
         if let baseURL {
             Self.removeLegacyStoreIfNeeded(at: baseURL)
@@ -82,6 +85,9 @@ class DataController: ObservableObject, @unchecked Sendable {
 
         modelContainer = container
         mainContext = ModelContext(container)
+        self.storeURL = storeURL
+        self.cloudKitEnabled = cloudKitEnabled
+        self.cloudKitDatabase = cloudKitDatabase
     }
 
     private static func removeLegacyStoreIfNeeded(at baseURL: URL) {
@@ -139,7 +145,7 @@ class DataController: ObservableObject, @unchecked Sendable {
         save(context: mainContext)
     }
 
-    private func save(context: ModelContext) {
+    func save(context: ModelContext) {
         if context.hasChanges {
             try? context.save()
             DispatchQueue.main.async {

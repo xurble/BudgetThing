@@ -81,11 +81,11 @@ extension Category {
     }
 
     var allTransactions: [Transaction] {
-        transactions.sorted { $0.wrappedDate < $1.wrappedDate }
+        (transactions ?? []).sorted { $0.wrappedDate < $1.wrappedDate }
     }
 
     var transactionCount: Int {
-        transactions.count
+        transactions?.count ?? 0
     }
 }
 

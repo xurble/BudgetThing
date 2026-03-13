@@ -774,7 +774,7 @@ struct SingleBudgetView: View {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                                     withAnimation {
                                         modelContext.delete(budget)
-                                        dataController.save()
+                                        dataController.save(context: modelContext)
                                     }
                                 }
 
@@ -1098,7 +1098,7 @@ struct DeleteBudgetAlert: View {
 
                     withAnimation {
                         modelContext.delete(toDelete)
-                        dataController.save()
+                        dataController.save(context: modelContext)
                     }
 
                 } label: {
@@ -1181,7 +1181,7 @@ struct DeleteMainBudgetAlert: View {
 
                     withAnimation {
                         modelContext.delete(toDelete)
-                        dataController.save()
+                        dataController.save(context: modelContext)
                     }
 
                 } label: {

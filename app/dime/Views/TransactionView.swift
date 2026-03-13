@@ -597,7 +597,7 @@ struct TransactionView: View {
                         if let itemToDelete = toDelete {
                             modelContext.delete(itemToDelete)
                         }
-                        dataController.save()
+                        dataController.save(context: modelContext)
                     }
 
                     deleteMode = false
@@ -822,7 +822,7 @@ struct TransactionView: View {
                         editedTransaction.recurringCoefficient = Int16(repeatCoefficient)
                     }
 
-                    dataController.save()
+                    dataController.save(context: modelContext)
                 }
             }
 
@@ -865,7 +865,7 @@ struct TransactionView: View {
         }
 
         modelContext.insert(transaction)
-        dataController.save()
+        dataController.save(context: modelContext)
 
         dismiss()
     }

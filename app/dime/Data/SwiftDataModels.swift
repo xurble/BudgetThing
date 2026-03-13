@@ -10,12 +10,12 @@ import SwiftData
 
 @Model
 final class Budget {
-    var amount: Double
-    var dateCreated: Date
-    var green: Bool
+    var amount: Double = 0
+    var dateCreated: Date = Date(timeIntervalSince1970: 0)
+    var green: Bool = false
     var id: UUID?
-    var startDate: Date
-    var type: Int16
+    var startDate: Date = Date(timeIntervalSince1970: 0)
+    var type: Int16 = 0
 
     var category: Category?
 
@@ -41,16 +41,16 @@ final class Budget {
 @Model
 final class Category {
     var colour: String?
-    var dateCreated: Date
+    var dateCreated: Date = Date(timeIntervalSince1970: 0)
     var emoji: String?
     var id: UUID?
-    var income: Bool
+    var income: Bool = false
     var name: String?
-    var order: Int64
+    var order: Int64 = 0
 
     var budget: Budget?
-    var templates: [TemplateTransaction]
-    var transactions: [Transaction]
+    var templates: [TemplateTransaction]?
+    var transactions: [Transaction]?
 
     init(
         colour: String? = nil,
@@ -61,8 +61,8 @@ final class Category {
         name: String? = nil,
         order: Int64 = 0,
         budget: Budget? = nil,
-        templates: [TemplateTransaction] = [],
-        transactions: [Transaction] = []
+        templates: [TemplateTransaction]? = nil,
+        transactions: [Transaction]? = nil
     ) {
         self.colour = colour
         self.dateCreated = dateCreated
@@ -79,11 +79,11 @@ final class Category {
 
 @Model
 final class MainBudget {
-    var amount: Double
-    var dateCreated: Date
-    var green: Bool
-    var startDate: Date
-    var type: Int16
+    var amount: Double = 0
+    var dateCreated: Date = Date(timeIntervalSince1970: 0)
+    var green: Bool = false
+    var startDate: Date = Date(timeIntervalSince1970: 0)
+    var type: Int16 = 0
 
     init(
         amount: Double = 0,
@@ -102,13 +102,13 @@ final class MainBudget {
 
 @Model
 final class TemplateTransaction {
-    var amount: Double
+    var amount: Double = 0
     var id: UUID?
-    var income: Bool
+    var income: Bool = false
     var note: String?
-    var order: Int16
-    var recurringCoefficient: Int16
-    var recurringType: Int16
+    var order: Int16 = 0
+    var recurringCoefficient: Int16 = 0
+    var recurringType: Int16 = 0
 
     var category: Category?
 
@@ -135,16 +135,16 @@ final class TemplateTransaction {
 
 @Model
 final class Transaction {
-    var amount: Double
-    var date: Date
-    var day: Date
+    var amount: Double = 0
+    var date: Date = Date(timeIntervalSince1970: 0)
+    var day: Date = Date(timeIntervalSince1970: 0)
     var id: UUID?
-    var income: Bool
-    var month: Date
+    var income: Bool = false
+    var month: Date = Date(timeIntervalSince1970: 0)
     var note: String?
-    var onceRecurring: Bool
-    var recurringCoefficient: Int16
-    var recurringType: Int16
+    var onceRecurring: Bool = false
+    var recurringCoefficient: Int16 = 0
+    var recurringType: Int16 = 0
 
     var category: Category?
 

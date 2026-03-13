@@ -467,7 +467,7 @@ struct CategoryListView: View {
                         modelContext.delete(gonnaDelete)
                     }
 
-                    dataController.save()
+                    dataController.save(context: modelContext)
                 }
 
                 toDelete = nil
@@ -528,7 +528,7 @@ struct CategoryListView: View {
             categories[itemToMove].order = newOrder
         }
 
-        dataController.save()
+        dataController.save(context: modelContext)
     }
 
     init(income: Binding<Bool>, mode: CategoryViewMode, showToast: Binding<Bool>, toastTitle: Binding<String>, toastImage: Binding<String>, positive: Binding<Bool>) {
@@ -876,7 +876,7 @@ struct NewCategoryAlert: View {
                 category.order = results.order
                 category.income = true
                 modelContext.insert(category)
-                dataController.save()
+                dataController.save(context: modelContext)
 
                 newName = ""
                 newEmoji = ""
@@ -892,7 +892,7 @@ struct NewCategoryAlert: View {
                 category.order = results.order
 
                 modelContext.insert(category)
-                dataController.save()
+                dataController.save(context: modelContext)
 
                 newName = ""
                 newEmoji = ""
@@ -1214,7 +1214,7 @@ struct EditCategoryAlert: View {
                 if let categoryToDelete = toDelete {
                     withAnimation {
                         modelContext.delete(categoryToDelete)
-                        dataController.save()
+                        dataController.save(context: modelContext)
                     }
                 }
 
@@ -1303,13 +1303,13 @@ struct EditCategoryAlert: View {
                 toEdit.name = newName.trimmingCharacters(in: .whitespaces).capitalized
                 toEdit.emoji = newEmoji
 
-                dataController.save()
+                dataController.save(context: modelContext)
             } else {
                 toEdit.name = newName.trimmingCharacters(in: .whitespaces).capitalized
                 toEdit.emoji = newEmoji
                 toEdit.colour = selectedColour
 
-                dataController.save()
+                dataController.save(context: modelContext)
             }
 
             rootToastTitle = "Edited \(newName)"
@@ -1367,7 +1367,7 @@ struct DeleteCategoryAlert: View {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         withAnimation {
                             modelContext.delete(toDelete)
-                            dataController.save()
+                            dataController.save(context: modelContext)
                         }
                     }
 
@@ -1539,7 +1539,7 @@ struct SuggestedCategoriesView: View {
                             suggestedCategory.order = (categories.last?.order ?? 0) + 1
                             suggestedCategory.income = false
                             modelContext.insert(suggestedCategory)
-                            dataController.save()
+                            dataController.save(context: modelContext)
 
                             availableColours = Color.colorArray
                             categories.forEach { category in
@@ -1563,7 +1563,7 @@ struct SuggestedCategoriesView: View {
                             suggestedCategory.order = (categories.last?.order ?? 0) + 1
                             suggestedCategory.income = true
                             modelContext.insert(suggestedCategory)
-                            dataController.save()
+                            dataController.save(context: modelContext)
                         }
                     }
                 }

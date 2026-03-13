@@ -751,7 +751,7 @@ struct BrandNewBudgetView: View {
             unwrappedEditedBudget.amount = price
             unwrappedEditedBudget.type = Int16(budgetType)
 
-            dataController.save()
+            dataController.save(context: modelContext)
 
             dismiss()
 
@@ -763,7 +763,7 @@ struct BrandNewBudgetView: View {
             unwrappedEditedMainBudget.amount = price
             unwrappedEditedMainBudget.type = Int16(budgetType)
 
-            dataController.save()
+            dataController.save(context: modelContext)
 
             dismiss()
 
@@ -793,7 +793,7 @@ struct BrandNewBudgetView: View {
             modelContext.insert(newBudget)
         }
 
-        dataController.save()
+        dataController.save(context: modelContext)
 
         dismiss()
     }

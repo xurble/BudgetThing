@@ -108,7 +108,7 @@ struct NumberPad: View {
                             .frame(width: diameter, height: diameter)
                             .foregroundColor(Color.LightIcon)
                             .background {
-                                glassCircle(diameter: diameter, tint: Color.DarkBackground)
+                                glassCircle(diameter: diameter, tint: Color.accentColor)
                             }
                             .overlay {
                                 glassCircleStroke(diameter: diameter)

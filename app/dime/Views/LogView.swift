@@ -1354,7 +1354,7 @@ struct SingleTransactionView: View {
                 if transaction.recurringType > 0 {
                     Button {
                         transaction.recurringType = 0
-                        dataController.save()
+                        dataController.save(context: modelContext)
                     } label: {
                         Label("Stop Recurring", systemImage: "xmark")
                     }
@@ -1423,7 +1423,7 @@ struct SingleTransactionView: View {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                                 withAnimation(.easeInOut(duration: 0.5)) {
                                     transaction.recurringType = 0
-                                    dataController.save()
+                                    dataController.save(context: modelContext)
                                 }
                             }
                         } else {
@@ -1586,7 +1586,7 @@ struct DeleteTransactionAlert: View {
                     if stopRecurring {
                         withAnimation(.easeInOut(duration: 0.5)) {
                             unwrappedToDelete.recurringType = 0
-                            dataController.save()
+                            dataController.save(context: modelContext)
                         }
                     } else {
                         withAnimation(.easeInOut(duration: 0.5)) {

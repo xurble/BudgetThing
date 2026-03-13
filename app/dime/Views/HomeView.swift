@@ -197,7 +197,7 @@ struct HomeView: View {
             }
             transactionManager.toDelete = nil
         }, completion: {
-            dataController.save()
+            dataController.save(context: modelContext)
             transactionManager.toDelete = nil
         })
         .confirmationDialog(
@@ -216,7 +216,7 @@ struct HomeView: View {
                 if shouldStopRecurring {
                     withAnimation(.easeInOut(duration: 0.5)) {
                         toDelete.recurringType = 0
-                        dataController.save()
+                        dataController.save(context: modelContext)
                     }
                 } else {
                     withAnimation(.easeInOut(duration: 0.5)) {
