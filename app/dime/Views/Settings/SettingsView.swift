@@ -152,247 +152,15 @@ struct SettingsView: View {
   var body: some View {
     NavigationView {
       List {
-        Section(header: settingsSectionHeader("General")) {
-          NavigationLink(destination: SettingsNotificationsView()) {
-            settingsRow(title: "Notifications", systemImage: "bell", color: "102", detail: notificationString)
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
+        generalSection
 
-          NavigationLink(destination: SettingsCurrencyView()) {
-            settingsRow(title: "Currency", systemImage: "coloncurrencysign.square", color: "103", detail: currency)
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
+        appearanceSection
 
-          NavigationLink(
-            destination: SettingsNumberEntryView()
-              .onAppear {
-                withAnimation(.easeOut.speed(1.5)) {
-                  tabBarManager.navigationHideTab()
-                }
-              }
-              .onDisappear {
-                withAnimation(.easeOut.speed(1.5)) {
-                  tabBarManager.navigationShowTab()
-                }
-              }
-          ) {
-            settingsRow(title: "Number Entry", systemImage: "keyboard", color: "104", detail: numberEntryString)
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
+        dataSection
 
-          Toggle(
-            isOn: Binding(
-              get: { appLockVM.isAppLockEnabled },
-              set: { appLockVM.appLockStateChange(appLockState: $0) }
-            )
-          ) {
-            HStack(spacing: 12) {
-              settingsIcon("faceid", color: "105")
-              Text("Authentication")
-            }
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
+        otherSection
 
-          Toggle(
-            isOn: Binding(
-              get: { incomeTracking },
-              set: { newValue in
-                incomeTracking = newValue
-                if !newValue {
-                  UserDefaults(suiteName: "group.farm.poplar.budgetthing")!.set(
-                    false, forKey: "insightsViewIncomeFiltering")
-                  UserDefaults(suiteName: "group.farm.poplar.budgetthing")!.set(
-                    3, forKey: "logInsightsType")
-                }
-              }
-            )
-          ) {
-            HStack(spacing: 12) {
-              settingsIcon("banknote", color: "106")
-              Text("Income Tracking")
-            }
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-
-          NavigationLink(destination: SettingsWeekStartView()) {
-            settingsRow(title: "Time Frames", systemImage: "calendar", color: "109")
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-        }
-
-        Section(header: settingsSectionHeader("Appearance")) {
-          NavigationLink(destination: SettingsAppearanceView()) {
-            settingsRow(title: "Theme", systemImage: "circle.righthalf.filled", color: "100", detail: colourSchemeString)
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-
-          NavigationLink(destination: SettingsAppIconView()) {
-            settingsRow(title: "App Icon", systemImage: "app.badge", color: "101", detail: appIconString)
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-
-          Toggle(isOn: $showCents) {
-            HStack(spacing: 12) {
-              settingsIcon("centsign.circle", color: "107")
-              Text("Display Cents")
-            }
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-
-          NavigationLink(destination: SettingsUpcomingView()) {
-            settingsRow(title: "Upcoming Logs", systemImage: "sun.min", color: "108", detail: upcomingString)
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-
-          Toggle(isOn: $showExpenseOrIncomeSign) {
-            HStack(spacing: 12) {
-              settingsIcon("plusminus", color: "123")
-              Text("Display +/- Symbol")
-            }
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-
-          Toggle(isOn: $animated) {
-            HStack(spacing: 12) {
-              settingsIcon("hare", color: "121")
-              Text("Animated Charts")
-            }
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-        }
-
-        Section(header: settingsSectionHeader("Data")) {
-          NavigationLink(
-            destination: SettingsCategoryView()
-              .onAppear {
-                withAnimation(.easeOut.speed(1.5)) {
-                  tabBarManager.navigationHideTab()
-                }
-              }
-              .onDisappear {
-                withAnimation(.easeOut.speed(1.5)) {
-                  tabBarManager.navigationShowTab()
-                }
-              }
-          ) {
-            settingsRow(title: "Categories", systemImage: "rectangle.grid.2x2", color: "110")
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-
-          NavigationLink(destination: SettingsCloudView()) {
-            settingsRow(title: "iCloud Sync", systemImage: "icloud", color: "111", detail: iCloudString)
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-
-          Button {
-            showImportGuide = true
-          } label: {
-            settingsRow(title: "Import Data", systemImage: "square.and.arrow.down", color: "112")
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-
-          Button {
-            exportData()
-          } label: {
-            settingsRow(title: "Export Data", systemImage: "square.and.arrow.up", color: "113")
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-
-          NavigationLink(destination: SettingsEraseView()) {
-            settingsRow(title: "Erase Data", systemImage: "xmark.bin", color: "114")
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-        }
-
-        Section(header: settingsSectionHeader("Other")) {
-          NavigationLink(destination: SettingsHapticsView()) {
-            settingsRow(title: "Haptics", systemImage: "hand.tap", color: "100", detail: hapticString)
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-
-          NavigationLink(destination: SettingsGoofyView()) {
-            settingsRow(title: "Feature Lab", systemImage: "flame", color: "122")
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-
-          Button {
-            showTipJarMenu = true
-          } label: {
-            settingsRow(title: "Tip Jar", systemImage: "heart", color: "123")
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-
-          Button {
-            supportEmail.send(openURL: openURL)
-          } label: {
-            settingsRow(title: "Report Bug", systemImage: "ladybug", color: "124")
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-
-          Button {
-            featureRequestEmail.send(openURL: openURL)
-          } label: {
-            settingsRow(title: "Feature Request", systemImage: "hand.wave", color: "125")
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-
-          Button {
-            let url = "https://apps.apple.com/app/id1635280255?action=write-review"
-            guard let writeReviewURL = URL(string: url)
-            else { fatalError("Expected a valid URL") }
-            UIApplication.shared.open(writeReviewURL, options: [:], completionHandler: nil)
-          } label: {
-            settingsRow(title: "Rate on App Store", systemImage: "star", color: "126")
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-
-          Button {
-            shareSheet(url: "https://apps.apple.com/app/id1635280255")
-          } label: {
-            settingsRow(title: "Share with Friends", systemImage: "square.and.arrow.up", color: "127")
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-
-          Button {
-            if let url = URL(string: "https://www.x.com/budgetwithdime") {
-              UIApplication.shared.open(url)
-            }
-          } label: {
-            settingsRow(title: "Follow Dime on X", systemImage: "bird", color: "128")
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-
-          Button {
-            if let url = URL(string: "https://www.x.com/rarfell") {
-              UIApplication.shared.open(url)
-            }
-          } label: {
-            settingsRow(title: "Follow Rafael on X", systemImage: "camera", color: "129")
-          }
-          .listRowBackground(Color(.secondarySystemGroupedBackground))
-        }
-
-        Section {
-          VStack(spacing: 6) {
-            HStack(spacing: 6) {
-              Text("Version \(UIApplication.appVersion ?? "") (\(UIApplication.buildNumber ?? ""))")
-                .foregroundColor(.secondary)
-              Text("·")
-                .foregroundColor(.secondary)
-              Text("What's New")
-                .foregroundColor(.primary)
-                .onTapGesture {
-                  showUpdate = true
-                }
-            }
-
-            Text("Made with ❤️ by \(makeAttributedString()) from 🇸🇬")
-              .foregroundColor(.secondary)
-              .multilineTextAlignment(.center)
-          }
-          .frame(maxWidth: .infinity)
-        }
-        .listRowBackground(Color(.secondarySystemGroupedBackground))
+        aboutSection
       }
       .listStyle(.insetGrouped)
       .background(NavigationBarConfigurator())
@@ -434,6 +202,259 @@ struct SettingsView: View {
     }
   }
 
+
+  @ViewBuilder
+  private var generalSection: some View {
+    Section(header: settingsSectionHeader("General")) {
+      NavigationLink(destination: SettingsNotificationsView()) {
+        settingsRow(title: "Notifications", systemImage: "bell", color: "102", detail: notificationString)
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      NavigationLink(destination: SettingsCurrencyView()) {
+        settingsRow(title: "Currency", systemImage: "coloncurrencysign.square", color: "103", detail: currency)
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      NavigationLink(
+        destination: SettingsNumberEntryView()
+          .onAppear {
+            withAnimation(.easeOut.speed(1.5)) {
+              tabBarManager.navigationHideTab()
+            }
+          }
+          .onDisappear {
+            withAnimation(.easeOut.speed(1.5)) {
+              tabBarManager.navigationShowTab()
+            }
+          }
+      ) {
+        settingsRow(title: "Number Entry", systemImage: "keyboard", color: "104", detail: numberEntryString)
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      Toggle(
+        isOn: Binding(
+          get: { appLockVM.isAppLockEnabled },
+          set: { appLockVM.appLockStateChange(appLockState: $0) }
+        )
+      ) {
+        HStack(spacing: 12) {
+          settingsIcon("faceid", color: "105")
+          Text("Authentication")
+        }
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      Toggle(
+        isOn: Binding(
+          get: { incomeTracking },
+          set: { newValue in
+            incomeTracking = newValue
+            if !newValue {
+              UserDefaults(suiteName: "group.farm.poplar.budgetthing")!.set(
+                false, forKey: "insightsViewIncomeFiltering")
+              UserDefaults(suiteName: "group.farm.poplar.budgetthing")!.set(
+                3, forKey: "logInsightsType")
+            }
+          }
+        )
+      ) {
+        HStack(spacing: 12) {
+          settingsIcon("banknote", color: "106")
+          Text("Income Tracking")
+        }
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      NavigationLink(destination: SettingsWeekStartView()) {
+        settingsRow(title: "Time Frames", systemImage: "calendar", color: "109")
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+    }
+  }
+
+  @ViewBuilder
+  private var appearanceSection: some View {
+    Section(header: settingsSectionHeader("Appearance")) {
+      NavigationLink(destination: SettingsAppearanceView()) {
+        settingsRow(title: "Theme", systemImage: "circle.righthalf.filled", color: "100", detail: colourSchemeString)
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      NavigationLink(destination: SettingsAppIconView()) {
+        settingsRow(title: "App Icon", systemImage: "app.badge", color: "101", detail: appIconString)
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      Toggle(isOn: $showCents) {
+        HStack(spacing: 12) {
+          settingsIcon("centsign.circle", color: "107")
+          Text("Display Cents")
+        }
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      NavigationLink(destination: SettingsUpcomingView()) {
+        settingsRow(title: "Upcoming Logs", systemImage: "sun.min", color: "108", detail: upcomingString)
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      Toggle(isOn: $showExpenseOrIncomeSign) {
+        HStack(spacing: 12) {
+          settingsIcon("plusminus", color: "123")
+          Text("Display +/- Symbol")
+        }
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      Toggle(isOn: $animated) {
+        HStack(spacing: 12) {
+          settingsIcon("hare", color: "121")
+          Text("Animated Charts")
+        }
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+    }
+  }
+
+  @ViewBuilder
+  private var dataSection: some View {
+    Section(header: settingsSectionHeader("Data")) {
+      NavigationLink(
+        destination: SettingsCategoryView()
+          .onAppear {
+            withAnimation(.easeOut.speed(1.5)) {
+              tabBarManager.navigationHideTab()
+            }
+          }
+          .onDisappear {
+            withAnimation(.easeOut.speed(1.5)) {
+              tabBarManager.navigationShowTab()
+            }
+          }
+      ) {
+        settingsRow(title: "Categories", systemImage: "rectangle.grid.2x2", color: "110")
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      NavigationLink(destination: SettingsCloudView()) {
+        settingsRow(title: "iCloud Sync", systemImage: "icloud", color: "111", detail: iCloudString)
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      Button {
+        showImportGuide = true
+      } label: {
+        settingsRow(title: "Import Data", systemImage: "square.and.arrow.down", color: "112")
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      ShareLink(item: exportCSVFileURL()) {
+        settingsRow(title: "Export Data", systemImage: "square.and.arrow.up", color: "113")
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      NavigationLink(destination: SettingsEraseView()) {
+        settingsRow(title: "Erase Data", systemImage: "xmark.bin", color: "114")
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+    }
+  }
+
+  @ViewBuilder
+  private var otherSection: some View {
+    Section(header: settingsSectionHeader("Other")) {
+      NavigationLink(destination: SettingsHapticsView()) {
+        settingsRow(title: "Haptics", systemImage: "hand.tap", color: "100", detail: hapticString)
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      NavigationLink(destination: SettingsGoofyView()) {
+        settingsRow(title: "Feature Lab", systemImage: "flame", color: "122")
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      Button {
+        showTipJarMenu = true
+      } label: {
+        settingsRow(title: "Tip Jar", systemImage: "heart", color: "123")
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      Button {
+        supportEmail.send(openURL: openURL)
+      } label: {
+        settingsRow(title: "Report Bug", systemImage: "ladybug", color: "124")
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      Button {
+        featureRequestEmail.send(openURL: openURL)
+      } label: {
+        settingsRow(title: "Feature Request", systemImage: "hand.wave", color: "125")
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      Button {
+        let url = "https://apps.apple.com/app/id1635280255?action=write-review"
+        guard let writeReviewURL = URL(string: url)
+        else { fatalError("Expected a valid URL") }
+        UIApplication.shared.open(writeReviewURL, options: [:], completionHandler: nil)
+      } label: {
+        settingsRow(title: "Rate on App Store", systemImage: "star", color: "126")
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      ShareLink(item: URL(string: "https://apps.apple.com/app/id1635280255")!) {
+        settingsRow(title: "Share with Friends", systemImage: "square.and.arrow.up", color: "127")
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      Button {
+        if let url = URL(string: "https://www.x.com/budgetwithdime") {
+          UIApplication.shared.open(url)
+        }
+      } label: {
+        settingsRow(title: "Follow Dime on X", systemImage: "bird", color: "128")
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+
+      Button {
+        if let url = URL(string: "https://www.x.com/rarfell") {
+          UIApplication.shared.open(url)
+        }
+      } label: {
+        settingsRow(title: "Follow Rafael on X", systemImage: "camera", color: "129")
+      }
+      .listRowBackground(Color(.secondarySystemGroupedBackground))
+    }
+  }
+
+  @ViewBuilder
+  private var aboutSection: some View {
+    Section {
+      VStack(spacing: 6) {
+        HStack(spacing: 6) {
+          Text("Version \(UIApplication.appVersion ?? "") (\(UIApplication.buildNumber ?? ""))")
+            .foregroundColor(.secondary)
+          Text("·")
+            .foregroundColor(.secondary)
+          Text("What's New")
+            .foregroundColor(.primary)
+            .onTapGesture {
+              showUpdate = true
+            }
+        }
+
+        Text("Made with ❤️ by \(makeAttributedString()) from 🇸🇬")
+          .foregroundColor(.secondary)
+          .multilineTextAlignment(.center)
+      }
+      .frame(maxWidth: .infinity)
+    }
+    .listRowBackground(Color(.secondarySystemGroupedBackground))
+  }
 
   private struct NavigationBarConfigurator: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {
@@ -545,25 +566,10 @@ struct SettingsView: View {
     return string
   }
 
-  func shareSheet(url: String) {
-    let url = URL(string: url)
-    let activityView = UIActivityViewController(activityItems: [url!], applicationActivities: nil)
-
-    let allScenes = UIApplication.shared.connectedScenes
-    let scene = allScenes.first { $0.activationState == .foregroundActive }
-
-    if let windowScene = scene as? UIWindowScene {
-      windowScene.keyWindow?.rootViewController?.present(
-        activityView, animated: true, completion: nil)
-    }
-  }
-
-  func exportData() {
+  func exportCSVText() -> String {
     let fetchRequest = dataController.fetchRequestForExport()
     let transactions = dataController.results(for: fetchRequest)
 
-    let fileName = "export.csv"
-    let path = NSURL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(fileName)
     var csvText = "Date,Note,Amount,Category,Type\n"
 
     for transaction in transactions {
@@ -582,25 +588,23 @@ struct SettingsView: View {
         "\(transaction.wrappedDate),\(string),\(String(format: "%.2f", transaction.wrappedAmount)),\(transaction.category?.wrappedName ?? ""),\(type)\n"
     }
 
+    return csvText
+  }
+
+  func exportCSVFileURL() -> URL {
+    let csvText = exportCSVText()
+    let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("export.csv")
+
     do {
-      try csvText.write(to: path!, atomically: true, encoding: String.Encoding.utf8)
+      try csvText.write(to: fileURL, atomically: true, encoding: .utf8)
     } catch {
       print("\(error)")
     }
 
-    var filesToShare = [Any]()
-    filesToShare.append(path!)
-
-    let av = UIActivityViewController(activityItems: filesToShare, applicationActivities: nil)
-
-    let allScenes = UIApplication.shared.connectedScenes
-    let scene = allScenes.first { $0.activationState == .foregroundActive }
-
-    if let windowScene = scene as? UIWindowScene {
-      windowScene.keyWindow?.rootViewController?.present(av, animated: true, completion: nil)
-    }
+    return fileURL
   }
 }
+
 
 struct TipJarAlert: View {
   @Environment(\.dismiss) var dismiss
