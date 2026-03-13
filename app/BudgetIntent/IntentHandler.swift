@@ -6,15 +6,19 @@
 //
 
 import Intents
+import SwiftData
 
 class IntentHandler: INExtension, @preconcurrency BudgetWidgetConfigurationIntentHandling {
     @MainActor
     func provideBudgetOptionsCollection(for _: BudgetWidgetConfigurationIntent, with completion: @escaping (INObjectCollection<WidgetBudget>?, Error?) -> Void) {
         let dataController = DataController.shared
-        let budgetFetchRequest = dataController.fetchRequestForBudgets()
+        let descriptor = dataController.fetchDescriptorForBudgets()
 
-        let budgets = dataController.results(for: budgetFetchRequest).map {
-            WidgetBudget(identifier: $0.objectID.uriRepresentation().absoluteString, display: $0.wrappedName)
+        let budgets: [WidgetBudget] = dataController.results(for: descriptor).compactMap { budget in
+            guard let id = budget.id else {
+                return nil
+            }
+            return WidgetBudget(identifier: id.uuidString, display: budget.wrappedName)
         }
 
         let collection = INObjectCollection(items: budgets)

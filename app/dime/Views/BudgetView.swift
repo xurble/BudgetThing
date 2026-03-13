@@ -7,12 +7,13 @@
 
 import CrookedText
 import Foundation
+import SwiftData
 import SwiftUI
 
 struct BudgetView: View {
-    @FetchRequest(sortDescriptors: []) private var categories: FetchedResults<Category>
-    @FetchRequest(sortDescriptors: []) private var budgets: FetchedResults<Budget>
-    @FetchRequest(sortDescriptors: []) private var mainBudget: FetchedResults<MainBudget>
+    @Query private var categories: [Category]
+    @Query private var budgets: [Budget]
+    @Query private var mainBudget: [MainBudget]
 
     var body: some View {
         if categories.isEmpty && budgets.isEmpty && mainBudget.isEmpty {
@@ -50,11 +51,9 @@ struct ActualBudgetView: View {
     @Environment(\.colorScheme) var colorScheme
     @State private var showInfo = false
 
-    @FetchRequest(sortDescriptors: [
-        SortDescriptor(\.dateCreated)
-    ]) private var budgets: FetchedResults<Budget>
-    @FetchRequest(sortDescriptors: []) private var mainBudget: FetchedResults<MainBudget>
-    @Environment(\.managedObjectContext) var moc
+    @Query(sort: [SortDescriptor(\Budget.dateCreated)]) private var budgets: [Budget]
+    @Query private var mainBudget: [MainBudget]
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var dataController: DataController
     @EnvironmentObject var tabBarManager: TabBarManager
 
@@ -74,7 +73,6 @@ struct ActualBudgetView: View {
 
     @Namespace var animation
 
-    var didSave = NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave) // the publisher
     @AppStorage("UUID") var refreshID = UUID().uuidString
 
     @State var date = Date.now
@@ -235,7 +233,12 @@ struct ActualBudgetView: View {
             }) { budget in
                 DeleteBudgetAlert(toDelete: budget)
             }
-            .onReceive(self.didSave) { _ in // the listener
+            .onChange(of: budgets.count) { _, _ in
+                withAnimation {
+                    refreshID = UUID().uuidString
+                }
+            }
+            .onChange(of: mainBudget.count) { _, _ in
                 withAnimation {
                     refreshID = UUID().uuidString
                 }
@@ -246,9 +249,9 @@ struct ActualBudgetView: View {
 
 struct MainBudgetView: View {
     let budget: MainBudget
-    @FetchRequest<Transaction> private var transactions: FetchedResults<Transaction>
+    @Query private var transactions: [Transaction]
 
-    @Environment(\.managedObjectContext) var moc
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var dataController: DataController
 
     @State var toEdit: MainBudget?
@@ -258,7 +261,7 @@ struct MainBudgetView: View {
     var soloBudget: Bool
 
     var budgetAmount: Double {
-        if budget.isFault {
+        if false {
             return 0.0
         }
 
@@ -266,7 +269,7 @@ struct MainBudgetView: View {
     }
 
     var budgetType: String {
-        if budget.isFault {
+        if false {
             return ""
         }
 
@@ -292,7 +295,7 @@ struct MainBudgetView: View {
     var percentageOfDays: Double {
         let calendar = Calendar.current
 
-        if budget.isFault {
+        if false {
             return 0.0
         }
 
@@ -313,7 +316,7 @@ struct MainBudgetView: View {
     var targetPercent: Double {
         let calendar = Calendar.current
 
-        if budget.isFault {
+        if false {
             return 0.0
         }
 
@@ -360,7 +363,7 @@ struct MainBudgetView: View {
     }
 
     var percentString: String {
-        if !budget.isFault {
+        if !false {
             return "\(Int(round(100 - (totalSpent / budgetAmount) * 100)))%"
         } else {
             return ""
@@ -368,7 +371,7 @@ struct MainBudgetView: View {
     }
 
     var percentString1: String {
-        if !budget.isFault {
+        if !false {
             return "\(Int(round((totalSpent / budgetAmount) * 100)))%"
         } else {
             return ""
@@ -466,7 +469,7 @@ struct MainBudgetView: View {
             }
         }
         .onAppear {
-            if budget.isFault {
+            if false {
                 return
             }
 
@@ -493,19 +496,20 @@ struct MainBudgetView: View {
         self.budget = budget
         soloBudget = solo
 
-        let startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), budget.wrappedDate as CVarArg)
-        let endPredicate = NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg)
-        let incomePredicate = NSPredicate(format: "income = %d", false)
+        let startDate = budget.wrappedDate
+        let endDate = Date.now
 
-        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, incomePredicate])
-
-        _transactions = FetchRequest<Transaction>(sortDescriptors: [], predicate: andPredicate)
+        _transactions = Query(
+            filter: #Predicate<Transaction> {
+                $0.date >= startDate && $0.date <= endDate && $0.income == false
+            }
+        )
     }
 }
 
 struct SingleBudgetView: View {
     let budget: Budget
-    @FetchRequest<Transaction> private var transactions: FetchedResults<Transaction>
+    @Query private var transactions: [Transaction]
 
     @Binding var toDelete: Budget?
     @Binding var toEdit: Budget?
@@ -513,6 +517,13 @@ struct SingleBudgetView: View {
     @State var totalSpent: Double = 0
 
     var budgetRows: Bool
+    private let categoryId: UUID?
+    private var filteredTransactions: [Transaction] {
+        guard let categoryId else {
+            return transactions
+        }
+        return transactions.filter { $0.category?.id == categoryId }
+    }
 
     var width: CGFloat {
         ((UIScreen.main.bounds.width - 75) / 2) - 30
@@ -523,7 +534,7 @@ struct SingleBudgetView: View {
     }
 
     var budgetAmount: Double {
-        if budget.isFault {
+        if false {
             return 0.0
         }
 
@@ -531,7 +542,7 @@ struct SingleBudgetView: View {
     }
 
     var budgetType: String {
-        if budget.isFault {
+        if false {
             return ""
         }
 
@@ -552,7 +563,7 @@ struct SingleBudgetView: View {
     var timeLeft: String {
         let calendar = Calendar.current
 
-        if budget.isFault {
+        if false {
             return ""
         }
 
@@ -608,7 +619,7 @@ struct SingleBudgetView: View {
     }
 
     var percentString: String {
-        if !budget.isFault {
+        if !false {
             return "\(Int(round(100 - (totalSpent / budgetAmount) * 100)))%"
         } else {
             return ""
@@ -616,7 +627,7 @@ struct SingleBudgetView: View {
     }
 
     var percentString1: String {
-        if !budget.isFault {
+        if !false {
             return "\(Int(round((totalSpent / budgetAmount) * 100)))%"
         } else {
             return ""
@@ -626,7 +637,7 @@ struct SingleBudgetView: View {
     var targetPercent: Double {
         let calendar = Calendar.current
 
-        if budget.isFault {
+        if false {
             return 0.0
         }
 
@@ -642,7 +653,7 @@ struct SingleBudgetView: View {
     @Environment(\.colorScheme) var colorScheme
 
     // swipe to delete
-    @Environment(\.managedObjectContext) var moc
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var dataController: DataController
     @State private var offset: CGFloat = 0
     @State private var deleted: Bool = false
@@ -762,8 +773,8 @@ struct SingleBudgetView: View {
 
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                                     withAnimation {
-                                        moc.delete(budget)
-                                        dataController.save()
+                                        modelContext.delete(budget)
+                                        dataController.save(context: modelContext)
                                     }
                                 }
 
@@ -885,7 +896,7 @@ struct SingleBudgetView: View {
             }
         }
         .onAppear {
-            if budget.isFault {
+            if false {
                 return
             }
 
@@ -903,25 +914,16 @@ struct SingleBudgetView: View {
         self.budgetRows = budgetRows
         _toDelete = toDelete ?? Binding.constant(nil)
         _toEdit = toEdit ?? Binding.constant(nil)
+        categoryId = budget.category?.id
 
-        let date = budget.startDate ?? Date.now
+        let startDate = budget.startDate ?? Date.now
+        let endDate = Date.now
 
-        let startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), date as CVarArg)
-        let endPredicate = NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg)
-        let incomePredicate = NSPredicate(format: "income = %d", false)
-
-        let andPredicate: NSCompoundPredicate
-
-        if let category = budget.category {
-            let categoryPredicate = NSPredicate(format: "%K == %@", #keyPath(Transaction.category), category)
-            andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, categoryPredicate, incomePredicate])
-
-            _transactions = FetchRequest<Transaction>(sortDescriptors: [], predicate: andPredicate)
-        } else {
-            andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, incomePredicate])
-
-            _transactions = FetchRequest<Transaction>(sortDescriptors: [], predicate: andPredicate)
-        }
+        _transactions = Query(
+            filter: #Predicate<Transaction> {
+                $0.date >= startDate && $0.date <= endDate && $0.income == false
+            }
+        )
     }
 }
 
@@ -1060,7 +1062,7 @@ struct DetailedBudgetDifferenceDollarView: View {
 }
 
 struct DeleteBudgetAlert: View {
-    @Environment(\.managedObjectContext) var moc
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var dataController: DataController
     @Environment(\.dismiss) var dismiss
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
@@ -1095,8 +1097,8 @@ struct DeleteBudgetAlert: View {
                     self.presentationMode.wrappedValue.dismiss()
 
                     withAnimation {
-                        moc.delete(toDelete)
-                        dataController.save()
+                        modelContext.delete(toDelete)
+                        dataController.save(context: modelContext)
                     }
 
                 } label: {
@@ -1145,7 +1147,7 @@ struct DeleteBudgetAlert: View {
 }
 
 struct DeleteMainBudgetAlert: View {
-    @Environment(\.managedObjectContext) var moc
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var dataController: DataController
     @Environment(\.dismiss) var dismiss
     let toDelete: MainBudget
@@ -1178,8 +1180,8 @@ struct DeleteMainBudgetAlert: View {
                     dismiss()
 
                     withAnimation {
-                        moc.delete(toDelete)
-                        dataController.save()
+                        modelContext.delete(toDelete)
+                        dataController.save(context: modelContext)
                     }
 
                 } label: {
@@ -1231,7 +1233,7 @@ struct DeleteMainBudgetAlert: View {
 
 struct DetailedBudgetView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
-    @Environment(\.managedObjectContext) var moc
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var dataController: DataController
     let budget: Budget
 
@@ -1304,7 +1306,7 @@ struct DetailedBudgetView: View {
 
 struct DetailedMainBudgetView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
-    @Environment(\.managedObjectContext) var moc
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var dataController: DataController
     let budget: MainBudget
 
@@ -1674,7 +1676,7 @@ struct TimeBudgetView: View {
 }
 
 struct FilteredCategoryDayBudgetView: View {
-    @FetchRequest private var transactions: FetchedResults<Transaction>
+    @Query private var transactions: [Transaction]
     @Binding var totalSpent: Double
     @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currency?.identifier ?? "USD"
     var currencySymbol: String {
@@ -1683,19 +1685,27 @@ struct FilteredCategoryDayBudgetView: View {
 
     var date: Date
 
-    @Environment(\.managedObjectContext) var moc
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var dataController: DataController
     @AppStorage("showCents", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var showCents: Bool = true
     @AppStorage("swapTimeLabel", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var swapTimeLabel: Bool = false
     @AppStorage("showExpenseOrIncomeSign", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing"))
     var showExpenseOrIncomeSign: Bool = true
 
+    private let categoryId: UUID?
+    private var filteredTransactions: [Transaction] {
+        guard let categoryId else {
+            return transactions
+        }
+        return transactions.filter { $0.category?.id == categoryId }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            if transactions.count == 0 {
+            if filteredTransactions.count == 0 {
                 NoResultsView(fullscreen: false)
             } else {
-                ForEach(transactions, id: \.id) { transaction in
+                ForEach(filteredTransactions, id: \.id) { transaction in
                     SingleTransactionView(transaction: transaction, showCents: showCents, currencySymbol: currencySymbol, currency: currency, swapTimeLabel: swapTimeLabel, future: false, showExpenseOrIncomeSign: showExpenseOrIncomeSign)
                 }
             }
@@ -1703,7 +1713,7 @@ struct FilteredCategoryDayBudgetView: View {
         .onAppear {
             DispatchQueue.main.async {
                 var holding = 0.0
-                transactions.forEach { transaction in
+                filteredTransactions.forEach { transaction in
 
                     holding += transaction.wrappedAmount
                 }
@@ -1714,7 +1724,7 @@ struct FilteredCategoryDayBudgetView: View {
         .onChange(of: date) { 
             DispatchQueue.main.async {
                 var holding = 0.0
-                transactions.forEach { transaction in
+                filteredTransactions.forEach { transaction in
 
                     holding += transaction.wrappedAmount
                 }
@@ -1737,54 +1747,48 @@ struct FilteredCategoryDayBudgetView: View {
 
     init(category: Category?, day: Date, totalSpent: Binding<Double>) {
         date = day
+        categoryId = category?.id
 
-        let datePredicate = NSPredicate(format: "%K == %@", #keyPath(Transaction.day), day as CVarArg)
-        let dateCapPredicate = NSPredicate(format: "%K <= %@", #keyPath(Transaction.date), Date.now as CVarArg)
-        let incomePredicate = NSPredicate(format: "income = %d", false)
+        let endDate = Date.now
 
-        if let unwrappedCategory = category {
-            let categoryPredicate = NSPredicate(format: "%K == %@", #keyPath(Transaction.category), unwrappedCategory)
-
-            let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [datePredicate, categoryPredicate, incomePredicate, dateCapPredicate])
-
-            _transactions = FetchRequest<Transaction>(sortDescriptors: [
-                SortDescriptor(\.date, order: .reverse)
-            ], predicate: andPredicate)
-        } else {
-            let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [datePredicate, incomePredicate, dateCapPredicate])
-
-            _transactions = FetchRequest<Transaction>(sortDescriptors: [
-                SortDescriptor(\.date, order: .reverse)
-            ], predicate: andPredicate)
-        }
+        _transactions = Query(
+            filter: #Predicate<Transaction> {
+                $0.day == day && $0.date <= endDate && $0.income == false
+            },
+            sort: [SortDescriptor(\.date, order: .reverse)]
+        )
 
         _totalSpent = totalSpent
     }
 }
 
 struct FilteredBudgetView: View {
-    @SectionedFetchRequest<Date?, Transaction> private var transactions: SectionedFetchResults<Date?, Transaction>
+    @Query private var transactions: [Transaction]
 
     @Binding var totalSpent: Double
     var date: Date
+    private let categoryId: UUID?
+    private var filteredTransactions: [Transaction] {
+        guard let categoryId else {
+            return transactions
+        }
+        return transactions.filter { $0.category?.id == categoryId }
+    }
 
     var body: some View {
         VStack(spacing: 30) {
-            if transactions.count == 0 {
+            if filteredTransactions.count == 0 {
                 NoResultsView(fullscreen: false)
             }
 
-            ListView(transactions: _transactions)
+            ListView(transactions: filteredTransactions)
         }
         .frame(maxHeight: .infinity)
         .onAppear {
             DispatchQueue.main.async {
                 var holding = 0.0
-                transactions.forEach { day in
-
-                    day.forEach { transaction in
-                        holding += transaction.wrappedAmount
-                    }
+                filteredTransactions.forEach { transaction in
+                    holding += transaction.wrappedAmount
                 }
 
                 totalSpent = holding
@@ -1793,11 +1797,8 @@ struct FilteredBudgetView: View {
         .onChange(of: date) { 
             DispatchQueue.main.async {
                 var holding = 0.0
-                transactions.forEach { day in
-
-                    day.forEach { transaction in
-                        holding += transaction.wrappedAmount
-                    }
+                filteredTransactions.forEach { transaction in
+                    holding += transaction.wrappedAmount
                 }
                 totalSpent = holding
             }
@@ -1806,56 +1807,43 @@ struct FilteredBudgetView: View {
 
     init(category: Category? = nil, startDate: Date, totalSpent: Binding<Double>, type: Int) {
         date = startDate
-
-        let startPredicate = NSPredicate(format: "%K >= %@", #keyPath(Transaction.date), startDate as CVarArg)
-        let incomePredicate = NSPredicate(format: "income = %d", false)
-        let endPredicate: NSPredicate
+        categoryId = category?.id
 
         var calendar = Calendar(identifier: .gregorian)
-
         calendar.firstWeekday = UserDefaults(suiteName: "group.farm.poplar.budgetthing")!.integer(forKey: "firstWeekday")
         calendar.minimumDaysInFirstWeek = 4
 
+        let endDate: Date
+
         if type == 1 {
             if calendar.isDate(startDate, equalTo: Date.now, toGranularity: .weekOfYear) {
-                endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
+                endDate = Date.now
             } else {
-                let next = calendar.date(byAdding: .day, value: 7, to: startDate) ?? Date.now
-                endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), next as CVarArg)
+                endDate = calendar.date(byAdding: .day, value: 7, to: startDate) ?? Date.now
             }
         } else if type == 2 {
             if calendar.isDate(startDate, equalTo: Date.now, toGranularity: .month) {
-                endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
+                endDate = Date.now
             } else {
-                let next = calendar.date(byAdding: .month, value: 1, to: startDate) ?? Date.now
-                endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), next as CVarArg)
+                endDate = calendar.date(byAdding: .month, value: 1, to: startDate) ?? Date.now
             }
         } else {
             if calendar.isDate(startDate, equalTo: Date.now, toGranularity: .year) {
-                endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), Date.now as CVarArg)
+                endDate = Date.now
             } else {
-                let next = calendar.date(byAdding: .year, value: 1, to: startDate) ?? Date.now
-                endPredicate = NSPredicate(format: "%K < %@", #keyPath(Transaction.date), next as CVarArg)
+                endDate = calendar.date(byAdding: .year, value: 1, to: startDate) ?? Date.now
             }
         }
 
-        if let unwrappedCategory = category {
-            let categoryPredicate = NSPredicate(format: "%K == %@", #keyPath(Transaction.category), unwrappedCategory)
-
-            let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, categoryPredicate, incomePredicate])
-
-            _transactions = SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [
+        _transactions = Query(
+            filter: #Predicate<Transaction> {
+                $0.date >= startDate && $0.date < endDate && $0.income == false
+            },
+            sort: [
                 SortDescriptor(\.day, order: .reverse),
                 SortDescriptor(\.date, order: .reverse)
-            ], predicate: andPredicate)
-        } else {
-            let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [startPredicate, endPredicate, incomePredicate])
-
-            _transactions = SectionedFetchRequest<Date?, Transaction>(sectionIdentifier: \.day, sortDescriptors: [
-                SortDescriptor(\.day, order: .reverse),
-                SortDescriptor(\.date, order: .reverse)
-            ], predicate: andPredicate)
-        }
+            ]
+        )
 
         _totalSpent = totalSpent
     }
@@ -2212,7 +2200,7 @@ struct AnimatedHorizontalBarGraphMainBudget: View {
 }
 
 struct AnimatedCurvedBarGraphBudget: View {
-    var transactions: FetchedResults<Transaction>
+    var transactions: [Transaction]
     var budgetTotal: Double
     let cornerRadius: Double
     let width: Double
@@ -2244,7 +2232,7 @@ struct AnimatedCurvedBarGraphBudget: View {
 }
 
 struct AnimatedCurvedBarGraphMainBudget: View {
-    var transactions: FetchedResults<Transaction>
+    var transactions: [Transaction]
     var budgetTotal: Double
     let cornerRadius: Double
     let width: Double
@@ -2276,14 +2264,21 @@ struct AnimatedCurvedBarGraphMainBudget: View {
 }
 
 struct BudgetStepperView: View {
-    @FetchRequest private var transactions: FetchedResults<Transaction>
+    @Query private var transactions: [Transaction]
 
     @Binding var date: Date
+    private let categoryId: UUID?
+    private var filteredTransactions: [Transaction] {
+        guard let categoryId else {
+            return transactions
+        }
+        return transactions.filter { $0.category?.id == categoryId }
+    }
     var firstDate: Date {
-        if transactions.isEmpty {
+        if filteredTransactions.isEmpty {
             return Date.now
         } else {
-            return transactions[0].day ?? Date.now
+            return filteredTransactions[0].day
         }
     }
 
@@ -2362,15 +2357,8 @@ struct BudgetStepperView: View {
     }
 
     init(category: Category?, date: Binding<Date>, startDate: Date, budgetType: Int) {
-        if let unwrappedCategory = category {
-            _transactions = FetchRequest<Transaction>(sortDescriptors: [
-                SortDescriptor(\.day)
-            ], predicate: NSPredicate(format: "%K == %@", #keyPath(Transaction.category), unwrappedCategory))
-        } else {
-            _transactions = FetchRequest<Transaction>(sortDescriptors: [
-                SortDescriptor(\.day)
-            ])
-        }
+        categoryId = category?.id
+        _transactions = Query(sort: [SortDescriptor(\Transaction.day)])
 
         _date = date
 

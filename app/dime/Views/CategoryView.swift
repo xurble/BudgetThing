@@ -7,6 +7,7 @@
 
 import Combine
 import CoreHaptics
+import SwiftData
 import SwiftUI
 import UIKit
 
@@ -21,7 +22,10 @@ struct CategoryView: View {
 
     @State var newCategory = false
 
-    @FetchRequest(sortDescriptors: [SortDescriptor(\.order)], predicate: NSPredicate(format: "income = %d", false)) private var expenseCategories: FetchedResults<Category>
+    @Query(
+        filter: #Predicate<Category> { $0.income == false },
+        sort: [SortDescriptor(\Category.order)]
+    ) private var expenseCategories: [Category]
 
     @State var showToast = false
     @State var toastTitle = ""
@@ -98,7 +102,7 @@ struct CategoryListView: View {
 
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     @Environment(\.dismiss) var dismiss
-    @Environment(\.managedObjectContext) var moc
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) var systemColorScheme
     @EnvironmentObject var dataController: DataController
 
@@ -107,11 +111,11 @@ struct CategoryListView: View {
     @AppStorage("categorySuggestions", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var showSuggestions: Bool = true
     @State var suggestionsToast = false
 
-    @FetchRequest private var categories: FetchedResults<Category>
+    @Query private var categories: [Category]
 
     @State var isEditing = false
 
-    @FetchRequest(sortDescriptors: [SortDescriptor(\.order)]) private var allCategories: FetchedResults<Category>
+    @Query(sort: [SortDescriptor(\Category.order)]) private var allCategories: [Category]
 
     // delete mode
     @State private var deleteMode = false
@@ -460,10 +464,10 @@ struct CategoryListView: View {
             Button("Delete", role: .destructive) {
                 withAnimation {
                     if let gonnaDelete = toDelete {
-                        moc.delete(gonnaDelete)
+                        modelContext.delete(gonnaDelete)
                     }
 
-                    dataController.save()
+                    dataController.save(context: modelContext)
                 }
 
                 toDelete = nil
@@ -524,13 +528,15 @@ struct CategoryListView: View {
             categories[itemToMove].order = newOrder
         }
 
-        dataController.save()
+        dataController.save(context: modelContext)
     }
 
     init(income: Binding<Bool>, mode: CategoryViewMode, showToast: Binding<Bool>, toastTitle: Binding<String>, toastImage: Binding<String>, positive: Binding<Bool>) {
-        _categories = FetchRequest<Category>(sortDescriptors: [
-            SortDescriptor(\.order)
-        ], predicate: NSPredicate(format: "income = %d", income.wrappedValue))
+        let isIncome = income.wrappedValue
+        _categories = Query(
+            filter: #Predicate<Category> { $0.income == isIncome },
+            sort: [SortDescriptor(\Category.order)]
+        )
 
         _income = income
         _showToast = showToast
@@ -547,15 +553,21 @@ struct NewCategoryAlert: View {
     let bottomSpacers: Bool
 
     @Environment(\.dismiss) var dismiss
-    @Environment(\.managedObjectContext) var moc
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) var systemColorScheme
     @EnvironmentObject var dataController: DataController
 
 
     // existing categories
 
-    @FetchRequest(sortDescriptors: [SortDescriptor(\.order)], predicate: NSPredicate(format: "income = %d", false)) private var expenseCategories: FetchedResults<Category>
-    @FetchRequest(sortDescriptors: [SortDescriptor(\.order)], predicate: NSPredicate(format: "income = %d", true)) private var incomeCategories: FetchedResults<Category>
+    @Query(
+        filter: #Predicate<Category> { $0.income == false },
+        sort: [SortDescriptor(\Category.order)]
+    ) private var expenseCategories: [Category]
+    @Query(
+        filter: #Predicate<Category> { $0.income == true },
+        sort: [SortDescriptor(\Category.order)]
+    ) private var incomeCategories: [Category]
     @State private var availableColours: [String] = Color.colorArray
 
     // state
@@ -855,7 +867,7 @@ struct NewCategoryAlert: View {
             generator.notificationOccurred(.success)
 
             if income {
-                let category = Category(context: moc)
+                let category = Category()
                 category.name = newName.trimmingCharacters(in: .whitespaces).capitalized
                 category.emoji = newEmoji
                 category.dateCreated = Date.now
@@ -863,12 +875,13 @@ struct NewCategoryAlert: View {
                 category.colour = "IncomeGreen"
                 category.order = results.order
                 category.income = true
-                dataController.save()
+                modelContext.insert(category)
+                dataController.save(context: modelContext)
 
                 newName = ""
                 newEmoji = ""
             } else {
-                let category = Category(context: moc)
+                let category = Category()
                 category.name = newName.trimmingCharacters(in: .whitespaces).capitalized
                 category.emoji = newEmoji
                 category.dateCreated = Date.now
@@ -878,7 +891,8 @@ struct NewCategoryAlert: View {
                 category.colour = selectedColour
                 category.order = results.order
 
-                dataController.save()
+                modelContext.insert(category)
+                dataController.save(context: modelContext)
 
                 newName = ""
                 newEmoji = ""
@@ -970,14 +984,17 @@ struct EditCategoryAlert: View {
     let bottomSpacers: Bool
 
     @Environment(\.dismiss) var dismiss
-    @Environment(\.managedObjectContext) var moc
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) var systemColorScheme
     @EnvironmentObject var dataController: DataController
 
 
     // existing categories
 
-    @FetchRequest(sortDescriptors: [SortDescriptor(\.order)], predicate: NSPredicate(format: "income = %d", false)) private var expenseCategories: FetchedResults<Category>
+    @Query(
+        filter: #Predicate<Category> { $0.income == false },
+        sort: [SortDescriptor(\Category.order)]
+    ) private var expenseCategories: [Category]
 
     // state
     @State private var newName = ""
@@ -1007,154 +1024,166 @@ struct EditCategoryAlert: View {
     @State var showNativePicker: Bool = false
     @State var customSelectedColor = Color.white
 
+    private var headerView: some View {
+        HStack {
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(.callout, design: .rounded).weight(.semibold))
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+//                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(Color.SubtitleText)
+                    .padding(7)
+                    .background(Color.SecondaryBackground, in: Circle())
+                    .contentShape(Circle())
+            }
+
+            Spacer()
+
+            if showToast {
+                HStack(spacing: 5) {
+                    Image(systemName: toastImage)
+                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+//                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(Color.AlertRed)
+
+                    Text(toastTitle)
+                        .font(.system(.callout, design: .rounded).weight(.semibold))
+                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                        .lineLimit(1)
+//                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .foregroundColor(Color.AlertRed)
+                }
+                .padding(6)
+                .toastGlassRoundedRect(tint: Color.AlertRed)
+                .transition(ToastAnimationStyle.transition)
+                .frame(maxWidth: 200)
+            } else {
+                Text(toEdit.income ? "Income" : "Expense")
+                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+//                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+            }
+
+            Spacer()
+
+            Button {
+                toDelete = toEdit
+            } label: {
+                Image(systemName: "trash.fill")
+                    .font(.system(.callout, design: .rounded).weight(.semibold))
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+//                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(Color.AlertRed)
+                    .padding(7)
+                    .background(Color.AlertRed.opacity(0.23), in: Circle())
+                    .contentShape(Circle())
+            }
+        }
+        .frame(height: 30)
+    }
+
+    private var emojiPickerView: some View {
+        ZStack {
+            EmojiTextField(text: $newEmoji)
+                .focused($focusedField, equals: .emoji)
+                .onReceive(Just(newEmoji), perform: { _ in
+                    if String(self.newEmoji.onlyEmoji().suffix(1)) != self.newEmoji.onlyEmoji().prefix(1) {
+                        self.newEmoji = String(self.newEmoji.onlyEmoji().suffix(1))
+                    } else {
+                        self.newEmoji = String(self.newEmoji.onlyEmoji().prefix(1))
+                    }
+                })
+                .font(.system(size: 160))
+                .padding(8)
+                .frame(width: 80, height: 80, alignment: .center)
+                .background {
+                    RoundedRectangle(cornerRadius: 13, style: .continuous)
+                        .strokeBorder(focusedField == .emoji ? Color.SubtitleText : Color.clear, lineWidth: 2.2)
+                        .background(RoundedRectangle(cornerRadius: 13, style: .continuous).fill(Color.SecondaryBackground))
+                }
+
+            if newEmoji == "" {
+                Image("emoji-happy")
+                    .resizable()
+                    .foregroundColor(Color.PrimaryText)
+                    .frame(width: 35, height: 35, alignment: .center)
+                    .allowsHitTesting(false)
+            }
+        }
+    }
+
+    private var nameRowView: some View {
+        HStack {
+            if !toEdit.income {
+                Menu {
+                    Picker("Color", selection: $selectedColour) {
+                        ForEach(availableColours, id: \.self) { colorHex in
+                            ColorMenuItemView(colorHex: colorHex)
+                                .tag(colorHex)
+                        }
+
+                        if !availableColours.contains(selectedColour) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "paintpalette.fill")
+                                Text("Custom")
+                            }
+                            .tag(selectedColour)
+                        }
+                    }
+                    Button("Custom...") {
+                        customSelectedColor = Color(hex: selectedColour)
+                        showNativePicker = true
+                    }
+                } label: {
+                    RoundedRectangle(cornerRadius: 11, style: .continuous)
+                        .fill(Color(hex: selectedColour))
+                        .padding(8)
+                        .background(Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+                        .frame(width: 50, height: 50)
+                }
+            }
+
+            NormalTextField(text: $newName, placeholder: "Category Name", action: verification)
+                .focused($focusedField, equals: .name)
+                .padding(.horizontal, 15)
+                .padding(.vertical, 5)
+                .frame(height: 50)
+                .foregroundColor(Color.PrimaryText)
+                .background {
+                    RoundedRectangle(cornerRadius: 13, style: .continuous)
+                        .strokeBorder(focusedField == .name ? Color.SubtitleText : Color.clear, lineWidth: 2.2)
+                        .background(RoundedRectangle(cornerRadius: 13, style: .continuous).fill(Color.SecondaryBackground))
+                }
+
+            Button {
+                verification()
+            } label: {
+                Image(systemName: "checkmark")
+                    .foregroundColor(Color.LightIcon)
+                    .font(.system(.title3, design: .rounded).weight(.semibold))
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+//                    .font(.system(size: 20, weight: .semibold))
+                    .frame(width: 50, height: 50)
+                    .background(Color.DarkBackground, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+            }
+        }
+    }
+
     var body: some View {
         VStack {
             VStack {
-                HStack {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .font(.system(.callout, design: .rounded).weight(.semibold))
-                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(Color.SubtitleText)
-                            .padding(7)
-                            .background(Color.SecondaryBackground, in: Circle())
-                            .contentShape(Circle())
-                    }
-
-                    Spacer()
-
-                    if showToast {
-                        HStack(spacing: 5) {
-                            Image(systemName: toastImage)
-                                .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(Color.AlertRed)
-
-                            Text(toastTitle)
-                                .font(.system(.callout, design: .rounded).weight(.semibold))
-                                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                                .lineLimit(1)
-//                                .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                .foregroundColor(Color.AlertRed)
-                        }
-                        .padding(6)
-                        .toastGlassRoundedRect(tint: Color.AlertRed)
-                        .transition(ToastAnimationStyle.transition)
-                        .frame(maxWidth: 200)
-                    } else {
-                        Text(toEdit.income ? "Income" : "Expense")
-                            .font(.system(.body, design: .rounded).weight(.semibold))
-                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                            .font(.system(size: 18, weight: .semibold, design: .rounded))
-                    }
-
-                    Spacer()
-
-                    Button {
-                        toDelete = toEdit
-                    } label: {
-                        Image(systemName: "trash.fill")
-                            .font(.system(.callout, design: .rounded).weight(.semibold))
-                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(Color.AlertRed)
-                            .padding(7)
-                            .background(Color.AlertRed.opacity(0.23), in: Circle())
-                            .contentShape(Circle())
-                    }
-                }
-                .frame(height: 30)
+                headerView
 
                 Spacer()
 
-                ZStack {
-                    EmojiTextField(text: $newEmoji)
-                        .focused($focusedField, equals: .emoji)
-                        .onReceive(Just(newEmoji), perform: { _ in
-                            if String(self.newEmoji.onlyEmoji().suffix(1)) != self.newEmoji.onlyEmoji().prefix(1) {
-                                self.newEmoji = String(self.newEmoji.onlyEmoji().suffix(1))
-                            } else {
-                                self.newEmoji = String(self.newEmoji.onlyEmoji().prefix(1))
-                            }
-                        })
-                        .font(.system(size: 160))
-                        .padding(8)
-                        .frame(width: 80, height: 80, alignment: .center)
-                        .background {
-                            RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                .strokeBorder(focusedField == .emoji ? Color.SubtitleText : Color.clear, lineWidth: 2.2)
-                                .background(RoundedRectangle(cornerRadius: 13, style: .continuous).fill(Color.SecondaryBackground))
-                        }
-
-                    if newEmoji == "" {
-                        Image("emoji-happy")
-                            .resizable()
-                            .foregroundColor(Color.PrimaryText)
-                            .frame(width: 35, height: 35, alignment: .center)
-                            .allowsHitTesting(false)
-                    }
-                }
+                emojiPickerView
 
                 Spacer()
 
-                HStack {
-                    if !toEdit.income {
-                        Menu {
-                            Picker("Color", selection: $selectedColour) {
-                                ForEach(availableColours, id: \.self) { colorHex in
-                                    ColorMenuItemView(colorHex: colorHex)
-                                        .tag(colorHex)
-                                }
-
-                                if !availableColours.contains(selectedColour) {
-                                    HStack(spacing: 8) {
-                                        Image(systemName: "paintpalette.fill")
-                                        Text("Custom")
-                                    }
-                                    .tag(selectedColour)
-                                }
-                            }
-                            Button("Custom...") {
-                                customSelectedColor = Color(hex: selectedColour)
-                                showNativePicker = true
-                            }
-                        } label: {
-                            RoundedRectangle(cornerRadius: 11, style: .continuous)
-                                .fill(Color(hex: selectedColour))
-                                .padding(8)
-                                .background(Color.SecondaryBackground, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
-                                .frame(width: 50, height: 50)
-                        }
-                    }
-
-                    NormalTextField(text: $newName, placeholder: "Category Name", action: verification)
-                        .focused($focusedField, equals: .name)
-                        .padding(.horizontal, 15)
-                        .padding(.vertical, 5)
-                        .frame(height: 50)
-                        .foregroundColor(Color.PrimaryText)
-                        .background {
-                            RoundedRectangle(cornerRadius: 13, style: .continuous)
-                                .strokeBorder(focusedField == .name ? Color.SubtitleText : Color.clear, lineWidth: 2.2)
-                                .background(RoundedRectangle(cornerRadius: 13, style: .continuous).fill(Color.SecondaryBackground))
-                        }
-
-                    Button {
-                        verification()
-                    } label: {
-                        Image(systemName: "checkmark")
-                            .foregroundColor(Color.LightIcon)
-                            .font(.system(.title3, design: .rounded).weight(.semibold))
-                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-//                            .font(.system(size: 20, weight: .semibold))
-                            .frame(width: 50, height: 50)
-                            .background(Color.DarkBackground, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
-                    }
-                }
+                nameRowView
             }
             .padding(13)
             .frame(maxHeight: bottomSpacers ? 350 : .infinity)
@@ -1184,8 +1213,8 @@ struct EditCategoryAlert: View {
             Button("Delete", role: .destructive) {
                 if let categoryToDelete = toDelete {
                     withAnimation {
-                        moc.delete(categoryToDelete)
-                        dataController.save()
+                        modelContext.delete(categoryToDelete)
+                        dataController.save(context: modelContext)
                     }
                 }
 
@@ -1216,7 +1245,7 @@ struct EditCategoryAlert: View {
             if !toEdit.income {
                 availableColours = Color.colorArray
                 expenseCategories.forEach { category in
-                    if category.objectID != toEdit.objectID,
+                    if category.id != toEdit.id,
                        availableColours.contains(category.wrappedColour) {
                         availableColours.remove(at: availableColours.firstIndex(of: category.wrappedColour) ?? 0)
                     }
@@ -1274,13 +1303,13 @@ struct EditCategoryAlert: View {
                 toEdit.name = newName.trimmingCharacters(in: .whitespaces).capitalized
                 toEdit.emoji = newEmoji
 
-                dataController.save()
+                dataController.save(context: modelContext)
             } else {
                 toEdit.name = newName.trimmingCharacters(in: .whitespaces).capitalized
                 toEdit.emoji = newEmoji
                 toEdit.colour = selectedColour
 
-                dataController.save()
+                dataController.save(context: modelContext)
             }
 
             rootToastTitle = "Edited \(newName)"
@@ -1296,7 +1325,7 @@ struct EditCategoryAlert: View {
 }
 
 struct DeleteCategoryAlert: View {
-    @Environment(\.managedObjectContext) var moc
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var dataController: DataController
     @Environment(\.dismiss) var dismiss
     let toDelete: Category
@@ -1337,8 +1366,8 @@ struct DeleteCategoryAlert: View {
 
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         withAnimation {
-                            moc.delete(toDelete)
-                            dataController.save()
+                            modelContext.delete(toDelete)
+                            dataController.save(context: modelContext)
                         }
                     }
 
@@ -1409,9 +1438,9 @@ struct DeleteCategoryAlert: View {
 
 struct SuggestedCategoriesView: View {
     let income: Bool
-    @FetchRequest private var categories: FetchedResults<Category>
+    @Query private var categories: [Category]
 
-    @Environment(\.managedObjectContext) var moc
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var dataController: DataController
 
     var nameArray: [String] {
@@ -1501,7 +1530,7 @@ struct SuggestedCategoriesView: View {
                         impactMed.impactOccurred()
 
                         if !income {
-                            let suggestedCategory = Category(context: moc)
+                            let suggestedCategory = Category()
                             suggestedCategory.name = NSLocalizedString(category.name, comment: "category name")
                             suggestedCategory.emoji = category.emoji
                             suggestedCategory.dateCreated = Date.now
@@ -1509,7 +1538,8 @@ struct SuggestedCategoriesView: View {
                             suggestedCategory.colour = selectedColour
                             suggestedCategory.order = (categories.last?.order ?? 0) + 1
                             suggestedCategory.income = false
-                            dataController.save()
+                            modelContext.insert(suggestedCategory)
+                            dataController.save(context: modelContext)
 
                             availableColours = Color.colorArray
                             categories.forEach { category in
@@ -1524,7 +1554,7 @@ struct SuggestedCategoriesView: View {
                                 selectedColour = availableColours[0]
                             }
                         } else {
-                            let suggestedCategory = Category(context: moc)
+                            let suggestedCategory = Category()
                             suggestedCategory.name = NSLocalizedString(category.name, comment: "category name")
                             suggestedCategory.emoji = category.emoji
                             suggestedCategory.dateCreated = Date.now
@@ -1532,7 +1562,8 @@ struct SuggestedCategoriesView: View {
                             suggestedCategory.colour = "#76FBB0"
                             suggestedCategory.order = (categories.last?.order ?? 0) + 1
                             suggestedCategory.income = true
-                            dataController.save()
+                            modelContext.insert(suggestedCategory)
+                            dataController.save(context: modelContext)
                         }
                     }
                 }
@@ -1556,9 +1587,10 @@ struct SuggestedCategoriesView: View {
     }
 
     init(income: Bool) {
-        _categories = FetchRequest<Category>(sortDescriptors: [
-            SortDescriptor(\.order)
-        ], predicate: NSPredicate(format: "income = %d", income))
+        _categories = Query(
+            filter: #Predicate<Category> { $0.income == income },
+            sort: [SortDescriptor(\Category.order)]
+        )
 
         self.income = income
     }

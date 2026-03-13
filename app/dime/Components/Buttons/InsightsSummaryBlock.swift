@@ -25,7 +25,6 @@ struct InsightsSummaryBlockView: View {
                 .foregroundColor(color)
                 .padding(5)
                 .frame(width: 30, height: 30)
-                .background(color.opacity(0.23), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 .padding(.horizontal, 3)
 
             VStack(alignment: .leading, spacing: 0) {
@@ -47,11 +46,12 @@ struct InsightsSummaryBlockView: View {
         .onTapGesture {
             self.action()
         }
-        .background(Color.TertiaryBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(color.opacity(0.1), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .glassRoundedRect(cornerRadius: 12)
         .overlay {
             if showOverlay {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color.SubtitleText.opacity(0.7), lineWidth: 1.3)
+                    .stroke(color.opacity(0.7), lineWidth: 1.3)
             }
         }
     }

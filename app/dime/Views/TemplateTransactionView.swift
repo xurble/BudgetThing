@@ -7,11 +7,12 @@
 
 import Combine
 import Foundation
+import SwiftData
 import SwiftUI
 import WidgetKit
 
 struct TemplateTransactionView: View {
-    @Environment(\.managedObjectContext) var moc
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var dataController: DataController
     @Environment(\.dismiss) var dismiss
 
@@ -418,7 +419,7 @@ struct TemplateTransactionView: View {
                 Button("Delete", role: .destructive) {
                     withAnimation {
                         if let itemToDelete = toDelete {
-                            moc.delete(itemToDelete)
+                            modelContext.delete(itemToDelete)
                         }
                         dataController.save()
                     }
@@ -584,7 +585,8 @@ struct TemplateTransactionView: View {
             dismiss()
 
         } else {
-            let transaction = TemplateTransaction(context: moc)
+            let transaction = TemplateTransaction()
+            modelContext.insert(transaction)
             if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
                 transaction.note = category?.wrappedName ?? ""
             } else {
@@ -643,8 +645,14 @@ struct TemplateTransactionView: View {
 }
 
 struct CategoryRowPickerView: View {
-    @FetchRequest(sortDescriptors: [SortDescriptor(\.order)], predicate: NSPredicate(format: "income = %d", false)) private var expenseCategories: FetchedResults<Category>
-    @FetchRequest(sortDescriptors: [SortDescriptor(\.order)], predicate: NSPredicate(format: "income = %d", true)) private var incomeCategories: FetchedResults<Category>
+    @Query(
+        filter: #Predicate<Category> { $0.income == false },
+        sort: [SortDescriptor(\.order)]
+    ) private var expenseCategories: [Category]
+    @Query(
+        filter: #Predicate<Category> { $0.income == true },
+        sort: [SortDescriptor(\.order)]
+    ) private var incomeCategories: [Category]
 
     @Binding var selectedCategory: Category?
     @State var showCategorySheet = false
@@ -854,9 +862,9 @@ struct SettingsQuickAddWidgetDraggingView: View {
 
     @State var refreshID = UUID()
 
-    @FetchRequest(sortDescriptors: [
-        SortDescriptor(\.order)
-    ]) private var transactions: FetchedResults<TemplateTransaction>
+    @Query(sort: [SortDescriptor(\TemplateTransaction.order)]) private var transactions: [TemplateTransaction]
+
+    init() { }
 
     let columns = Array(repeating: GridItem(.fixed(100), spacing: 15), count: 2)
 

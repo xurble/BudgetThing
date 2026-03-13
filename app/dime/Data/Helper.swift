@@ -13,7 +13,7 @@ extension Transaction {
     }
 
     var wrappedDate: Date {
-        date ?? Date.now
+        date
     }
 
     var wrappedNote: String {
@@ -30,14 +30,14 @@ extension Transaction {
 
     var nextTransactionDate: Date {
         if recurringType == 1 {
-            return Calendar.current.date(byAdding: .day, value: Int(recurringCoefficient), to: day ?? Date.now)!
+            return Calendar.current.date(byAdding: .day, value: Int(recurringCoefficient), to: day)!
         } else if recurringType == 2 {
-            return Calendar.current.date(byAdding: .day, value: Int(recurringCoefficient * 7), to: day ?? Date.now)!
+            return Calendar.current.date(byAdding: .day, value: Int(recurringCoefficient * 7), to: day)!
         } else if recurringType == 3 {
-            return Calendar.current.date(byAdding: .month, value: Int(recurringCoefficient), to: day ?? Date.now)!
+            return Calendar.current.date(byAdding: .month, value: Int(recurringCoefficient), to: day)!
         }
 
-        return date ?? Date.now
+        return date
     }
 }
 
@@ -73,7 +73,7 @@ extension Category {
     }
 
     var wrappedDate: Date {
-        dateCreated ?? Date.now
+        dateCreated
     }
 
     var fullName: String {
@@ -81,10 +81,7 @@ extension Category {
     }
 
     var allTransactions: [Transaction] {
-        let set = transactions as? Set<Transaction> ?? []
-        return set.sorted {
-            $0.wrappedDate < $1.wrappedDate
-        }
+        (transactions ?? []).sorted { $0.wrappedDate < $1.wrappedDate }
     }
 
     var transactionCount: Int {
@@ -92,7 +89,7 @@ extension Category {
     }
 }
 
-public extension Budget {
+extension Budget {
     var wrappedColour: String {
         category?.wrappedColour ?? "#FFFFFF"
     }
@@ -110,39 +107,39 @@ public extension Budget {
     }
 
     var wrappedDate: Date {
-        return startDate ?? Date.now
+        return startDate
     }
 
     var endDate: Date {
         if type == 1 {
-            return Calendar.current.date(byAdding: .day, value: 1, to: startDate ?? Date.now)!
+            return Calendar.current.date(byAdding: .day, value: 1, to: startDate)!
         } else if type == 2 {
-            return Calendar.current.date(byAdding: .day, value: 7, to: startDate ?? Date.now)!
+            return Calendar.current.date(byAdding: .day, value: 7, to: startDate)!
         } else if type == 3 {
-            return Calendar.current.date(byAdding: .month, value: 1, to: startDate ?? Date.now)!
+            return Calendar.current.date(byAdding: .month, value: 1, to: startDate)!
         } else if type == 4 {
-            return Calendar.current.date(byAdding: .year, value: 1, to: startDate ?? Date.now)!
+            return Calendar.current.date(byAdding: .year, value: 1, to: startDate)!
         }
-        return startDate ?? Date.now
+        return startDate
     }
 }
 
-public extension MainBudget {
+extension MainBudget {
     var wrappedDate: Date {
-        return startDate ?? Date.now
+        return startDate
     }
 
     var endDate: Date {
         if type == 1 {
-            return Calendar.current.date(byAdding: .day, value: 1, to: startDate ?? Date.now)!
+            return Calendar.current.date(byAdding: .day, value: 1, to: startDate)!
         } else if type == 2 {
-            return Calendar.current.date(byAdding: .day, value: 7, to: startDate ?? Date.now)!
+            return Calendar.current.date(byAdding: .day, value: 7, to: startDate)!
         } else if type == 3 {
-            return Calendar.current.date(byAdding: .month, value: 1, to: startDate ?? Date.now)!
+            return Calendar.current.date(byAdding: .month, value: 1, to: startDate)!
         } else if type == 4 {
-            return Calendar.current.date(byAdding: .year, value: 1, to: startDate ?? Date.now)!
+            return Calendar.current.date(byAdding: .year, value: 1, to: startDate)!
         }
 
-        return startDate ?? Date.now
+        return startDate
     }
 }

@@ -8,6 +8,7 @@
 import ConfettiSwiftUI
 import FabBar
 import Foundation
+import SwiftData
 import SwiftUI
 import UIKit
 
@@ -40,7 +41,7 @@ struct HomeView: View {
 
     @StateObject var toastPresenter = OverallToastPresenter()
     @StateObject var transactionManager = OverallTransactionManager()
-    @Environment(\.managedObjectContext) var moc
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var dataController: DataController
 
     @State private var currentTab: AppTab = .log
@@ -63,7 +64,7 @@ struct HomeView: View {
     @EnvironmentObject var tabBarManager: TabBarManager
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
-    @FetchRequest(sortDescriptors: []) private var transactions: FetchedResults<Transaction>
+    @Query private var transactions: [Transaction]
 
     @AppStorage("confetti", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var confetti: Bool = false
     @AppStorage("firstTransactionViewLaunch", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var firstLaunch: Bool = true
@@ -192,11 +193,11 @@ struct HomeView: View {
             AlertToast(displayMode: .hud, type: .systemImage("arrow.uturn.backward.circle.fill", Color.AlertRed), title: "Log Deleted", subTitle: "Tap to Undo")
         }, onTap: {
             withAnimation(.easeInOut(duration: 0.5)) {
-                moc.rollback()
+                modelContext.rollback()
             }
             transactionManager.toDelete = nil
         }, completion: {
-            dataController.save()
+            dataController.save(context: modelContext)
             transactionManager.toDelete = nil
         })
         .confirmationDialog(
@@ -215,11 +216,11 @@ struct HomeView: View {
                 if shouldStopRecurring {
                     withAnimation(.easeInOut(duration: 0.5)) {
                         toDelete.recurringType = 0
-                        dataController.save()
+                        dataController.save(context: modelContext)
                     }
                 } else {
                     withAnimation(.easeInOut(duration: 0.5)) {
-                        moc.delete(toDelete)
+                        modelContext.delete(toDelete)
                         transactionManager.showToast = true
                     }
                 }

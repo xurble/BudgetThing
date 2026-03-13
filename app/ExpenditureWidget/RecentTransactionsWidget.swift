@@ -94,8 +94,8 @@ struct Provider: IntentTimelineProvider {
     func loadTransactions(type: TimePeriod, count: Int) -> [HoldingTransaction] {
 //        let dataController = DataController()
         let dataController = DataController.shared
-        let itemRequest = dataController.fetchRequestForRecentTransactionsWithCount(type: type, count: count)
-        let holding = dataController.results(for: itemRequest)
+        let descriptor = dataController.fetchDescriptorForRecentTransactionsWithCount(type: type, count: count)
+        let holding = dataController.results(for: descriptor)
 
         var sending = [HoldingTransaction]()
 

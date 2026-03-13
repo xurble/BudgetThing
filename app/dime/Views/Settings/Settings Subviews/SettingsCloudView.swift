@@ -10,8 +10,17 @@ import SwiftUI
 
 struct SettingsCloudView: View {
   @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+  @EnvironmentObject var dataController: DataController
   @State private var iCloudStorage: Bool = false
+  @State private var showRelaunchPrompt = false
+  @State private var shouldIgnoreNextToggle = true
   @Namespace var animation
+
+  private let appGroupID = "group.farm.poplar.budgetthing"
+
+  private var cloudKitDatabaseLabel: String {
+    String(describing: dataController.cloudKitDatabase)
+  }
 
   var body: some View {
     VStack(spacing: 10) {
@@ -53,7 +62,14 @@ struct SettingsCloudView: View {
             iCloudStorage.toggle()
           }
           .onChange(of: iCloudStorage) { _, newValue in
+            if shouldIgnoreNextToggle {
+              shouldIgnoreNextToggle = false
+              return
+            }
+            UserDefaults(suiteName: appGroupID)?.set(newValue, forKey: "icloud_sync")
             NSUbiquitousKeyValueStore.default.set(newValue, forKey: "icloud_sync")
+            NSUbiquitousKeyValueStore.default.synchronize()
+            showRelaunchPrompt = true
           }
         }
         .frame(maxWidth: .infinity)
@@ -68,9 +84,44 @@ struct SettingsCloudView: View {
         .foregroundColor(Color.SubtitleText)
         .padding(.horizontal, 15)
         .frame(maxWidth: .infinity, alignment: .leading)
+
+#if DEBUG
+      VStack(alignment: .leading, spacing: 6) {
+        Text("CloudKit Debug")
+          .font(.system(.caption, design: .rounded).weight(.semibold))
+          .foregroundColor(Color.SubtitleText)
+
+        let storePath = dataController.storeURL?.path ?? "nil"
+        let appGroupValue = UserDefaults(suiteName: appGroupID)?.bool(forKey: "icloud_sync") ?? false
+        let ubiquitousValue = NSUbiquitousKeyValueStore.default.bool(forKey: "icloud_sync")
+        let bundleId = Bundle.main.bundleIdentifier ?? "unknown"
+
+        Text("cloudKitEnabled: \(dataController.cloudKitEnabled)")
+        Text("cloudKitDatabase: \(cloudKitDatabaseLabel)")
+        Text("storeURL: \(storePath)")
+        Text("appGroup iCloud: \(appGroupValue)")
+        Text("ubiquitous iCloud: \(ubiquitousValue)")
+        Text("bundle: \(bundleId)")
+      }
+      .font(.system(.caption2, design: .monospaced))
+      .foregroundColor(Color.SubtitleText)
+      .padding(.horizontal, 15)
+      .padding(.top, 6)
+      .frame(maxWidth: .infinity, alignment: .leading)
+#endif
     }
     .onAppear {
-      iCloudStorage = NSUbiquitousKeyValueStore.default.bool(forKey: "icloud_sync")
+      if let storedValue = UserDefaults(suiteName: appGroupID)?.object(forKey: "icloud_sync") as? Bool {
+        iCloudStorage = storedValue
+      } else {
+        iCloudStorage = NSUbiquitousKeyValueStore.default.bool(forKey: "icloud_sync")
+      }
+      shouldIgnoreNextToggle = true
+    }
+    .alert("Restart Required", isPresented: $showRelaunchPrompt) {
+      Button("OK", role: .cancel) {}
+    } message: {
+      Text("Please force-quit and relaunch the app to apply the iCloud sync change.")
     }
     .modifier(SettingsSubviewModifier())
 

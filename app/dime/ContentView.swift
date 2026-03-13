@@ -18,12 +18,6 @@ struct ContentView: View {
 
     @AppStorage("firstLaunch", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var firstLaunch: Bool = true
 
-    // adds category orders
-    @AppStorage("dataMigration1", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var dataMigration1: Bool = true
-
-    // converts category colors to hex codes
-    @AppStorage("dataMigration2", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var dataMigration2: Bool = true
-
     @AppStorage("currency", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var currency: String = Locale.current.currency?.identifier ?? "USD"
 
     @State var showIntro: Bool = false
@@ -101,38 +95,6 @@ struct ContentView: View {
                     currency = Locale.current.currency?.identifier ?? "USD"
                     NSUbiquitousKeyValueStore.default.set(Locale.current.currency?.identifier ?? "USD", forKey: "currency")
                 }
-            }
-
-            if dataMigration1 {
-                let categoryFetch = dataController.fetchRequestForCategoriesMigration(income: false)
-                let categories = dataController.results(for: categoryFetch)
-
-                categories.forEach { category in
-                    category.order = Int64(categories.firstIndex(of: category) ?? 0)
-                }
-
-                dataController.save()
-
-                dataMigration1 = false
-            }
-
-            if dataMigration2 {
-                let categoryFetch = dataController.fetchRequestForCategoriesMigration()
-                let categories = dataController.results(for: categoryFetch)
-
-                categories.forEach { category in
-                    if category.income {
-                        category.colour = "#76FBB1"
-                    } else {
-                        if Double(category.wrappedColour) != nil {
-                            category.colour = Color.colourMigrationDictionary[category.wrappedColour] ?? "#FFFFFF"
-                        }
-                    }
-                }
-
-                dataController.save()
-
-                dataMigration2 = false
             }
 
             if showUpdateSheet {

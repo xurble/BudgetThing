@@ -36,7 +36,7 @@ struct BudgetIntent: AppIntent {
 
         switch type {
         case .overall:
-            if let mainBudget = dataController.results(for: dataController.fetchRequestForMainBudget()).first {
+            if let mainBudget = dataController.results(for: dataController.fetchDescriptorForMainBudget()).first {
                 amount = dataController.getBudgetLeftover(overallBudget: mainBudget)
 
                 budgetType = mainBudget.type
