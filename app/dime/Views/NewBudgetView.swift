@@ -7,6 +7,7 @@
 
 import SwiftData
 import SwiftUI
+import UIKit
 
 struct PickerStyle: ViewModifier {
     var colorScheme: ColorScheme
@@ -533,7 +534,7 @@ struct BrandNewBudgetView: View {
                     if progress == 2 && selectedCategory == nil {
                         showToast = true
                         toastMessage = "Missing Category"
-                        UINotificationFeedbackGenerator().notificationOccurred(.error)
+                        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
                         return
                     }
 
@@ -692,7 +693,7 @@ struct BrandNewBudgetView: View {
 
     func submit() {
         if price == 0 {
-            UINotificationFeedbackGenerator().notificationOccurred(.error)
+            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
             showToast = true
             toastMessage = "Missing Amount"
             return

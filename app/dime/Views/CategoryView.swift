@@ -6,7 +6,6 @@
 //
 
 import Combine
-import CoreHaptics
 import SwiftData
 import SwiftUI
 import UIKit
@@ -992,8 +991,7 @@ struct NewCategoryAlert: View {
         outcome = results.error
 
         if outcome != .none {
-            let generator = UINotificationFeedbackGenerator()
-            generator.notificationOccurred(.error)
+            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
 
             switch outcome {
             case .incomplete:
@@ -1032,8 +1030,7 @@ struct NewCategoryAlert: View {
         } else {
             toastTitle = "Added \(newName)"
 
-            let generator = UINotificationFeedbackGenerator()
-            generator.notificationOccurred(.success)
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
             if income {
                 let category = Category()
@@ -1477,8 +1474,7 @@ struct EditCategoryAlert: View {
         outcome = results.error
 
         if outcome != .none {
-            let generator = UINotificationFeedbackGenerator()
-            generator.notificationOccurred(.error)
+            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
 
             switch outcome {
             case .incomplete:
@@ -1513,8 +1509,7 @@ struct EditCategoryAlert: View {
 
             showToast = true
         } else {
-            let generator = UINotificationFeedbackGenerator()
-            generator.notificationOccurred(.success)
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
             if toEdit.income {
                 toEdit.name = newName.trimmingCharacters(in: .whitespaces).capitalized

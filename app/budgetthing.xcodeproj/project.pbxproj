@@ -15,6 +15,7 @@
 		06AFE73A2F6359D9001FE658 /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06AFE7382F6359D9001FE658 /* SwiftDataModels.swift */; };
 		06AFE73B2F6359D9001FE658 /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06AFE7382F6359D9001FE658 /* SwiftDataModels.swift */; };
 		06AFE73C2F6359D9001FE658 /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06AFE7382F6359D9001FE658 /* SwiftDataModels.swift */; };
+		06AFE73E2F64AAA3001FE658 /* TipJar.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 06AFE73D2F64AAA3001FE658 /* TipJar.storekit */; };
 		530C89D62A793B6C00B5028D /* ShortcutsEntities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530C89D52A793B6C00B5028D /* ShortcutsEntities.swift */; };
 		530C9DFD28ACE14A0038535F /* BudgetWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530C9DFC28ACE14A0038535F /* BudgetWidget.swift */; };
 		530C9DFE28ACE14A0038535F /* BudgetWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530C9DFC28ACE14A0038535F /* BudgetWidget.swift */; };
@@ -217,6 +218,7 @@
 		066D0B752F5987EA00F3A3DE /* Buttons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Buttons.swift; sourceTree = "<group>"; };
 		06A2954A2F5CA6EB00CEDD79 /* BankView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BankView.swift; sourceTree = "<group>"; };
 		06AFE7382F6359D9001FE658 /* SwiftDataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataModels.swift; sourceTree = "<group>"; };
+		06AFE73D2F64AAA3001FE658 /* TipJar.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; name = TipJar.storekit; path = dime/TipJar.storekit; sourceTree = "<group>"; };
 		530C89D52A793B6C00B5028D /* ShortcutsEntities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsEntities.swift; sourceTree = "<group>"; };
 		530C9DFC28ACE14A0038535F /* BudgetWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetWidget.swift; sourceTree = "<group>"; };
 		5311A22E29F04EF300A5BE20 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.intentdefinition; name = Base; path = Base.lproj/WidgetConfiguration.intentdefinition; sourceTree = "<group>"; };
@@ -420,6 +422,7 @@
 		5327D27A287C697400F76ADF = {
 			isa = PBXGroup;
 			children = (
+				06AFE73D2F64AAA3001FE658 /* TipJar.storekit */,
 				BADA55BADA55BADA55BADA57 /* Config */,
 				D63B20462D8728C300CAFB20 /* Localizable.strings */,
 				D63B20482D8728C300CAFB20 /* Localizable.stringsdict */,
@@ -848,6 +851,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5327D28E287C697C00F76ADF /* Preview Assets.xcassets in Resources */,
+				06AFE73E2F64AAA3001FE658 /* TipJar.storekit in Resources */,
 				D63B204A2D8728C300CAFB20 /* Localizable.strings in Resources */,
 				D63B204B2D8728C300CAFB20 /* Localizable.stringsdict in Resources */,
 				5327D295287C698900F76ADF /* Assets.xcassets in Resources */,

@@ -684,14 +684,29 @@ struct TipJarAlert: View {
               .frame(height: 200)
           }
         case .failed:
-          Text("Unable to load tip options, please try again later 🥲")
-            .font(.system(.body, design: .rounded).weight(.medium))
+          VStack(spacing: 14) {
+            Text("Unable to load tip options, please try again later 🥲")
+              .font(.system(.body, design: .rounded).weight(.medium))
+              .multilineTextAlignment(.center)
+              .foregroundColor(Color.SubtitleText)
+              .frame(maxWidth: .infinity)
 
-            //                        .font(.system(size: 18, weight: .medium, design: .rounded))
-            .multilineTextAlignment(.center)
-            .foregroundColor(Color.SubtitleText)
-            .frame(maxWidth: .infinity)
-            .frame(height: 200)
+            Button {
+              unlockManager.reloadProducts()
+            } label: {
+              Text("Try Again")
+                .font(.system(.body, design: .rounded).weight(.semibold))
+                .padding(.horizontal, 18)
+                .padding(.vertical, 8)
+                .background(
+                  RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.SecondaryBackground)
+                )
+            }
+            .foregroundColor(.PrimaryText)
+          }
+          .frame(maxWidth: .infinity)
+          .frame(height: 200)
         default:
           VStack(alignment: .leading, spacing: 4) {
             HStack {
@@ -802,6 +817,11 @@ struct TipJarAlert: View {
     }
     .edgesIgnoringSafeArea(.all)
     .background(BackgroundBlurView())
+    .onAppear {
+      if unlockManager.requestState == .failed {
+        unlockManager.reloadProducts()
+      }
+    }
   }
 }
 

@@ -9,6 +9,7 @@ import Combine
 import Foundation
 import SwiftData
 import SwiftUI
+import UIKit
 
 struct TransactionView: View {
     @Query(filter: #Predicate<Category> { $0.income == false }) private var expenseCategories: [Category]
@@ -754,7 +755,8 @@ struct TransactionView: View {
     }
 
     func submit() {
-        let generator = UINotificationFeedbackGenerator()
+        let errorGenerator = UIImpactFeedbackGenerator(style: .heavy)
+        let successGenerator = UIImpactFeedbackGenerator(style: .light)
 
         if price == 0 && category == nil {
             toastImage = "questionmark.app"
@@ -762,14 +764,14 @@ struct TransactionView: View {
             showToast = true
             toggleFieldColors()
 
-            generator.notificationOccurred(.error)
+            errorGenerator.impactOccurred()
 
             return
         } else if price == 0 {
             toastImage = "centsign.circle"
             toastTitle = "Missing Amount"
             showToast = true
-            generator.notificationOccurred(.error)
+            errorGenerator.impactOccurred()
             return
         } else if category == nil {
             toastImage = "tray"
@@ -778,11 +780,11 @@ struct TransactionView: View {
 
             toggleFieldColors()
 
-            generator.notificationOccurred(.error)
+            errorGenerator.impactOccurred()
             return
         }
 
-        generator.notificationOccurred(.success)
+        successGenerator.impactOccurred()
 
         if let editedTransaction = toEdit {
             if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {

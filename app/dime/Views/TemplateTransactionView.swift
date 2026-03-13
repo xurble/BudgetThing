@@ -9,6 +9,7 @@ import Combine
 import Foundation
 import SwiftData
 import SwiftUI
+import UIKit
 import WidgetKit
 
 struct TemplateTransactionView: View {
@@ -538,30 +539,31 @@ struct TemplateTransactionView: View {
     }
 
     func submit() {
-        let generator = UINotificationFeedbackGenerator()
+        let errorGenerator = UIImpactFeedbackGenerator(style: .heavy)
+        let successGenerator = UIImpactFeedbackGenerator(style: .light)
 
         if transactionValue == 0 && category == nil {
             toastImage = "questionmark.app"
             toastTitle = "Incomplete Entry"
             showToast = true
-            generator.notificationOccurred(.error)
+            errorGenerator.impactOccurred()
 
             return
         } else if transactionValue == 0 {
             toastImage = "centsign.circle"
             toastTitle = "Missing Amount"
             showToast = true
-            generator.notificationOccurred(.error)
+            errorGenerator.impactOccurred()
             return
         } else if category == nil {
             toastImage = "tray"
             toastTitle = "Missing Category"
             showToast = true
-            generator.notificationOccurred(.error)
+            errorGenerator.impactOccurred()
             return
         }
 
-        generator.notificationOccurred(.success)
+        successGenerator.impactOccurred()
 
         if let editedTransaction = toEdit {
             if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {

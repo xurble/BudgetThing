@@ -86,6 +86,13 @@ final class UnlockManager: ObservableObject {
         }
     }
 
+    func reloadProducts() {
+        productTask?.cancel()
+        productTask = Task { [weak self] in
+            await self?.loadProducts()
+        }
+    }
+
     private func loadProducts() async {
         requestState = .loading
         do {
