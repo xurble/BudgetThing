@@ -5,7 +5,9 @@
 //  Created by Rafael Soh on 3/6/22.
 //
 
+import DeviceCheck
 import Foundation
+import Security
 import SwiftData
 import SwiftUI
 import WidgetKit
@@ -26,17 +28,149 @@ enum CustomError: Swift.Error, CustomLocalizedStringResourceConvertible {
     }
 }
 
+private enum SecureKeychainStore {
+    static func readString(service: String, account: String) -> String? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecMatchLimit as String: kSecMatchLimitOne,
+            kSecReturnData as String: true
+        ]
+
+        var item: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &item)
+        guard status == errSecSuccess,
+              let data = item as? Data,
+              let value = String(data: data, encoding: .utf8) else {
+            return nil
+        }
+
+        return value
+    }
+
+    static func writeString(_ value: String, service: String, account: String) {
+        let data = Data(value.utf8)
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account
+        ]
+
+        let attributes: [String: Any] = [
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        ]
+
+        let status = SecItemAdd(query.merging(attributes) { _, new in new } as CFDictionary, nil)
+        if status == errSecDuplicateItem {
+            SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
+        }
+    }
+
+    static func delete(service: String, account: String) {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account
+        ]
+
+        SecItemDelete(query as CFDictionary)
+    }
+
+    static func readStringSynchronizable(service: String, account: String) -> String? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: kCFBooleanTrue as Any,
+            kSecMatchLimit as String: kSecMatchLimitOne,
+            kSecReturnData as String: true
+        ]
+
+        var item: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &item)
+        guard status == errSecSuccess,
+              let data = item as? Data,
+              let value = String(data: data, encoding: .utf8) else {
+            return nil
+        }
+
+        return value
+    }
+
+    static func writeStringSynchronizable(_ value: String, service: String, account: String) {
+        let data = Data(value.utf8)
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: kCFBooleanTrue as Any
+        ]
+
+        let attributes: [String: Any] = [
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock
+        ]
+
+        let status = SecItemAdd(query.merging(attributes) { _, new in new } as CFDictionary, nil)
+        if status == errSecDuplicateItem {
+            SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
+        }
+    }
+
+    static func deleteSynchronizable(service: String, account: String) {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: kCFBooleanTrue as Any
+        ]
+
+        SecItemDelete(query as CFDictionary)
+    }
+}
+
 class DataController: ObservableObject, @unchecked Sendable {
     static let shared = DataController()
+    private static let appGroupID = "group.farm.poplar.budgetthing"
+    private static let accountIdKey = "account_id"
+    private static let bffSessionTokenKey = "bff_session_token"
+    private static let bffSessionExpiresAtKey = "bff_session_expires_at"
+    private static let bffNegotiationAttemptedKey = "bff_negotiation_attempted"
+    private static let keychainService = Bundle.main.bundleIdentifier ?? "com.budgetthing.dime"
+    private static let deviceIdKey = "device_id"
+    private static let appAttestKeyIdKey = "app_attest_key_id"
+
+    enum AttestError: LocalizedError {
+        case notSupported
+        case missingKeyId
+
+        var errorDescription: String? {
+            switch self {
+            case .notSupported:
+                return "App Attest is not supported on this device."
+            case .missingKeyId:
+                return "Failed to generate App Attest key."
+            }
+        }
+    }
 
     let modelContainer: ModelContainer
     let mainContext: ModelContext
     let storeURL: URL?
     let cloudKitEnabled: Bool
     let cloudKitDatabase: ModelConfiguration.CloudKitDatabase
+    private let bffNegotiationQueue = DispatchQueue(label: "com.budgetthing.bff.negotiation", qos: .utility)
+    private var bffNegotiationInFlight = false
+    @Published var bankingStatusMessage: String?
+    @Published var bankingStatusIsError: Bool = false
+    @Published var bankingShowToast: Bool = false
+    @Published var bankLinkToken: String?
+    @Published var bankIsLinking: Bool = false
 
     init() {
-        let groupID = "group.farm.poplar.budgetthing"
+        let groupID = Self.appGroupID
         let baseURL = FileManager.default
             .containerURL(forSecurityApplicationGroupIdentifier: groupID)
         let storeURL = baseURL?.appendingPathComponent("SwiftData.sqlite")
@@ -66,6 +200,9 @@ class DataController: ObservableObject, @unchecked Sendable {
                     MainBudget.self,
                     TemplateTransaction.self,
                     Transaction.self,
+                    BankConnection.self,
+                    BankAccount.self,
+                    BankTransaction.self,
                     configurations: config
                 )
             } else {
@@ -76,6 +213,9 @@ class DataController: ObservableObject, @unchecked Sendable {
                     MainBudget.self,
                     TemplateTransaction.self,
                     Transaction.self,
+                    BankConnection.self,
+                    BankAccount.self,
+                    BankTransaction.self,
                     configurations: config
                 )
             }
@@ -88,6 +228,32 @@ class DataController: ObservableObject, @unchecked Sendable {
         self.storeURL = storeURL
         self.cloudKitEnabled = cloudKitEnabled
         self.cloudKitDatabase = cloudKitDatabase
+
+        _ = ensureAccountId()
+    }
+
+    func accountId() -> String? {
+        SecureKeychainStore.readStringSynchronizable(service: Self.keychainService, account: Self.accountIdKey)
+    }
+
+    func updateAccountId(_ value: String) {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        SecureKeychainStore.writeStringSynchronizable(trimmed, service: Self.keychainService, account: Self.accountIdKey)
+    }
+
+    func getOrCreateAccountId() -> String {
+        ensureAccountId()
+    }
+
+    private func ensureAccountId() -> String {
+        if let stored = accountId(), !stored.isEmpty {
+            return stored
+        }
+
+        let newToken = UUID().uuidString
+        updateAccountId(newToken)
+        return newToken
     }
 
     private static func removeLegacyStoreIfNeeded(at baseURL: URL) {
@@ -152,6 +318,315 @@ class DataController: ObservableObject, @unchecked Sendable {
                 WidgetCenter.shared.reloadAllTimelines()
             }
         }
+    }
+
+    func bffSessionToken() -> String? {
+        SecureKeychainStore.readString(service: Self.keychainService, account: Self.bffSessionTokenKey)
+    }
+
+    func bffSessionExpiresAt() -> Date? {
+        guard let value = SecureKeychainStore.readString(service: Self.keychainService, account: Self.bffSessionExpiresAtKey) else {
+            return nil
+        }
+
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = isoFormatter.date(from: value) {
+            return date
+        }
+
+        let isoNoFraction = ISO8601DateFormatter()
+        isoNoFraction.formatOptions = [.withInternetDateTime]
+        return isoNoFraction.date(from: value)
+    }
+
+    func updateBffSessionToken(_ token: String, expiresAt: Date? = nil) {
+        let trimmed = token.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        SecureKeychainStore.writeString(trimmed, service: Self.keychainService, account: Self.bffSessionTokenKey)
+
+        if let expiresAt {
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            let dateString = formatter.string(from: expiresAt)
+            SecureKeychainStore.writeString(dateString, service: Self.keychainService, account: Self.bffSessionExpiresAtKey)
+        } else {
+            SecureKeychainStore.delete(service: Self.keychainService, account: Self.bffSessionExpiresAtKey)
+        }
+    }
+
+    func clearBffSessionToken() {
+        SecureKeychainStore.delete(service: Self.keychainService, account: Self.bffSessionTokenKey)
+        SecureKeychainStore.delete(service: Self.keychainService, account: Self.bffSessionExpiresAtKey)
+    }
+
+    func deviceId() -> String? {
+        SecureKeychainStore.readString(service: Self.keychainService, account: Self.deviceIdKey)
+    }
+
+    func updateDeviceId(_ value: String) {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        SecureKeychainStore.writeString(trimmed, service: Self.keychainService, account: Self.deviceIdKey)
+    }
+
+    func getOrCreateDeviceId() -> String {
+        if let stored = deviceId(), !stored.isEmpty {
+            return stored
+        }
+
+        let generated = UUID().uuidString
+        updateDeviceId(generated)
+        return generated
+    }
+
+    func appAttestKeyId() -> String? {
+        SecureKeychainStore.readString(service: Self.keychainService, account: Self.appAttestKeyIdKey)
+    }
+
+    func updateAppAttestKeyId(_ value: String) {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        SecureKeychainStore.writeString(trimmed, service: Self.keychainService, account: Self.appAttestKeyIdKey)
+    }
+
+    func getOrCreateAppAttestKeyId() async throws -> String {
+        if let stored = appAttestKeyId(), !stored.isEmpty {
+            return stored
+        }
+
+        #if DEBUG
+        let debugKeyId = "debug-attest-\(UUID().uuidString)"
+        updateAppAttestKeyId(debugKeyId)
+        return debugKeyId
+        #else
+        let service = DCAppAttestService.shared
+        guard service.isSupported else {
+            throw AttestError.notSupported
+        }
+
+        let keyId = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String, Error>) in
+            service.generateKey { keyId, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else if let keyId {
+                    continuation.resume(returning: keyId)
+                } else {
+                    continuation.resume(throwing: AttestError.missingKeyId)
+                }
+            }
+        }
+
+        updateAppAttestKeyId(keyId)
+        return keyId
+        #endif
+    }
+
+    func startBffNegotiationIfNeeded() {
+        bffNegotiationQueue.async { [weak self] in
+            guard let self else { return }
+
+            let defaults = UserDefaults(suiteName: Self.appGroupID) ?? .standard
+            if defaults.bool(forKey: Self.bffNegotiationAttemptedKey) || self.bffNegotiationInFlight {
+                return
+            }
+
+            self.bffNegotiationInFlight = true
+            defaults.set(true, forKey: Self.bffNegotiationAttemptedKey)
+
+            Task.detached(priority: .utility) { [weak self] in
+                await self?.performBffNegotiation()
+            }
+        }
+    }
+
+    private func performBffNegotiation() async {
+        defer {
+            bffNegotiationQueue.async { [weak self] in
+                self?.bffNegotiationInFlight = false
+            }
+        }
+
+        do {
+            await updateBankingStatus(message: "Setting up secure banking...", isError: false)
+            _ = getOrCreateAccountId()
+            _ = getOrCreateDeviceId()
+            _ = try await getOrCreateAppAttestKeyId()
+            let client = try BankClient()
+            _ = try await client.health()
+            await updateBankingStatus(message: nil, isError: false)
+        } catch {
+            await updateBankingStatus(message: error.localizedDescription, isError: true)
+        }
+    }
+
+    @MainActor
+    private func updateBankingStatus(message: String?, isError: Bool) {
+        bankingStatusMessage = message
+        bankingStatusIsError = isError
+        if isError, let message, !message.isEmpty {
+            bankingShowToast = true
+        } else {
+            bankingShowToast = false
+        }
+    }
+
+    func startBankLink() async {
+        guard !bankIsLinking else { return }
+        await MainActor.run {
+            bankIsLinking = true
+        }
+        defer {
+            Task { @MainActor in
+                bankIsLinking = false
+            }
+        }
+
+        await updateBankingStatus(message: "Creating bank link...", isError: false)
+        guard let token = bffSessionToken(), !token.isEmpty else {
+            await updateBankingStatus(message: "Missing banking session. Please reopen the app.", isError: true)
+            return
+        }
+
+        do {
+            let client = try BankClient()
+            let result = try await client.createLinkToken(bffToken: token)
+            await MainActor.run {
+                bankLinkToken = result.linkToken
+            }
+            await updateBankingStatus(message: nil, isError: false)
+        } catch let error as BankClient.BankClientError {
+            if case let .httpError(statusCode, _, _, _) = error, statusCode == 401 {
+                clearBffSessionToken()
+            }
+            await updateBankingStatus(message: error.localizedDescription, isError: true)
+        } catch {
+            await updateBankingStatus(message: error.localizedDescription, isError: true)
+        }
+    }
+
+    @MainActor
+    func clearBankLinkToken() {
+        bankLinkToken = nil
+    }
+
+    func handleBankLinkSuccess(publicToken: String) async {
+        await updateBankingStatus(message: "Linking bank...", isError: false)
+        guard let token = bffSessionToken(), !token.isEmpty else {
+            await updateBankingStatus(message: "Missing banking session. Please reopen the app.", isError: true)
+            await MainActor.run { bankLinkToken = nil }
+            return
+        }
+
+        do {
+            let client = try BankClient()
+            let result = try await client.exchangePublicToken(publicToken: publicToken, bffToken: token)
+            await MainActor.run {
+                upsertLinkResult(result)
+                bankLinkToken = nil
+            }
+            await updateBankingStatus(message: nil, isError: false)
+        } catch let error as BankClient.BankClientError {
+            if case let .httpError(statusCode, _, _, _) = error, statusCode == 401 {
+                clearBffSessionToken()
+            }
+            await updateBankingStatus(message: error.localizedDescription, isError: true)
+            await MainActor.run { bankLinkToken = nil }
+        } catch {
+            await updateBankingStatus(message: error.localizedDescription, isError: true)
+            await MainActor.run { bankLinkToken = nil }
+        }
+    }
+
+    func handleBankLinkExit() async {
+        await MainActor.run { bankLinkToken = nil }
+    }
+
+    func handleBankLinkError(_ error: Error) async {
+        await updateBankingStatus(message: error.localizedDescription, isError: true)
+        await MainActor.run { bankLinkToken = nil }
+    }
+
+    @MainActor
+    private func upsertLinkResult(_ result: BankClient.ExchangeResult) {
+        let connection = upsertConnection(result.connection)
+        var accounts: [BankAccount] = []
+        accounts.reserveCapacity(result.accounts.count)
+        for account in result.accounts {
+            let record = upsertAccount(account, connection: connection)
+            accounts.append(record)
+        }
+        connection.accountCount = accounts.count
+        connection.accounts = accounts
+        save()
+    }
+
+    @MainActor
+    private func upsertConnection(_ summary: BankClient.ConnectionSummary) -> BankConnection {
+        let connection = fetchConnection(connectionId: summary.connectionId) ?? BankConnection()
+        connection.connectionId = summary.connectionId
+        connection.institutionId = summary.institutionId
+        connection.institutionName = summary.institutionName
+        connection.status = summary.status
+        connection.createdAt = summary.createdAt
+        connection.updatedAt = summary.updatedAt
+        connection.lastSyncAt = summary.lastSyncAt
+        if connection.modelContext == nil {
+            mainContext.insert(connection)
+        }
+        return connection
+    }
+
+    @MainActor
+    private func upsertAccount(_ record: BankClient.AccountRecord, connection: BankConnection) -> BankAccount {
+        let account = fetchAccount(providerAccountId: record.providerAccountId, connectionId: connection.connectionId) ?? BankAccount()
+        let minorUnit = currencyMinorUnit(for: record.isoCurrencyCode)
+        account.providerAccountId = record.providerAccountId
+        account.connectionId = connection.connectionId
+        account.name = record.name
+        account.officialName = record.officialName
+        account.mask = record.mask
+        account.type = record.type
+        account.subtype = record.subtype
+        account.isoCurrencyCode = record.isoCurrencyCode
+        account.minorUnit = minorUnit
+        account.currentBalanceMinor = minorAmount(record.currentBalance, minorUnit: minorUnit)
+        account.availableBalanceMinor = minorAmount(record.availableBalance, minorUnit: minorUnit)
+        account.connection = connection
+        if account.modelContext == nil {
+            mainContext.insert(account)
+        }
+        return account
+    }
+
+    @MainActor
+    private func fetchConnection(connectionId: String) -> BankConnection? {
+        let predicate = #Predicate<BankConnection> { $0.connectionId == connectionId }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        return (try? mainContext.fetch(descriptor))?.first
+    }
+
+    @MainActor
+    private func fetchAccount(providerAccountId: String, connectionId: String) -> BankAccount? {
+        let predicate = #Predicate<BankAccount> {
+            $0.providerAccountId == providerAccountId && $0.connectionId == connectionId
+        }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        return (try? mainContext.fetch(descriptor))?.first
+    }
+
+    private func currencyMinorUnit(for code: String?) -> Int16 {
+        _ = code
+        return 2
+    }
+
+    private func minorAmount(_ amount: Double?, minorUnit: Int16) -> Int64? {
+        guard let amount else { return nil }
+        let multiplier = pow(10.0, Double(minorUnit))
+        var decimal = Decimal(amount) * Decimal(multiplier)
+        var rounded = Decimal()
+        NSDecimalRound(&rounded, &decimal, 0, .plain)
+        return NSDecimalNumber(decimal: rounded).int64Value
     }
 
     func updateRecurringTransaction(

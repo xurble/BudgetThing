@@ -168,6 +168,11 @@ struct HomeView: View {
             )
             .environmentObject(toastPresenter)
             .environmentObject(transactionManager)
+            .onChange(of: currentTab) { _, newTab in
+                if newTab == .bank {
+                    dataController.startBffNegotiationIfNeeded()
+                }
+            }
 
             if appLockVM.isAppLockEnabled && !appLockVM.isAppUnLocked {
                 AppLockView()

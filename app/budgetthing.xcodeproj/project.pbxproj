@@ -16,6 +16,12 @@
 		06AFE73B2F6359D9001FE658 /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06AFE7382F6359D9001FE658 /* SwiftDataModels.swift */; };
 		06AFE73C2F6359D9001FE658 /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06AFE7382F6359D9001FE658 /* SwiftDataModels.swift */; };
 		06AFE73E2F64AAA3001FE658 /* TipJar.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 06AFE73D2F64AAA3001FE658 /* TipJar.storekit */; };
+		06AFE7D12F654495001FE658 /* BankClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06AFE7D02F654495001FE658 /* BankClient.swift */; };
+		06AFE7D22F654495001FE658 /* BankClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06AFE7D02F654495001FE658 /* BankClient.swift */; };
+		06AFE7D32F654495001FE658 /* BankClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06AFE7D02F654495001FE658 /* BankClient.swift */; };
+		06AFE7D42F654495001FE658 /* BankClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06AFE7D02F654495001FE658 /* BankClient.swift */; };
+		06AFE7D62F655568001FE658 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06AFE7D52F655568001FE658 /* KeychainStore.swift */; };
+		06AFE7DB2F65873E001FE658 /* LinkKit in Frameworks */ = {isa = PBXBuildFile; productRef = 06AFE7DA2F65873E001FE658 /* LinkKit */; };
 		530C89D62A793B6C00B5028D /* ShortcutsEntities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530C89D52A793B6C00B5028D /* ShortcutsEntities.swift */; };
 		530C9DFD28ACE14A0038535F /* BudgetWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530C9DFC28ACE14A0038535F /* BudgetWidget.swift */; };
 		530C9DFE28ACE14A0038535F /* BudgetWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530C9DFC28ACE14A0038535F /* BudgetWidget.swift */; };
@@ -219,6 +225,8 @@
 		06A2954A2F5CA6EB00CEDD79 /* BankView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BankView.swift; sourceTree = "<group>"; };
 		06AFE7382F6359D9001FE658 /* SwiftDataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataModels.swift; sourceTree = "<group>"; };
 		06AFE73D2F64AAA3001FE658 /* TipJar.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; name = TipJar.storekit; path = dime/TipJar.storekit; sourceTree = "<group>"; };
+		06AFE7D02F654495001FE658 /* BankClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BankClient.swift; sourceTree = "<group>"; };
+		06AFE7D52F655568001FE658 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		530C89D52A793B6C00B5028D /* ShortcutsEntities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsEntities.swift; sourceTree = "<group>"; };
 		530C9DFC28ACE14A0038535F /* BudgetWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetWidget.swift; sourceTree = "<group>"; };
 		5311A22E29F04EF300A5BE20 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.intentdefinition; name = Base; path = Base.lproj/WidgetConfiguration.intentdefinition; sourceTree = "<group>"; };
@@ -371,6 +379,7 @@
 				5327D2E6287C6CC300F76ADF /* Popovers in Frameworks */,
 				538D10752A5AB7E7008F1AFB /* IsScrolling in Frameworks */,
 				533A38F42AA49E5900F66957 /* Alamofire in Frameworks */,
+				06AFE7DB2F65873E001FE658 /* LinkKit in Frameworks */,
 				536715ED28E1E9A3008461F2 /* StoreKit.framework in Frameworks */,
 				53B1D1A8289A60D500E28062 /* CrookedText in Frameworks */,
 			);
@@ -499,6 +508,7 @@
 				536A2A162A5A7C5D00D81E02 /* OffsetHelper.swift */,
 				533D1C3B2AE7BB6900894764 /* DynamicType.swift */,
 				0623606C2F585A83003A8E0D /* LiquidGlass.swift */,
+				06AFE7D52F655568001FE658 /* KeychainStore.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -509,6 +519,7 @@
 				53980E5B28A77B62009CC4E2 /* Helper.swift */,
 				5327D2AC287C6AD200F76ADF /* DataController.swift */,
 				06AFE7382F6359D9001FE658 /* SwiftDataModels.swift */,
+				06AFE7D02F654495001FE658 /* BankClient.swift */,
 			);
 			path = Data;
 			sourceTree = "<group>";
@@ -753,6 +764,7 @@
 				D6A4DE1F2D61744400F7F751 /* SwiftUIIntrospect */,
 				D6A4DE232D61744400F7F751 /* SwiftUIIntrospect-Static */,
 				066D0B712F59863300F3A3DE /* FabBar */,
+				06AFE7DA2F65873E001FE658 /* LinkKit */,
 			);
 			productName = BudgetThing;
 			productReference = 5327D283287C697400F76ADF /* BudgetThing.app */;
@@ -817,6 +829,7 @@
 				533A38F22AA49E0100F66957 /* XCRemoteSwiftPackageReference "Alamofire" */,
 				D6A4DE1E2D61744400F7F751 /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */,
 				066D0B702F59863300F3A3DE /* XCRemoteSwiftPackageReference "FabBar" */,
+				06AFE7D92F6585B1001FE658 /* XCRemoteSwiftPackageReference "plaid-link-ios-spm" */,
 			);
 			productRefGroup = 5327D284287C697400F76ADF /* Products */;
 			projectDirPath = "";
@@ -903,6 +916,7 @@
 				537152DF28AD0EB300E93EC4 /* DataController.swift in Sources */,
 				533D1C2D2AE791F500894764 /* ShortcutsEntities.swift in Sources */,
 				5311A22C29F04EF300A5BE20 /* WidgetConfiguration.intentdefinition in Sources */,
+				06AFE7D12F654495001FE658 /* BankClient.swift in Sources */,
 				5321E1E0291FE2D000D5A931 /* CategoryCreationErrors.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -917,6 +931,7 @@
 				537152E028AD0EB600E93EC4 /* DataController.swift in Sources */,
 				533D1C2E2AE791F500894764 /* ShortcutsEntities.swift in Sources */,
 				5311A22D29F04EF300A5BE20 /* WidgetConfiguration.intentdefinition in Sources */,
+				06AFE7D42F654495001FE658 /* BankClient.swift in Sources */,
 				5321E1DF291FE2D000D5A931 /* CategoryCreationErrors.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -949,6 +964,7 @@
 				AE5B3D792AEE99E000AB364E /* NumberPad.swift in Sources */,
 				53D5F02328A8E0E4004573C8 /* InsightsWidget.swift in Sources */,
 				53D6BDD42AF73CA100F5728E /* SettingsFeatureLabView.swift in Sources */,
+				06AFE7D32F654495001FE658 /* BankClient.swift in Sources */,
 				5327D2BC287C6AFB00F76ADF /* Color.swift in Sources */,
 				5327D2BB287C6AFB00F76ADF /* StringExtension.swift in Sources */,
 				53B1D1A5289383B100E28062 /* FontExtension.swift in Sources */,
@@ -977,6 +993,7 @@
 				53D0298028C5BC0300443F2B /* Currency.swift in Sources */,
 				53D6BDDF2AF73EF100F5728E /* SettingsHapticsView.swift in Sources */,
 				53D6BDD02AF73C4300F5728E /* SettingsNumberEntryView.swift in Sources */,
+				06AFE7D62F655568001FE658 /* KeychainStore.swift in Sources */,
 				AEADEF712AE94DA8006EB614 /* BackButton.swift in Sources */,
 				53D6BDC52AF6B32C00F5728E /* StepperButtons.swift in Sources */,
 				534973D628CB5A75000201F9 /* URLExtension.swift in Sources */,
@@ -1027,6 +1044,7 @@
 				53D0298228C62E1A00443F2B /* StringExtension.swift in Sources */,
 				5324985528A64DA7007B34D1 /* RecentTransactionsWidget.swift in Sources */,
 				533D1C2C2AE791F400894764 /* ShortcutsEntities.swift in Sources */,
+				06AFE7D22F654495001FE658 /* BankClient.swift in Sources */,
 				53B7D0D229701DB800F81002 /* MainBudgetWidget.swift in Sources */,
 				534973D228CB3594000201F9 /* NewExpenseWidget.swift in Sources */,
 				5311A22B29F04EF300A5BE20 /* WidgetConfiguration.intentdefinition in Sources */,
@@ -1257,6 +1275,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = V66L78P795;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -1321,6 +1340,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = V66L78P795;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -1550,6 +1570,14 @@
 				minimumVersion = 1.1.0;
 			};
 		};
+		06AFE7D92F6585B1001FE658 /* XCRemoteSwiftPackageReference "plaid-link-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/plaid/plaid-link-ios-spm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.0.4;
+			};
+		};
 		5327D2E4287C6CC300F76ADF /* XCRemoteSwiftPackageReference "Popovers" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/aheze/Popovers";
@@ -1613,6 +1641,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 066D0B702F59863300F3A3DE /* XCRemoteSwiftPackageReference "FabBar" */;
 			productName = FabBar;
+		};
+		06AFE7DA2F65873E001FE658 /* LinkKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 06AFE7D92F6585B1001FE658 /* XCRemoteSwiftPackageReference "plaid-link-ios-spm" */;
+			productName = LinkKit;
 		};
 		5327D2E5287C6CC300F76ADF /* Popovers */ = {
 			isa = XCSwiftPackageProductDependency;

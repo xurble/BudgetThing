@@ -143,3 +143,41 @@ extension MainBudget {
         return startDate
     }
 }
+
+extension BankConnection {
+    var wrappedInstitutionName: String {
+        institutionName ?? "Bank"
+    }
+
+    var statusLabel: String {
+        status.replacingOccurrences(of: "_", with: " ").capitalized
+    }
+}
+
+extension BankAccount {
+    var displayName: String {
+        officialName ?? name
+    }
+
+    var maskedName: String {
+        if let mask, !mask.isEmpty {
+            return "\(name) ••••\(mask)"
+        }
+
+        return name
+    }
+}
+
+extension BankTransaction {
+    var displayName: String {
+        merchantName ?? name
+    }
+
+    var amountMajor: Double {
+        Double(amountMinor) / pow(10.0, Double(minorUnit))
+    }
+
+    var isRemoved: Bool {
+        removedAt != nil
+    }
+}

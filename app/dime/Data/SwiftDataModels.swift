@@ -174,3 +174,153 @@ final class Transaction {
         self.category = category
     }
 }
+
+@Model
+final class BankConnection {
+    var connectionId: String = ""
+    var institutionId: String?
+    var institutionName: String?
+    var status: String = "active"
+    var createdAt: Date = Date(timeIntervalSince1970: 0)
+    var updatedAt: Date?
+    var lastSyncAt: Date?
+    var accountCount: Int = 0
+    var nextCursor: String?
+
+    @Relationship(inverse: \BankAccount.connection) var accounts: [BankAccount]?
+    @Relationship(inverse: \BankTransaction.connection) var transactions: [BankTransaction]?
+
+    init(
+        connectionId: String = "",
+        institutionId: String? = nil,
+        institutionName: String? = nil,
+        status: String = "active",
+        createdAt: Date = Date.now,
+        updatedAt: Date? = nil,
+        lastSyncAt: Date? = nil,
+        accountCount: Int = 0,
+        nextCursor: String? = nil,
+        accounts: [BankAccount]? = nil,
+        transactions: [BankTransaction]? = nil
+    ) {
+        self.connectionId = connectionId
+        self.institutionId = institutionId
+        self.institutionName = institutionName
+        self.status = status
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.lastSyncAt = lastSyncAt
+        self.accountCount = accountCount
+        self.nextCursor = nextCursor
+        self.accounts = accounts
+        self.transactions = transactions
+    }
+}
+
+@Model
+final class BankAccount {
+    var providerAccountId: String = ""
+    var connectionId: String = ""
+    var name: String = ""
+    var officialName: String?
+    var mask: String?
+    var type: String?
+    var subtype: String?
+    var currentBalanceMinor: Int64?
+    var availableBalanceMinor: Int64?
+    var isoCurrencyCode: String?
+    var minorUnit: Int16 = 2
+
+    var connection: BankConnection?
+    @Relationship(inverse: \BankTransaction.account) var transactions: [BankTransaction]?
+
+    init(
+        providerAccountId: String = "",
+        connectionId: String = "",
+        name: String = "",
+        officialName: String? = nil,
+        mask: String? = nil,
+        type: String? = nil,
+        subtype: String? = nil,
+        currentBalanceMinor: Int64? = nil,
+        availableBalanceMinor: Int64? = nil,
+        isoCurrencyCode: String? = nil,
+        minorUnit: Int16 = 2,
+        connection: BankConnection? = nil,
+        transactions: [BankTransaction]? = nil
+    ) {
+        self.providerAccountId = providerAccountId
+        self.connectionId = connectionId
+        self.name = name
+        self.officialName = officialName
+        self.mask = mask
+        self.type = type
+        self.subtype = subtype
+        self.currentBalanceMinor = currentBalanceMinor
+        self.availableBalanceMinor = availableBalanceMinor
+        self.isoCurrencyCode = isoCurrencyCode
+        self.minorUnit = minorUnit
+        self.connection = connection
+        self.transactions = transactions
+    }
+}
+
+@Model
+final class BankTransaction {
+    var providerTransactionId: String = ""
+    var providerAccountId: String = ""
+    var connectionId: String = ""
+    var amountMinor: Int64 = 0
+    var minorUnit: Int16 = 2
+    var isoCurrencyCode: String?
+    var date: Date = Date(timeIntervalSince1970: 0)
+    var authorizedDate: Date?
+    var name: String = ""
+    var merchantName: String?
+    var paymentChannel: String?
+    var pending: Bool = false
+    var personalFinanceCategoryPrimary: String?
+    var rawJSON: String?
+    var removedAt: Date?
+
+    var connection: BankConnection?
+    var account: BankAccount?
+
+    init(
+        providerTransactionId: String = "",
+        providerAccountId: String = "",
+        connectionId: String = "",
+        amountMinor: Int64 = 0,
+        minorUnit: Int16 = 2,
+        isoCurrencyCode: String? = nil,
+        date: Date = Date.now,
+        authorizedDate: Date? = nil,
+        name: String = "",
+        merchantName: String? = nil,
+        paymentChannel: String? = nil,
+        pending: Bool = false,
+        personalFinanceCategoryPrimary: String? = nil,
+        rawJSON: String? = nil,
+        removedAt: Date? = nil,
+        connection: BankConnection? = nil,
+        account: BankAccount? = nil
+    ) {
+        self.providerTransactionId = providerTransactionId
+        self.providerAccountId = providerAccountId
+        self.connectionId = connectionId
+        self.amountMinor = amountMinor
+        self.minorUnit = minorUnit
+        self.isoCurrencyCode = isoCurrencyCode
+        self.date = date
+        self.authorizedDate = authorizedDate
+        self.name = name
+        self.merchantName = merchantName
+        self.paymentChannel = paymentChannel
+        self.pending = pending
+        self.personalFinanceCategoryPrimary = personalFinanceCategoryPrimary
+        self.rawJSON = rawJSON
+        self.removedAt = removedAt
+        self.connection = connection
+        self.account = account
+    }
+}

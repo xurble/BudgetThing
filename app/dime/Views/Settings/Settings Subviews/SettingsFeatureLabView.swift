@@ -29,6 +29,9 @@ struct SettingsGoofyView: View {
     "showTransactionRecommendations", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing"))
   var showRecommendations: Bool = false
 
+  @AppStorage("bankingPaywallBypass", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing"))
+  var bankingPaywallBypass: Bool = false
+
   @Namespace var animation
 
   var body: some View {
@@ -55,6 +58,8 @@ struct SettingsGoofyView: View {
           ToggleRow(text: "Show Line Graph", bool: $lineGraph, id: 2)
 
           ToggleRow(text: "Budget Rows", bool: $budgetRows, id: 3)
+
+        ToggleRow(text: "Bypass Bank Paywall", bool: $bankingPaywallBypass, id: 6)
         }
         .background(Color.SettingsBackground, in: RoundedRectangle(cornerRadius: 9))
 
