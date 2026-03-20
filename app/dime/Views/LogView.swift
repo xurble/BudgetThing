@@ -11,6 +11,37 @@ import SwiftData
 import SwiftUIIntrospect
 import SwiftUI
 
+@MainActor
+private enum LogFormatters {
+    private static var currencyCache: [String: NumberFormatter] = [:]
+
+    static let dayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "d MMM"
+        return formatter
+    }()
+
+    static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
+        return formatter
+    }()
+
+    static func currencyFormatter(currency: String, showCents: Bool) -> NumberFormatter {
+        let key = "\(currency)|\(showCents)"
+        if let cached = currencyCache[key] {
+            return cached
+        }
+
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = currency
+        formatter.maximumFractionDigits = showCents ? 2 : 0
+        currencyCache[key] = formatter
+        return formatter
+    }
+}
+
 struct LogView: View {
     @ObservedObject var syncMonitor = SyncMonitor.shared
 
@@ -1047,25 +1078,17 @@ struct ListView: View {
     }
 
     func filterOutDupes(day: [Transaction]) -> (transactions: [Transaction], string: String) {
-        var seen = [Transaction]()
+        var seen = Set<UUID?>()
         let filtered = day.filter { entity -> Bool in
-            if seen.contains(where: { $0.id == entity.id }) {
+            let id = entity.id
+            if seen.contains(id) {
                 return false
-            } else {
-                seen.append(entity)
-                return true
             }
+            seen.insert(id)
+            return true
         }
 
-        let numberFormatter = NumberFormatter()
-        numberFormatter.numberStyle = .currency
-        numberFormatter.currencyCode = currency
-
-        if showCents {
-            numberFormatter.maximumFractionDigits = 2
-        } else {
-            numberFormatter.maximumFractionDigits = 0
-        }
+        let numberFormatter = LogFormatters.currencyFormatter(currency: currency, showCents: showCents)
 
         let total = dayTotal(dayTransaction: filtered)
 
@@ -1153,15 +1176,7 @@ struct FutureListView: View {
     @AppStorage("swapTimeLabel", store: UserDefaults(suiteName: "group.farm.poplar.budgetthing")) var swapTimeLabel: Bool = false
 
     var totalString: String {
-        let numberFormatter = NumberFormatter()
-        numberFormatter.numberStyle = .currency
-        numberFormatter.currencyCode = currency
-
-        if showCents {
-            numberFormatter.maximumFractionDigits = 2
-        } else {
-            numberFormatter.maximumFractionDigits = 0
-        }
+        let numberFormatter = LogFormatters.currencyFormatter(currency: currency, showCents: showCents)
 
         var total = 0.0
 
@@ -1264,16 +1279,7 @@ struct SingleTransactionView: View {
     }
 
     var transactionAmountString: String {
-        let numberFormatter = NumberFormatter()
-        numberFormatter.numberStyle = .currency
-        numberFormatter.currencyCode = currency
-
-        if showCents {
-            numberFormatter.maximumFractionDigits = 2
-        } else {
-            numberFormatter.maximumFractionDigits = 0
-        }
-
+        let numberFormatter = LogFormatters.currencyFormatter(currency: currency, showCents: showCents)
         return numberFormatter.string(from: NSNumber(value: transaction.amount)) ?? "$0"
     }
 
@@ -1486,20 +1492,15 @@ struct SingleTransactionView: View {
             if swapTimeLabel {
                 return transaction.wrappedCategoryName
             } else {
-                let formatter = DateFormatter()
-                formatter.dateFormat = "h:mm a"
-
-                return formatter.string(from: transaction.wrappedDate)
+                return LogFormatters.timeFormatter.string(from: transaction.wrappedDate)
             }
         }
     }
 }
 
+@MainActor
 func dateFormatter(date: Date) -> String {
-    let dateFormatter = DateFormatter()
-
-    dateFormatter.dateFormat = "d MMM"
-    return dateFormatter.string(from: date).uppercased()
+    return LogFormatters.dayFormatter.string(from: date).uppercased()
 }
 
 struct EmojiLogView: View {
