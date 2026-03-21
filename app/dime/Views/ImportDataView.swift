@@ -607,7 +607,7 @@ struct ImportDataView: View {
                 if progress == 1 {
                     VStack(spacing: 13) {
                         Button {
-                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            Haptics.impact(.light)
 
                             importing = true
 

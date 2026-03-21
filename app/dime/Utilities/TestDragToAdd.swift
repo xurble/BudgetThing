@@ -67,7 +67,7 @@ struct CustomRefreshView<Content: View>: View {
                         // Additional haptic feedback at "success"
                         if scrollDelegate.isEligible && !scrollDelegate.isRefreshing {
                             scrollDelegate.isRefreshing = true
-                            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+                            Haptics.impact(.heavy)
                         } else {}
                     }
             }

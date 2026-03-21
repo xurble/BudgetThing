@@ -253,10 +253,10 @@ struct LogView: View {
 //                    if pullStatus == .filter {
 //                        showFilter = true
 //                        released = .filter
-//                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+//                        Haptics.impact(.light)
 //                    } else if pullStatus == .search {
 //                        released = .search
-//                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+//                        Haptics.impact(.light)
 //                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
 //                            searchMode = true
 //                        }
@@ -367,7 +367,7 @@ struct LogView: View {
 //            .animation(.spring(response: 0.4, dampingFraction: 0.6), value: pullStatus)
 //            .onChange(of: pullStatus) { _, newValue in
 //                if newValue != .none && released == .none {
-//                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+//                    Haptics.impact(.medium)
 //                }
 //            }
 //            .onChange(of: released) { 
@@ -1391,12 +1391,12 @@ struct SingleTransactionView: View {
         }
         .onChange(of: deletePopup) { 
             if deletePopup {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                Haptics.impact(.light)
             }
         }
         .onChange(of: deleteConfirm) { 
             if deleteConfirm {
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                Haptics.impact(.medium)
             }
         }
         .animation(.easeInOut, value: deletePopup)

@@ -991,7 +991,7 @@ struct NewCategoryAlert: View {
         outcome = results.error
 
         if outcome != .none {
-            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+            Haptics.impact(.heavy)
 
             switch outcome {
             case .incomplete:
@@ -1030,7 +1030,7 @@ struct NewCategoryAlert: View {
         } else {
             toastTitle = "Added \(newName)"
 
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            Haptics.impact(.light)
 
             if income {
                 let category = Category()
@@ -1474,7 +1474,7 @@ struct EditCategoryAlert: View {
         outcome = results.error
 
         if outcome != .none {
-            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+            Haptics.impact(.heavy)
 
             switch outcome {
             case .incomplete:
@@ -1509,7 +1509,7 @@ struct EditCategoryAlert: View {
 
             showToast = true
         } else {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            Haptics.impact(.light)
 
             if toEdit.income {
                 toEdit.name = newName.trimmingCharacters(in: .whitespaces).capitalized
@@ -1738,8 +1738,7 @@ struct SuggestedCategoriesView: View {
                             return
                         }
 
-                        let impactMed = UIImpactFeedbackGenerator(style: .light)
-                        impactMed.impactOccurred()
+                        Haptics.impact(.light)
 
                         if !income {
                             let suggestedCategory = Category()

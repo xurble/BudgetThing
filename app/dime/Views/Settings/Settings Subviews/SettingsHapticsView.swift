@@ -87,7 +87,7 @@ struct SettingsHapticsView: View {
         .modifier(SettingsSubviewModifier())
         .onChange(of: hapticType) { _, newValue in
             if newValue == 2 {
-                UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+                Haptics.impact(.heavy)
 
                 withAnimation(.easeInOut(duration: 0.1)) {
                     alternateShake = true
@@ -102,7 +102,7 @@ struct SettingsHapticsView: View {
                     }
                 }
             } else if newValue == 1 {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                Haptics.impact(.light)
 
                 withAnimation(.easeInOut(duration: 0.1).repeatCount(5)) {
                     wordShake = true

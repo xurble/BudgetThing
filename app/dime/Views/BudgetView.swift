@@ -746,12 +746,12 @@ struct SingleBudgetView: View {
                 .padding(.horizontal, 30)
                 .onChange(of: deletePopup) { 
                     if deletePopup {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        Haptics.impact(.light)
                     }
                 }
                 .onChange(of: deleteConfirm) { 
                     if deleteConfirm {
-                        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+                        Haptics.impact(.heavy)
                     }
                 }
                 .animation(.default, value: deletePopup)

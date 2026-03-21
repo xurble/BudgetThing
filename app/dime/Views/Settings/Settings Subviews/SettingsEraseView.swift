@@ -142,8 +142,7 @@ struct DeleteAllAlert: View {
         )
         .onChange(of: completedLongPress) { 
           if completedLongPress {
-            let impactMed = UIImpactFeedbackGenerator(style: .heavy)
-            impactMed.impactOccurred()
+            Haptics.impact(.heavy)
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
               dataController.deleteAll()

@@ -539,31 +539,29 @@ struct TemplateTransactionView: View {
     }
 
     func submit() {
-        let errorGenerator = UIImpactFeedbackGenerator(style: .heavy)
-        let successGenerator = UIImpactFeedbackGenerator(style: .light)
 
         if transactionValue == 0 && category == nil {
             toastImage = "questionmark.app"
             toastTitle = "Incomplete Entry"
             showToast = true
-            errorGenerator.impactOccurred()
+            Haptics.impact(.heavy)
 
             return
         } else if transactionValue == 0 {
             toastImage = "centsign.circle"
             toastTitle = "Missing Amount"
             showToast = true
-            errorGenerator.impactOccurred()
+            Haptics.impact(.heavy)
             return
         } else if category == nil {
             toastImage = "tray"
             toastTitle = "Missing Category"
             showToast = true
-            errorGenerator.impactOccurred()
+            Haptics.impact(.heavy)
             return
         }
 
-        successGenerator.impactOccurred()
+        Haptics.impact(.light)
 
         if let editedTransaction = toEdit {
             if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
