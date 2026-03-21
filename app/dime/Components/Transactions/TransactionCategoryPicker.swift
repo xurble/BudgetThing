@@ -92,8 +92,7 @@ struct NewCategoryPickerView: View {
 //            }
             .contentShape(Rectangle())
             .onTapGesture {
-                let impactMed = UIImpactFeedbackGenerator(style: .light)
-                impactMed.impactOccurred()
+                Haptics.impact(.light)
                 showPicker = false
                 showingCategoryView = true
             }

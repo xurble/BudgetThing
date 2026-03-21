@@ -534,11 +534,11 @@ struct BrandNewBudgetView: View {
                     if progress == 2 && selectedCategory == nil {
                         showToast = true
                         toastMessage = "Missing Category"
-                        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+                        Haptics.impact(.heavy)
                         return
                     }
 
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    Haptics.impact(.light)
 
                     withAnimation(.interactiveSpring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8)) {
                         if progress < 5 {
@@ -693,13 +693,13 @@ struct BrandNewBudgetView: View {
 
     func submit() {
         if price == 0 {
-            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+            Haptics.impact(.heavy)
             showToast = true
             toastMessage = "Missing Amount"
             return
         }
 
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        Haptics.impact(.light)
 
         let budgetType = getBudgetTypeInteger(budgetTimeFrame)
         let today = Calendar.current.startOfDay(for: Date.now)

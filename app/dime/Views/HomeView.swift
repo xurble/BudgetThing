@@ -294,8 +294,7 @@ struct HomeView: View {
     }
 
     private func presentAddTransaction() {
-        let impactMed = UIImpactFeedbackGenerator(style: .light)
-        impactMed.impactOccurred()
+        Haptics.impact(.light)
         addTransaction = true
     }
 }

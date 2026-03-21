@@ -1084,7 +1084,7 @@ struct WeekGraphView: View {
                 )
                 .onChange(of: changeTime) { 
                     if changeTime {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        Haptics.impact(.light)
                     }
                 }
                 .onChange(of: isDragging) { 
@@ -1504,7 +1504,7 @@ struct MonthGraphView: View {
                 )
                 .onChange(of: changeTime) { 
                     if changeTime {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        Haptics.impact(.light)
                     }
                 }
                 .onChange(of: isDragging) { 
@@ -1882,7 +1882,7 @@ struct YearGraphView: View {
                 )
                 .onChange(of: changeTime) { 
                     if changeTime {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        Haptics.impact(.light)
                     }
                 }
                 .onChange(of: isDragging) { 

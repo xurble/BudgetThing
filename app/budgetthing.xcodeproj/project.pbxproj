@@ -16,6 +16,7 @@
 		06AFE73B2F6359D9001FE658 /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06AFE7382F6359D9001FE658 /* SwiftDataModels.swift */; };
 		06AFE73C2F6359D9001FE658 /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06AFE7382F6359D9001FE658 /* SwiftDataModels.swift */; };
 		06AFE73E2F64AAA3001FE658 /* TipJar.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 06AFE73D2F64AAA3001FE658 /* TipJar.storekit */; };
+		06CB6F582F6DDB6D00E71CA6 /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06CB6F572F6DDB6D00E71CA6 /* Haptics.swift */; };
 		530C89D62A793B6C00B5028D /* ShortcutsEntities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530C89D52A793B6C00B5028D /* ShortcutsEntities.swift */; };
 		530C9DFD28ACE14A0038535F /* BudgetWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530C9DFC28ACE14A0038535F /* BudgetWidget.swift */; };
 		530C9DFE28ACE14A0038535F /* BudgetWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530C9DFC28ACE14A0038535F /* BudgetWidget.swift */; };
@@ -219,6 +220,7 @@
 		06A2954A2F5CA6EB00CEDD79 /* BankView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BankView.swift; sourceTree = "<group>"; };
 		06AFE7382F6359D9001FE658 /* SwiftDataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataModels.swift; sourceTree = "<group>"; };
 		06AFE73D2F64AAA3001FE658 /* TipJar.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; name = TipJar.storekit; path = dime/TipJar.storekit; sourceTree = "<group>"; };
+		06CB6F572F6DDB6D00E71CA6 /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
 		530C89D52A793B6C00B5028D /* ShortcutsEntities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsEntities.swift; sourceTree = "<group>"; };
 		530C9DFC28ACE14A0038535F /* BudgetWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetWidget.swift; sourceTree = "<group>"; };
 		5311A22E29F04EF300A5BE20 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.intentdefinition; name = Base; path = Base.lproj/WidgetConfiguration.intentdefinition; sourceTree = "<group>"; };
@@ -499,6 +501,7 @@
 				536A2A162A5A7C5D00D81E02 /* OffsetHelper.swift */,
 				533D1C3B2AE7BB6900894764 /* DynamicType.swift */,
 				0623606C2F585A83003A8E0D /* LiquidGlass.swift */,
+				06CB6F572F6DDB6D00E71CA6 /* Haptics.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -997,6 +1000,7 @@
 				5327D2DB287C6B5F00F76ADF /* LogView.swift in Sources */,
 				5362CF322A92750800244744 /* ImportDataView.swift in Sources */,
 				5327D287287C697400F76ADF /* BudgetThingApp.swift in Sources */,
+				06CB6F582F6DDB6D00E71CA6 /* Haptics.swift in Sources */,
 				53A4147728B3B559008C30E7 /* WelcomeSheetView.swift in Sources */,
 				53D6BDD82AF73CFC00F5728E /* SettingsEraseView.swift in Sources */,
 				53D6BDD62AF73CE400F5728E /* SettingsUpcomingView.swift in Sources */,

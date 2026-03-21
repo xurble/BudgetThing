@@ -136,7 +136,7 @@ struct SettingsNumberEntryView: View {
   }
 
   func submit() {
-    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    Haptics.impact(.light)
     price = 0
   }
 }

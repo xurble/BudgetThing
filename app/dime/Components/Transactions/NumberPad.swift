@@ -124,8 +124,7 @@ struct NumberPad: View {
     }
 
     private func hapticTap() {
-        let generator = UIImpactFeedbackGenerator(style: .heavy)
-        generator.impactOccurred()
+        Haptics.impact(.heavy)
     }
 
     public func deleteLastDigit() {

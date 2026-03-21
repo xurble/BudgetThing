@@ -663,7 +663,7 @@ struct TransactionView: View {
             }
         }
         .onChange(of: income) { 
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            Haptics.impact(.light)
             category = nil
         }
         .onAppear {
@@ -755,8 +755,6 @@ struct TransactionView: View {
     }
 
     func submit() {
-        let errorGenerator = UIImpactFeedbackGenerator(style: .heavy)
-        let successGenerator = UIImpactFeedbackGenerator(style: .light)
 
         if price == 0 && category == nil {
             toastImage = "questionmark.app"
@@ -764,14 +762,14 @@ struct TransactionView: View {
             showToast = true
             toggleFieldColors()
 
-            errorGenerator.impactOccurred()
+            Haptics.impact(.heavy)
 
             return
         } else if price == 0 {
             toastImage = "centsign.circle"
             toastTitle = "Missing Amount"
             showToast = true
-            errorGenerator.impactOccurred()
+            Haptics.impact(.heavy)
             return
         } else if category == nil {
             toastImage = "tray"
@@ -780,11 +778,11 @@ struct TransactionView: View {
 
             toggleFieldColors()
 
-            errorGenerator.impactOccurred()
+            Haptics.impact(.heavy)
             return
         }
 
-        successGenerator.impactOccurred()
+        Haptics.impact(.light)
 
         if let editedTransaction = toEdit {
             if note.trimmingCharacters(in: .whitespacesAndNewlines) == "" {
@@ -1040,8 +1038,7 @@ struct CategoryPickerView: View {
                 )
                 .contentShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
                 .onTapGesture {
-                    let impactMed = UIImpactFeedbackGenerator(style: .light)
-                    impactMed.impactOccurred()
+                    Haptics.impact(.light)
                     showPicker = false
                     showingCategoryView = true
                 }
@@ -1404,7 +1401,7 @@ struct CustomRecurringView: View {
                     repeatType = holdingType
                     repeatCoefficient = holdingCoefficient
 
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    Haptics.impact(.light)
 
                     dismiss()
 
